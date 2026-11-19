@@ -1,6 +1,7 @@
 """Small HTTP API for the release gate (used later by CI in Phase 6)."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -19,6 +20,7 @@ from .gate import (
 from .score import score_battle
 
 app = FastAPI(title="ChaosArena Gate", version="1.0.0")
+RL_TABLE = Path("ml/rl_q_table.json")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -86,3 +88,22 @@ def latest_report() -> dict:
     if not path.exists():
         return {"file": str(path), "text": None}
     return {"file": str(path), "text": path.read_text(encoding="utf-8")}
+
+
+@app.get("/rl/policy")
+def rl_policy() -> dict:
+    """Read the committed Q table; never imports the RL or attacker modules."""
+    if not RL_TABLE.exists():
+        return {"available": False, "states": {}}
+    payload = json.loads(RL_TABLE.read_text(encoding="utf-8"))
+    states: dict[str, list[dict]] = {}
+    for state, values in payload.get("states", {}).items():
+        ranked = sorted(values.items(), key=lambda item: item[1], reverse=True)[:3]
+        states[state] = [
+            {"action": action, "q": round(float(score), 4)} for action, score in ranked
+        ]
+    return {
+        "available": True,
+        "epsilon": payload.get("epsilon"),
+        "states": states,
+    }

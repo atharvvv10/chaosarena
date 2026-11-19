@@ -6,7 +6,7 @@ A resilience-gated CI/CD platform where an Attacker AI and a Defender AI battle 
 local Kubernetes cluster. A release is promoted only if it survives the attack and
 scores above a configurable threshold.
 
-> **Current status: Phase 8 complete** — ShopApp, observability, 7 attacks, Defender, release gate, LLM incident reporter, free GitHub Actions, local React dashboard and a free tabular RL attacker.
+> **Current status: Phase 9 complete** — all nine phases built and verified locally, with a polished React dashboard, final docs and a one-command verification script.
 
 ## Architecture (Mermaid)
 
@@ -60,7 +60,7 @@ flowchart LR
 - [x] **Phase 6** — GitHub Actions resilience gate (free tier, no secrets)
 - [x] **Phase 7** — React dashboard (local, free, no UI kit)
 - [x] **Phase 8** — RL Attacker (sim + real, standard library only)
-- [ ] Phase 9 — docs, results, tests, polish
+- [x] **Phase 9** — docs, results, one-command verify, UI polish
 
 ## Quickstart — Kubernetes (recommended)
 
@@ -108,6 +108,9 @@ See [docs/phase6.md](docs/phase6.md) — the free GitHub Actions workflow and CI
 See [docs/phase7.md](docs/phase7.md) — the React dashboard, API additions and browser verification.
 See [dashboard/README.md](dashboard/README.md) — how to run the UI next to the gate API.
 See [docs/phase8.md](docs/phase8.md) — the free Q-learning attacker, simulator and real battle.
+See [docs/phase9.md](docs/phase9.md) — final docs, one-command verification and UI polish.
+
+**Start here:** [Final results](docs/RESULTS.md) · [Testing guide](docs/TESTING.md) · run `make verify`.
 
 ## Verify Phase 1
 

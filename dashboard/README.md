@@ -29,6 +29,8 @@ Open http://127.0.0.1:5173
 - Decision history from `ml/gate_decisions.jsonl`
 - Incident report from `ml/incident_report.md`
 - A form to run a real battle through `POST /gate/evaluate`
+- The learned RL attacker policy from `GET /rl/policy` (read-only Q table)
+- A small score trend and mini-bars drawn with plain CSS — no chart library
 
 Set `VITE_API_URL` if the API runs somewhere other than `http://127.0.0.1:8080`.
 

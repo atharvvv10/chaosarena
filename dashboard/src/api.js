@@ -16,6 +16,7 @@ export const getHealth = () => request('/health')
 export const getLastGate = () => request('/gate/last')
 export const getHistory = (limit = 10) => request(`/gate/history?limit=${limit}`)
 export const getReport = () => request('/report/latest')
+export const getRlPolicy = () => request('/rl/policy')
 
 export const evaluate = (payload) =>
   request('/gate/evaluate', {

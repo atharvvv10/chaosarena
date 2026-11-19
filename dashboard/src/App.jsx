@@ -5,6 +5,7 @@ import {
   getHistory,
   getLastGate,
   getReport,
+  getRlPolicy,
 } from './api.js'
 
 const ATTACKS = [
@@ -33,16 +34,70 @@ function Verdict({ decision }) {
   const promoted = decision.verdict === 'PROMOTE'
   return (
     <span className={promoted ? 'pill pill-good' : 'pill pill-bad'}>
-      {decision.verdict}
+      {promoted ? '● ' : '● '}{decision.verdict}
     </span>
   )
 }
 
-function Score({ score, grade }) {
+function ScoreRing({ score, grade }) {
+  const value = score ?? 0
+  const rotation = `${value * 3.6}deg`
   return (
-    <div className="score">
-      <div className="score-number">{score ?? '--'}</div>
-      <div className="score-label">/ 100 · grade {grade ?? '--'}</div>
+    <div className="score-block">
+      <div className="score-ring" style={{ '--rotation': rotation }}>
+        <div className="score-ring-inner">
+          <strong>{score ?? '--'}</strong>
+          <span>/100</span>
+          <em>{grade ?? '--'}</em>
+        </div>
+      </div>
+      <div className="score-copy">
+        <span className="eyebrow">Resilience score</span>
+        <p>Measured from detection, recovery and cleanup — not a stored opinion.</p>
+      </div>
+    </div>
+  )
+}
+
+function Trend({ decisions }) {
+  if (!decisions.length) return null
+  return (
+    <div className="trend" aria-label="Recent score trend">
+      {decisions.slice(0, 12).reverse().map((decision, index) => (
+        <div
+          className={`trend-bar ${decision.verdict === 'PROMOTE' ? 'good' : 'bad'}`}
+          key={`${decision.evaluated_at}-${index}`}
+          style={{ height: `${Math.max(8, Number(decision.score) || 0)}%` }}
+          title={`${decision.score} · ${decision.verdict}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+function RlPanel({ policy }) {
+  if (!policy?.available) {
+    return <p className="muted">No trained Q table yet. Run <code>make rl-train</code>.</p>
+  }
+  return (
+    <div className="rl-panel">
+      <div className="rl-head">
+        <span className="eyebrow">Learned policy</span>
+        <span className="tag">epsilon {policy.epsilon ?? '--'}</span>
+      </div>
+      {['calm', 'alert'].map((state) => (
+        <div className="rl-state" key={state}>
+          <span className={`state-dot state-${state}`}>{state}</span>
+          <div className="rl-actions">
+            {(policy.states?.[state] || []).slice(0, 2).map((item) => (
+              <div className="rl-action" key={item.action}>
+                <code>{item.action}</code>
+                <span>Q {item.q}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -52,6 +107,7 @@ export default function App() {
   const [last, setLast] = useState(null)
   const [history, setHistory] = useState([])
   const [report, setReport] = useState(null)
+  const [policy, setPolicy] = useState(null)
   const [form, setForm] = useState(DEFAULTS)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -60,16 +116,18 @@ export default function App() {
   async function load() {
     setError('')
     try {
-      const [h, g, hist, rep] = await Promise.all([
+      const [h, g, hist, rep, rl] = await Promise.all([
         getHealth(),
         getLastGate(),
         getHistory(8),
         getReport(),
+        getRlPolicy(),
       ])
       setHealth(h)
       setLast(g.decision)
       setHistory(hist.decisions || [])
       setReport(rep.text)
+      setPolicy(rl)
     } catch (err) {
       setError(`Cannot reach the gate API: ${err.message}`)
     }
@@ -100,8 +158,9 @@ export default function App() {
       setLast(result.decision)
       setHistory((current) => [result.decision, ...current].slice(0, 8))
       if (result.decision?.verdict === 'PROMOTE') {
-        const rep = await getReport()
+        const [rep, rl] = await Promise.all([getReport(), getRlPolicy()])
         setReport(rep.text)
+        setPolicy(rl)
       }
     } catch (err) {
       setError(`Battle failed: ${err.message}`)
@@ -115,9 +174,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <h1>ChaosArena</h1>
-          <p className="subtitle">Resilience-gated releases · local demo</p>
+        <div className="brand">
+          <div className="brand-mark">CA</div>
+          <div>
+            <h1>ChaosArena</h1>
+            <p className="subtitle">Resilience-gated releases · local demo</p>
+          </div>
         </div>
         <div className="topbar-actions">
           <span className={online ? 'pill pill-good' : 'pill pill-bad'}>
@@ -129,19 +191,26 @@ export default function App() {
         </div>
       </header>
 
+      <div className="phase-strip">
+        <span>ShopApp</span><span>Attacks</span><span>Defender</span><span>Gate</span>
+        <span>Reporter</span><span>CI</span><span>Dashboard</span><span>RL</span>
+        <span className="active">Polish</span>
+      </div>
+
       {error && <div className="alert">{error}</div>}
 
       <main className="grid">
         <section className="card gate-card">
           <div className="card-head">
             <div>
+              <span className="eyebrow">Phase 4</span>
               <h2>Release gate</h2>
               <p className="muted">Latest decision from the Arena Controller</p>
             </div>
             <Verdict decision={last} />
           </div>
 
-          <Score score={last?.score} grade={last?.grade} />
+          <ScoreRing score={last?.score} grade={last?.grade} />
 
           <dl className="facts">
             <div><dt>Version</dt><dd>{last?.version || '--'}</dd></div>
@@ -159,9 +228,10 @@ export default function App() {
           </ul>
         </section>
 
-        <section className="card">
+        <section className="card battle-card">
           <div className="card-head">
             <div>
+              <span className="eyebrow">Phase 2 + 4</span>
               <h2>Run a battle</h2>
               <p className="muted">Calls the allowlisted attacker, then the Defender</p>
             </div>
@@ -250,7 +320,22 @@ export default function App() {
 
         <section className="card card-wide">
           <div className="card-head">
-            <h2>Decision history</h2>
+            <div>
+              <span className="eyebrow">Phase 8</span>
+              <h2>RL attacker</h2>
+              <p className="muted">Learned from the free simulator, executed via public CLIs</p>
+            </div>
+            <Trend decisions={history} />
+          </div>
+          <RlPanel policy={policy} />
+        </section>
+
+        <section className="card card-wide">
+          <div className="card-head">
+            <div>
+              <span className="eyebrow">Audit trail</span>
+              <h2>Decision history</h2>
+            </div>
             <span className="muted">newest first</span>
           </div>
           <div className="table-wrap">
@@ -268,7 +353,12 @@ export default function App() {
                     <td>{decision.version}</td>
                     <td>{decision.attack}</td>
                     <td>{decision.target}</td>
-                    <td>{decision.score}</td>
+                    <td>
+                      <span className="score-cell">
+                        <span className="mini-bar" style={{ width: `${Number(decision.score) || 0}%` }} />
+                        {decision.score}
+                      </span>
+                    </td>
                     <td>{decision.grade}</td>
                     <td><Verdict decision={decision} /></td>
                   </tr>
@@ -283,7 +373,10 @@ export default function App() {
 
         <section className="card card-wide">
           <div className="card-head">
-            <h2>Incident report</h2>
+            <div>
+              <span className="eyebrow">Phase 5</span>
+              <h2>Incident report</h2>
+            </div>
             <span className="muted">facts only · offline template</span>
           </div>
           <pre className="report">{report || 'No report yet. Run a battle to generate one.'}</pre>
@@ -291,7 +384,7 @@ export default function App() {
       </main>
 
       <footer>
-        ChaosArena · React + Vite · local and free · no external UI kit
+        ChaosArena · Phases 1–9 complete · React + Vite · local and free · no external UI kit
       </footer>
     </div>
   )
