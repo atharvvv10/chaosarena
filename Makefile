@@ -8,7 +8,7 @@ TARGET ?= order-service
 DURATION ?= 30
 THRESHOLD ?= 70
 
-.PHONY: help cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
+.PHONY: help cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -102,6 +102,21 @@ ui-build: ## Phase 7: build the React dashboard into dashboard/dist
 
 ui-dev: ## Phase 7: serve the dashboard at http://127.0.0.1:5173
 	cd dashboard && npm run dev
+
+rl-guard: ## Phase 8: print the RL attacker's allowlist and safety rules
+	$(PYTHON) -m rl.cli guard
+
+rl-train: ## Phase 8: train the Q table in the free simulator (no cluster)
+	$(PYTHON) -m rl.cli train --episodes 200 --seed 7
+
+rl-policy: ## Phase 8: show the learned policy
+	$(PYTHON) -m rl.cli policy
+
+rl-real-dry: ## Phase 8: print the real battle command without running it
+	$(PYTHON) -m rl.cli real --dry-run
+
+rl-real: ## Phase 8: run one real RL battle through controller.cli
+	$(PYTHON) -m rl.cli real --episodes 1 --duration 10 --settle 20 --threshold 0
 
 report: ## Phase 5: write a Markdown incident report (offline template)
 	$(PYTHON) -m reporter.cli report --backend template

@@ -1,10 +1,10 @@
 {
-  "name": "network-latency",
-  "manifest": "chaosarena-network-latency-fbdbcb66",
+  "name": "network-partition",
+  "manifest": "chaosarena-network-partition-0ada1bef",
   "target": "payment-service",
   "namespace": "shop-test",
-  "started_at": "2026-11-19T13:15:55+00:00",
-  "ended_at": "2026-11-19T13:16:07+00:00",
+  "started_at": "2026-11-19T13:27:27+00:00",
+  "ended_at": "2026-11-19T13:27:39+00:00",
   "cleanup_ok": true,
   "error": null,
   "ok": true

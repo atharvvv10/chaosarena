@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "alpha": 0.3,
+  "gamma": 0.8,
+  "epsilon": 0.05,
+  "states": {
+    "calm": {
+      "pod-kill@order-service": 1.113783,
+      "pod-failure@cart-service": 0.489273,
+      "network-latency@payment-service": 0.653317,
+      "network-loss@order-service": 0.974361,
+      "network-partition@payment-service": 1.499951,
+      "cpu-stress@order-service": 0.536444,
+      "memory-stress@product-service": 0.535093
+    },
+    "alert": {
+      "pod-kill@order-service": 1.192006,
+      "pod-failure@cart-service": 0.699711,
+      "network-latency@payment-service": 0.390231,
+      "network-loss@order-service": 0.887037,
+      "network-partition@payment-service": 1.499948,
+      "cpu-stress@order-service": 0.830174,
+      "memory-stress@product-service": 0.690275
+    }
+  }
+}
