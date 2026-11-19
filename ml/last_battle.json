@@ -1,0 +1,53 @@
+{
+  "battle": {
+    "attack": "network-latency",
+    "target": "payment-service",
+    "version": "v1.0.3",
+    "detected": true,
+    "detection_seconds": 14.0,
+    "recovered": true,
+    "final_score": 0.6851,
+    "defender_threshold": 0.7397,
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "diagnosis": {
+      "category": "latency_spike",
+      "service": "order-service",
+      "confidence": 0.99,
+      "evidence": [
+        "order-service_p95_latency z=+289.5",
+        "payment-service_request_rate z=-7.5",
+        "product-service_request_rate z=-7.0"
+      ]
+    },
+    "action_taken": {
+      "timestamp": "2026-11-19T12:35:04+00:00",
+      "namespace": "shop-test",
+      "action": "restart",
+      "service": "order-service",
+      "status": "requested"
+    },
+    "attack_error": null
+  },
+  "score": {
+    "score": 100,
+    "grade": "A",
+    "deductions": []
+  },
+  "decision": {
+    "verdict": "PROMOTE",
+    "promote": true,
+    "score": 100,
+    "threshold": 70,
+    "grade": "A",
+    "version": "v1.0.3",
+    "attack": "network-latency",
+    "target": "payment-service",
+    "reasons": [
+      "score 100 meets threshold 70",
+      "attack cleanup succeeded",
+      "no chaos objects left behind"
+    ],
+    "evaluated_at": "2026-11-19T12:35:18+00:00"
+  }
+}

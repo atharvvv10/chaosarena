@@ -1,0 +1,55 @@
+name: ChaosArena Resilience Gate
+
+'on':
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resilience-gate:
+    name: Test + release gate (free tier)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            requirements-dev.txt
+            services/*/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Show gate safety rules
+        run: python -m ci.gate guard
+
+      - name: Run all tests
+        run: python -m pytest -q
+
+      - name: Self-test - a bad battle must BLOCK
+        run: python -m ci.gate check --evidence ci/fixtures/failing_battle.json --threshold 70 --expect BLOCK
+
+      - name: Enforce committed battle - must PROMOTE
+        run: python -m ci.gate check --evidence ml/last_battle.json --threshold 70 --expect PROMOTE
+
+      - name: Show audit trail
+        if: always()
+        continue-on-error: true
+        run: python -m controller.cli last

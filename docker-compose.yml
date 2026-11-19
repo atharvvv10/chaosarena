@@ -1,0 +1,123 @@
+name: chaosarena
+
+x-app-env: &app-env
+  VERSION: v1.0.0
+  JWT_SECRET: chaosarena-demo-secret-change-me
+  PAYMENT_FAILURE_RATE: "0.01"
+  PAYMENT_LATENCY_MIN: "0.01"
+  PAYMENT_LATENCY_MAX: "0.12"
+  ENABLE_RETRY: "false"
+  LOAD_INTERVAL: "0.1"
+  PGHOST: postgres
+  PGPORT: "5432"
+  PGDATABASE: shop
+  PGUSER: shop
+  PGPASSWORD: shop
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  USER_URL: http://user-service:8000
+  PRODUCT_URL: http://product-service:8000
+  CART_URL: http://cart-service:8000
+  ORDER_URL: http://order-service:8000
+  PAYMENT_URL: http://payment-service:8000
+  PYTHONUNBUFFERED: "1"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: shop
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  user-service:
+    build: {context: ./services, dockerfile: user/Dockerfile}
+    environment: *app-env
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+
+  product-service:
+    build: {context: ./services, dockerfile: product/Dockerfile}
+    environment: *app-env
+    ports: ["8001:8000"]
+
+  cart-service:
+    build: {context: ./services, dockerfile: cart/Dockerfile}
+    environment: *app-env
+    ports: ["8002:8000"]
+    depends_on:
+      redis: {condition: service_healthy}
+
+  payment-service:
+    build: {context: ./services, dockerfile: payment/Dockerfile}
+    environment: *app-env
+    ports: ["8003:8000"]
+
+  order-service:
+    build: {context: ./services, dockerfile: order/Dockerfile}
+    environment: *app-env
+    ports: ["8004:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      product-service: {condition: service_started}
+      cart-service: {condition: service_started}
+      payment-service: {condition: service_started}
+
+  loadgen:
+    build: {context: ./services, dockerfile: loadgen/Dockerfile}
+    environment: *app-env
+    ports: ["8090:8000"]
+    depends_on:
+      order-service: {condition: service_started}
+
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    volumes:
+      - ./infra/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    depends_on:
+      - user-service
+      - product-service
+      - cart-service
+      - order-service
+      - payment-service
+      - loadgen
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/shopapp.json
+    volumes:
+      - ./infra/docker/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./infra/grafana/provisioning/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3000:3000"]
+    depends_on:
+      - prometheus

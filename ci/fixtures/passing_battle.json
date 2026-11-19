@@ -1,0 +1,40 @@
+{
+  "battle": {
+    "attack": "network-latency",
+    "target": "payment-service",
+    "version": "v1.0.3",
+    "detected": true,
+    "detection_seconds": 14.0,
+    "recovered": true,
+    "final_score": 0.6851,
+    "defender_threshold": 0.7397,
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "diagnosis": {
+      "category": "latency_spike",
+      "service": "order-service",
+      "confidence": 0.99,
+      "evidence": [
+        "order-service_p95_latency z=+289.5"
+      ]
+    },
+    "action_taken": {
+      "action": "restart",
+      "service": "order-service",
+      "namespace": "shop-test",
+      "status": "requested"
+    },
+    "attack_error": null
+  },
+  "score": {
+    "score": 100,
+    "grade": "A",
+    "deductions": []
+  },
+  "decision": {
+    "verdict": "PROMOTE",
+    "promote": true,
+    "score": 100,
+    "threshold": 70
+  }
+}

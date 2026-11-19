@@ -1,0 +1,11 @@
+apiVersion: 1
+providers:
+  - name: ShopApp
+    orgId: 1
+    folder: ShopApp
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: D:/Projects/1/chaosarena/infra/local/provisioning/dashboards

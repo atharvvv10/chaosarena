@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop-test
+  labels:
+    app: shopapp
+    tier: test
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shop-prod
+  labels:
+    app: shopapp
+    tier: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app: observability

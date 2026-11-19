@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - data.yaml
+  - apps.yaml
+
+configMapGenerator:
+  - name: app-config
+    literals:
+      - VERSION=dev
+      - JWT_SECRET=chaosarena-demo-secret-change-me
+      - PAYMENT_FAILURE_RATE=0.01
+      - PAYMENT_LATENCY_MIN=0.01
+      - PAYMENT_LATENCY_MAX=0.12
+      - ENABLE_RETRY=false
+      - LOAD_INTERVAL=0.1
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=shop
+      - PGUSER=shop
+      - PGPASSWORD=shop
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - USER_URL=http://user-service:8000
+      - PRODUCT_URL=http://product-service:8000
+      - CART_URL=http://cart-service:8000
+      - ORDER_URL=http://order-service:8000
+      - PAYMENT_URL=http://payment-service:8000
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,11 @@
+{
+  "name": "network-latency",
+  "manifest": "chaosarena-network-latency-6e537d4e",
+  "target": "payment-service",
+  "namespace": "shop-test",
+  "started_at": "2026-11-19T12:34:26+00:00",
+  "ended_at": "2026-11-19T12:34:47+00:00",
+  "cleanup_ok": true,
+  "error": null,
+  "ok": true
+}

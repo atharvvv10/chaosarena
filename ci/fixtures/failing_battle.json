@@ -1,0 +1,35 @@
+{
+  "battle": {
+    "attack": "pod-kill",
+    "target": "order-service",
+    "version": "v0.0.0-bad",
+    "detected": false,
+    "detection_seconds": null,
+    "recovered": false,
+    "final_score": 1.5,
+    "defender_threshold": 0.7397,
+    "cleanup_ok": false,
+    "chaos_objects_remaining": 2,
+    "diagnosis": null,
+    "action_taken": null,
+    "attack_error": "simulated fixture failure"
+  },
+  "score": {
+    "score": 0,
+    "grade": "F",
+    "deductions": [
+      "fault was never detected (-30)",
+      "service did not return to a normal score (-25)",
+      "attack cleanup failed (-20)",
+      "chaos objects were left behind (-20)",
+      "final anomaly score is still above threshold (-10)",
+      "attacker reported an error (-10)"
+    ]
+  },
+  "decision": {
+    "verdict": "BLOCK",
+    "promote": false,
+    "score": 0,
+    "threshold": 70
+  }
+}

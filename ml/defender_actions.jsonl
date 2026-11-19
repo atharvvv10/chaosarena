@@ -1,0 +1,5 @@
+{"timestamp": "2026-11-19T12:07:06+00:00", "namespace": "shop-test", "action": "scale", "service": "cart-service", "requested": 3, "applied": 3}
+{"timestamp": "2026-11-19T12:12:17+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-19T12:23:58+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-19T12:25:54+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-19T12:35:04+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
