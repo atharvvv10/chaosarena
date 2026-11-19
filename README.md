@@ -1,10 +1,12 @@
 # ChaosArena
 
+[![ChaosArena Resilience Gate](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml/badge.svg)](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml)
+
 A resilience-gated CI/CD platform where an Attacker AI and a Defender AI battle on a
 local Kubernetes cluster. A release is promoted only if it survives the attack and
 scores above a configurable threshold.
 
-> **Current status: Phase 5 complete** — ShopApp, observability, 7 attacks, Defender, release gate and an LLM incident reporter.
+> **Current status: Phase 6 complete** — ShopApp, observability, 7 attacks, Defender, release gate, LLM incident reporter and a free GitHub Actions resilience gate.
 
 ## Architecture (Mermaid)
 
