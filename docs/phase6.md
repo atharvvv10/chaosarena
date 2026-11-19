@@ -38,8 +38,9 @@ It reads only the `battle` facts, rebuilds `BattleResult`, calls the Phase 4
 - `--expect PROMOTE` → the step passes only if the gate promotes.
 - `--expect BLOCK` → the step passes only if the gate blocks.
 
-That second mode is the self-test: it proves the gate can stop a bad release
-instead of always saying yes.
+That second mode is the self-test: it proves the gate logic blocks a deliberately
+bad **saved fixture** instead of always saying yes. No live battle runs on the
+Actions runner.
 
 ## Exact commands (local, same logic as CI)
 

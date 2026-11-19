@@ -74,7 +74,10 @@ cd D:\Projects\1\chaosarena
 
 ## Results actually measured on this laptop
 
-Baseline: 40 samples → threshold **0.7397**.
+Baseline: 40 samples → threshold **0.7397**. Forty samples are enough here because
+loadgen produces a steady, repeatable traffic pattern and the detector only needs
+one stable threshold for this demo. Production would need days of traffic across
+peak/off-peak cycles, drift detection and held-out incidents.
 
 | Moment | Score | Result |
 |---|---|---|

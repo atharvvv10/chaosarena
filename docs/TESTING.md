@@ -58,6 +58,19 @@ Or let the RL attacker choose:
 
 Always confirm cleanup afterwards with `attacker.cli status`.
 
+## Media capture (optional)
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install playwright Pillow imageio-ffmpeg
+.\.venv\Scripts\python.exe -m playwright install ffmpeg
+make demo-media
+```
+
+This regenerates `docs/screenshots/dashboard.png`, `grafana.png`, `demo.gif` and
+`demo.mp4` using the already-running local services and Microsoft Edge. It runs a
+real battle, so check cleanup with `attacker.cli status` afterwards. It is not
+part of `make verify`.
+
 ## Common failures
 
 | Message | Fix |

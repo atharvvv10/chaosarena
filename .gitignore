@@ -13,3 +13,5 @@ build/
 .DS_Store
 .env
 tools/
+docs/screenshots/_frames/
+docs/screenshots/_video/

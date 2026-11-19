@@ -19,16 +19,25 @@ def test_all_final_docs_exist():
         path = DOCS / f"phase{number}.md"
         assert path.exists(), f"missing {path}"
         assert len(path.read_text(encoding="utf-8")) > 200
-    for name in ["RESULTS.md", "TESTING.md"]:
+    for name in ["RESULTS.md", "TESTING.md", "BUILD_NOTES.md", "PORTFOLIO_POLISH.md"]:
         assert (DOCS / name).exists()
 
 
-def test_readme_marks_every_phase_complete():
+def test_readme_leads_with_pitch_demo_and_honest_scope():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    assert "Current status: Phase 9 complete" in readme
+    assert "resilience-gated ci/cd lab" in readme.lower()
+    assert "docs/screenshots/demo.gif" in readme
+    assert "docs/screenshots/demo.mp4" in readme
+    assert "Results at a glance" in readme
+    assert "Honest scope" in readme
+    assert "not PPO" in readme
+    assert "40 samples" in readme
+    assert "BUILD_NOTES.md" in readme
+    assert "Current status:" not in readme
+    assert "## Verify Phase 1" not in readme
+    assert "- [ ] Phase" not in readme
     for number in range(1, 10):
         assert f"Phase {number}" in readme
-    assert "- [ ] Phase" not in readme
 
 
 def test_verify_script_covers_every_cluster_free_check():
@@ -101,6 +110,32 @@ def test_main_entry_avoids_duplicate_dev_requests():
     assert "StrictMode" not in main
     assert "createRoot" in main
     assert "<App />" in main
+
+
+def test_real_media_assets_exist_and_are_not_placeholders():
+    shots = DOCS / "screenshots"
+    for name in ["dashboard.png", "grafana.png", "demo.gif", "demo.mp4"]:
+        path = shots / name
+        assert path.exists(), f"missing {path}"
+        assert path.stat().st_size > 10_000, f"asset looks empty: {path}"
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "Screenshots (placeholders)" not in readme
+
+
+def test_docs_do_not_overclaim_gate_or_rl():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    results = (DOCS / "RESULTS.md").read_text(encoding="utf-8")
+    phase4 = (DOCS / "phase4.md").read_text(encoding="utf-8")
+    phase6 = (DOCS / "phase6.md").read_text(encoding="utf-8")
+    text = "\n".join([readme, results, phase4, phase6]).lower()
+    for overclaim in [
+        "this proved the gate really can stop a release",
+        "proves the gate can stop a bad release",
+    ]:
+        assert overclaim not in text
+    assert "not ppo" in readme.lower()
+    assert "measurement artefact" in results.lower() or "measurement timing" in readme.lower()
+    assert "saved" in phase6.lower()
 
 
 def test_final_project_has_no_secret_or_paid_ui_markers():

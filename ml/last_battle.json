@@ -2,11 +2,11 @@
   "battle": {
     "attack": "network-partition",
     "target": "payment-service",
-    "version": "rl-v1",
+    "version": "demo-v1",
     "detected": false,
     "detection_seconds": null,
     "recovered": true,
-    "final_score": 0.588,
+    "final_score": 0.6614,
     "defender_threshold": 0.7397,
     "cleanup_ok": true,
     "chaos_objects_remaining": 0,
@@ -25,16 +25,16 @@
     "verdict": "PROMOTE",
     "promote": true,
     "score": 70,
-    "threshold": 0,
+    "threshold": 70,
     "grade": "C",
-    "version": "rl-v1",
+    "version": "demo-v1",
     "attack": "network-partition",
     "target": "payment-service",
     "reasons": [
-      "score 70 meets threshold 0",
+      "score 70 meets threshold 70",
       "attack cleanup succeeded",
       "no chaos objects left behind"
     ],
-    "evaluated_at": "2026-11-19T13:27:44+00:00"
+    "evaluated_at": "2026-11-19T14:04:15+00:00"
   }
 }

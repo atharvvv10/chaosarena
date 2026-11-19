@@ -80,7 +80,8 @@ cd D:\Projects\1\chaosarena
 - First `network-latency` battle: detected at 13.8 s, diagnosed `latency_spike`
   on `order-service`, restarted it, but the final Prometheus sample was still
   inside the 30-second attack window → score **65**, verdict **BLOCK**.
-  This proved the gate really can stop a release.
+  This was a measurement artefact, not a rejected bad release; it is fixed by
+  the bounded settle period below.
 - Added a bounded settle period (up to 45 s, polling every 5 s). Second battle:
   detected at 13.9 s, final score **0.598** vs threshold **0.740** → score
   **100**, grade **A**, verdict **PROMOTE** for `v1.0.1`.

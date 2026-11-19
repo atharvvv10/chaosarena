@@ -10,27 +10,41 @@ Every number below came from a local run on one laptop, not from a slide deck.
 | 1 | 5 FastAPI services + loadgen, shared observability, Kustomize, Prometheus/Grafana/Loki | Local Python run + Docker Compose + Kind deploy verified; 9 tests |
 | 2 | Chaos Mesh 2.8.8, 7 attacks, hard `shop-test` allowlist, guaranteed cleanup | `clusterScoped=true`; 18 tests; cleanup always runs; 0 leftover objects |
 | 3 | Defender detect → diagnose → act → verify | Isolation Forest + capped deviation; real latency attack diagnosed `latency_spike` on `order-service`, restarted, recovered; 14 tests |
-| 4 | Arena Controller, Resilience Score, gate, API | Live BLOCK score 65, then PROMOTE score 100; `pod-kill` API battle score 70 PROMOTE; 11 tests |
+| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact, not a bad release; with a settle window, PROMOTE 100 and a `pod-kill` API battle 70 PROMOTE; 11 tests |
 | 5 | Incident reporter, offline + free Groq opt-in | `ml/incident_report.md` and `ml/incident_report_groq.md` with all six sections; 16 tests |
 | 6 | Free GitHub Actions resilience gate | Recomputes score from facts; bad battle BLOCK, good battle PROMOTE; 9 tests; all runs green |
 | 7 | Local React dashboard | 7 tests; `npm run build` clean; browser battle score 70 PROMOTE, cleanup ok, 0 objects |
 | 8 | Free tabular RL attacker | 14 tests; 200 sim episodes; real battle score 70 PROMOTE, reward 0.3, cluster clean |
-| 9 | Final docs, results, tests and UI polish | One `make verify` command; 8 tests; polished dashboard verified in browser |
+| 9 | Final docs, results, tests and UI polish | One `make verify` command; 8 tests; polished dashboard, real screenshots/GIF/video and recruiter-facing README verified |
 
-**Total: 106 automated tests pass.**
+**Total: 110 automated tests pass.**
 
 ## Release gate evidence
 
-The committed battle used by CI is `ml/last_battle.json`. After Phase 8 it is an
-RL-selected `network-partition` attack on `payment-service`:
+The committed battle used by CI is `ml/last_battle.json`. It is the final
+dashboard-recorded `network-partition` attack on `payment-service` (`demo-v1`):
 
-- score **70**, grade **C**, verdict **PROMOTE** at threshold 70
 - `detected: false` → one documented deduction (-30)
-- `cleanup_ok: true`, `chaos_objects_remaining: 0`
+- `recovered: true`, `cleanup_ok: true`, `chaos_objects_remaining: 0`
+- score **70**, grade **C**, verdict **PROMOTE** at threshold 70
 - CI independently recomputes the score; it never trusts the stored decision.
+
+An earlier dashboard battle in the same recording scored **100 / A / PROMOTE**
+with detection at 7.3 s and recovery. The Phase 8 RL-selected battle also scored
+**70 / C / PROMOTE**. Both are documented in `PORTFOLIO_POLISH.md` and `phase8.md`.
 
 The deliberately bad fixture `ci/fixtures/failing_battle.json` is score 0, grade F,
 **BLOCK**, with six deductions. Both directions are tested.
+
+## Honest scope
+
+- The early score 65 / BLOCK was caused by measuring before the 30-second
+  Prometheus window cleared. It was a settle-timing fix, **not** a bad release
+  being caught.
+- GitHub Actions re-scores **saved JSON fixtures**; it never runs a live cluster
+  battle.
+- The RL attacker is **tabular Q-learning**, not PPO or deep RL.
+- The 40-sample baseline fits a steady synthetic demo, not production traffic.
 
 ## GitHub Actions
 
@@ -50,6 +64,8 @@ free-tier only; the default reporter is fully offline.
 
 ## Links
 
+- [Build notes](BUILD_NOTES.md)
+- [Phase 1 ShopApp](phase1.md)
 - [Phase 2 attacks](phase2.md)
 - [Phase 3 Defender](phase3.md)
 - [Phase 4 controller](phase4.md)
