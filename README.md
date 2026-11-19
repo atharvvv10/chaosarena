@@ -6,7 +6,7 @@ A resilience-gated CI/CD platform where an Attacker AI and a Defender AI battle 
 local Kubernetes cluster. A release is promoted only if it survives the attack and
 scores above a configurable threshold.
 
-> **Current status: Phase 6 complete** — ShopApp, observability, 7 attacks, Defender, release gate, LLM incident reporter and a free GitHub Actions resilience gate.
+> **Current status: Phase 7 complete** — ShopApp, observability, 7 attacks, Defender, release gate, LLM incident reporter, a free GitHub Actions resilience gate and a local React dashboard.
 
 ## Architecture (Mermaid)
 
@@ -58,7 +58,7 @@ flowchart LR
 - [x] **Phase 4** — Arena Controller, Resilience Score, `/gate/evaluate`
 - [x] **Phase 5** — LLM incident reporter (offline default, free Groq optional)
 - [x] **Phase 6** — GitHub Actions resilience gate (free tier, no secrets)
-- [ ] Phase 7 — React dashboard
+- [x] **Phase 7** — React dashboard (local, free, no UI kit)
 - [ ] Phase 8 — RL Attacker (sim + real)
 - [ ] Phase 9 — docs, results, tests, polish
 
@@ -105,6 +105,8 @@ the full detect → diagnose → act → verify result.
 See [docs/phase4.md](docs/phase4.md) — the battle, score rules, gate decision and API.
 See [docs/phase5.md](docs/phase5.md) — the incident report, offline backend and free Groq setup.
 See [docs/phase6.md](docs/phase6.md) — the free GitHub Actions workflow and CI gate.
+See [docs/phase7.md](docs/phase7.md) — the React dashboard, API additions and browser verification.
+See [dashboard/README.md](dashboard/README.md) — how to run the UI next to the gate API.
 
 ## Verify Phase 1
 

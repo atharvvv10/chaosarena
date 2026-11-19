@@ -8,7 +8,7 @@ TARGET ?= order-service
 DURATION ?= 30
 THRESHOLD ?= 70
 
-.PHONY: help cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
+.PHONY: help cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -93,6 +93,15 @@ gate: ## Phase 4: show the last recorded gate decision
 
 gate-api: ## Phase 4: serve /gate/evaluate at http://127.0.0.1:8080
 	$(PYTHON) -m uvicorn controller.api:app --host 127.0.0.1 --port 8080
+
+ui-install: ## Phase 7: install locked dashboard dependencies
+	cd dashboard && npm ci
+
+ui-build: ## Phase 7: build the React dashboard into dashboard/dist
+	cd dashboard && npm run build
+
+ui-dev: ## Phase 7: serve the dashboard at http://127.0.0.1:5173
+	cd dashboard && npm run dev
 
 report: ## Phase 5: write a Markdown incident report (offline template)
 	$(PYTHON) -m reporter.cli report --backend template

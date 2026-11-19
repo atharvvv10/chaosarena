@@ -90,3 +90,14 @@ def last_decision(path: Path | str = DECISION_LOG) -> dict | None:
         return None
     lines = [line for line in target.read_text(encoding="utf-8").splitlines() if line.strip()]
     return json.loads(lines[-1]) if lines else None
+
+
+def recent_decisions(limit: int = 10, path: Path | str = DECISION_LOG) -> list[dict]:
+    """Newest-first decision history for the dashboard."""
+    if limit <= 0:
+        return []
+    target = Path(path)
+    if not target.exists():
+        return []
+    lines = [line for line in target.read_text(encoding="utf-8").splitlines() if line.strip()]
+    return [json.loads(line) for line in lines[-limit:][::-1]]

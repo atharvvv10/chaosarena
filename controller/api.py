@@ -1,15 +1,35 @@
 """Small HTTP API for the release gate (used later by CI in Phase 6)."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from .battle import BattleRunner
 from .evidence import record_battle
-from .gate import DEFAULT_THRESHOLD, evaluate_gate, last_decision, record_decision
+from .gate import (
+    DEFAULT_THRESHOLD,
+    evaluate_gate,
+    last_decision,
+    recent_decisions,
+    record_decision,
+)
 from .score import score_battle
 
 app = FastAPI(title="ChaosArena Gate", version="1.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
+    ],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 
 class EvaluateRequest(BaseModel):
@@ -51,3 +71,18 @@ def evaluate(request: EvaluateRequest) -> dict:
 def last() -> dict:
     decision = last_decision()
     return {"decision": decision} if decision else {"decision": None}
+
+
+@app.get("/gate/history")
+def history(limit: int = 10) -> dict:
+    """Newest-first decisions for the dashboard timeline."""
+    return {"decisions": recent_decisions(limit=limit)}
+
+
+@app.get("/report/latest")
+def latest_report() -> dict:
+    """Return the offline incident report for the dashboard panel."""
+    path = Path("ml/incident_report.md")
+    if not path.exists():
+        return {"file": str(path), "text": None}
+    return {"file": str(path), "text": path.read_text(encoding="utf-8")}
