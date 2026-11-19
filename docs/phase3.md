@@ -24,7 +24,8 @@ replicas. It cannot delete anything and cannot reach `shop-prod`.
 | `defender/verify.py` | Re-scores after the action to confirm recovery |
 | `defender/kubectl.py` | Defender-owned kubectl wrapper |
 | `defender/cli.py` | `python -m defender.cli` commands |
-| `tests/test_phase3.py` | 12 tests |
+| `defender/benchmark.py` | Offline rule-based vs Isolation Forest vs Defender comparison |
+| `tests/test_phase3.py` | 16 tests |
 | `docs/phase3.md` | This file |
 | `Makefile` | `baseline`, `train`, `detect`, `defend`, `defender-guard` |
 
@@ -70,6 +71,9 @@ cd D:\Projects\1\chaosarena
 # 5. After the attack is cleaned up
 .\.venv\Scripts\python.exe -m defender.cli detect
 .\.venv\Scripts\python.exe -m attacker.cli status
+
+# 6. Offline detector comparison (no cluster needed; writes ml/defender_benchmark.json)
+.\.venv\Scripts\python.exe -m defender.cli benchmark
 ```
 
 ## Results actually measured on this laptop
@@ -89,6 +93,24 @@ The full loop diagnosed **`latency_spike` on `order-service`** (evidence:
 `order-service_p95_latency z=+237.6`), chose `restart`, applied it to
 `shop-test`, and verification reported `recovered: true`. Chaos cleanup left
 zero objects and `attacker.cli status` showed no active experiments.
+
+### Offline detector comparison
+
+`python -m defender.cli benchmark` scores three detectors on the same labelled
+data: the 40 recorded normal samples plus 160 seeded fault signatures. The
+result is committed at `ml/defender_benchmark.json`.
+
+| Detector | Precision | Recall | False positives |
+| --- | --- | --- | --- |
+| Rule-based (3-sigma) | 99.4% | 100% | 1 / 40 normal |
+| Isolation Forest only | n/a | 0% | 0 / 40 normal |
+| Defender (forest + capped deviation) | 100% | 76.2% | 0 / 40 normal |
+
+A plain forest dilutes a single-service spike across 18 features, so the capped
+deviation term is what makes detection work; it lifts recall from 0% to 76% with
+zero false positives. A 3-sigma rule catches every seeded spike but false-alarms
+on normal traffic. These are offline benchmarks, not live battles. Full reading:
+[RESULTS.md](RESULTS.md#detector-comparison).
 
 ## Common errors and fixes
 

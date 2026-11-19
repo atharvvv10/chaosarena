@@ -13,6 +13,7 @@ class BattleResult:
     version: str = "candidate"
     detected: bool = False
     detection_seconds: float | None = None
+    recovery_seconds: float | None = None
     recovered: bool = False
     final_score: float | None = None
     defender_threshold: float | None = None
@@ -29,6 +30,7 @@ class BattleResult:
             "version": self.version,
             "detected": self.detected,
             "detection_seconds": self.detection_seconds,
+            "recovery_seconds": self.recovery_seconds,
             "recovered": self.recovered,
             "final_score": self.final_score,
             "defender_threshold": self.defender_threshold,

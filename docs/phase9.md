@@ -49,12 +49,15 @@ Then the existing dev servers were used:
 
 ## Verified results
 
-- **110 tests pass** across all nine phase suites and the final media/claim checks.
+- **117 tests pass** across all nine phase suites and the final evidence/benchmark checks.
 - `make verify` completes all cluster-free steps successfully.
 - React build: 17 modules, ≈227 kB JS / 71 kB gzip; no vulnerabilities.
-- Browser check: API online, score ring shows `70 / grade C`, RL panel shows
+- Browser check: API online, headline battle shows `100 / grade A`, RL panel shows
   `network-partition@payment-service` with Q ≈ 1.5, trend bars render,
   history table has 8 rows, incident report renders, no console errors.
+- Two committed offline benchmarks back the headline numbers: learned attacks do
+  1.77× the damage of random; the Defender reaches 76% recall at zero false
+  positives where a plain forest gets 0%.
 - All five original API calls plus `/rl/policy` return `200`.
 - GitHub Actions run checked after push.
 

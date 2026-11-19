@@ -12,13 +12,52 @@
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **110 passing** across all 9 phases (`make verify`) |
+| Automated tests | **117 passing** across all 9 phases (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
-| Live gated battle | **70/100, grade C, PROMOTE** at threshold 70; not detected but recovered, cleanup ok, 0 objects left |
-| Defender | 40-sample baseline (threshold 0.7397); Phase 3/4 latency attacks were diagnosed and recovered |
-| RL attacker | Tabular Q-learning, **200** simulated episodes, learned Q ≈ **1.50** |
+| Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.8 s**, recovered in **61.6 s**, cleanup ok, 0 objects left |
+| Defender | Detected in **13.8 s**, recovered in **61.6 s**; diagnosed `latency_spike` → restarted `order-service`; 40-sample baseline (threshold 0.7397) |
+| RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
+| Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
 | CI | Free `ubuntu-latest` Actions, green on every push, no cluster, no secrets |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
+
+## Learned vs random attacker
+
+A Q-table is only useful if it finds worse attacks than chance. In the seeded
+offline simulator (200 episodes, seed 7, per-fault effectiveness taken from
+recorded Phase 3/4 battles):
+
+| Policy | Avg damage (0–100) | Avg resilience score |
+| --- | --- | --- |
+| Uniform random | 16.9 | 83.1 |
+| **Learned Q-learning** | **30.0** | **70.0** |
+
+The learned attacker converges on `network-partition@payment-service` and does
+**more damage than random** — 1.77× as much, measured as points taken off the
+resilience score. This is a reproducible offline benchmark, **not** a live
+cluster battle. Evidence: `ml/rl_benchmark.json`; regenerate with
+`python -m rl.cli benchmark`.
+
+## Detector comparison
+
+Same labelled data for all three: the committed 40-sample normal baseline plus
+160 seeded fault signatures (latency spike, error spike, traffic drop, and a
+subtle multi-service latency rise). Offline and reproducible — evidence in
+`ml/defender_benchmark.json`; regenerate with `python -m defender.cli benchmark`.
+
+| Detector | Precision | Recall | False positives |
+| --- | --- | --- | --- |
+| Rule-based (3-sigma) | 99.4% | **100%** | 1 / 40 normal |
+| Isolation Forest only | n/a | 0% | 0 / 40 normal |
+| **Defender (forest + capped deviation)** | **100%** | 76.2% | **0 / 40 normal** |
+
+Read this honestly: a simple 3-sigma rule catches every seeded spike but raises
+a false alarm on normal traffic. A plain Isolation Forest catches **none** —
+across 18 features it dilutes a single-service spike until it looks normal. The
+shipped Defender adds a bounded standardized-deviation term that lifts recall
+from 0% to 76% while keeping **zero false positives**; the remaining misses are
+small error-rate spikes. Zero false positives is the right trade for a release
+gate, where a false alarm blocks a good build.
 
 ## What is in the loop
 
@@ -33,6 +72,8 @@
 - GitHub Actions does **not** run a live battle. It re-scores **saved** passing and failing JSON fixtures on a cluster-free runner. The real battles were run locally and their evidence is committed.
 - The attacker is **tabular Q-learning** (a JSON Q-table with epsilon-greedy exploration), **not PPO** or a deep RL model.
 - The Defender baseline is **40 samples**. That is enough for a deterministic local demo with steady synthetic load; production would need days of traffic across peak/off-peak cycles, drift detection and held-out incidents. See [BUILD_NOTES.md](docs/BUILD_NOTES.md).
+- An earlier demo used a **10-second `network-partition`** and scored **70/C/PROMOTE** because the fault healed inside the 30-second Prometheus window and was never flagged. The headline battle instead uses a sustained **30-second `network-latency`** fault that the Defender clearly detects and repairs. Both runs are real; see [PORTFOLIO_POLISH.md](docs/PORTFOLIO_POLISH.md).
+- The learned-vs-random and detector-comparison tables are **offline, seeded benchmarks**, not live cluster battles. Their exact commands and data are linked above.
 
 ## Try it in the dashboard
 
@@ -42,7 +83,7 @@ http://127.0.0.1:8080     gate API
 ```
 
 1. Click **Refresh** — expect `API online`.
-2. In **Run a battle**, use: attack `network-partition`, target `payment-service`, duration `10`, settle `20`, threshold `70`, version `demo-v1`.
+2. In **Run a battle**, use: attack `network-latency`, target `payment-service`, duration `30`, settle `45`, threshold `70`, version `release-candidate`.
 3. Click **Run battle** and wait about a minute. Do not click twice.
 4. Read the **Release gate** card for score/grade/verdict and **Why**. A new row appears in **Decision history**.
 5. Check **RL attacker** for the learned policy and **Incident report** for the generated report.

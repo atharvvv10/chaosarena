@@ -67,6 +67,18 @@ def test_slow_detection_is_penalised():
     assert scored.grade == "B"
 
 
+def test_battle_result_records_detection_and_recovery_timing():
+    result = _perfect()
+    result.detection_seconds = 14.3
+    result.recovery_seconds = 58.2
+    payload = result.as_dict()
+    assert payload["detection_seconds"] == 14.3
+    assert payload["recovery_seconds"] == 58.2
+    restored = BattleResult(**payload)
+    assert restored.detection_seconds == 14.3
+    assert restored.recovery_seconds == 58.2
+
+
 # --------------------------------------------------------------------------- #
 # Gate
 # --------------------------------------------------------------------------- #

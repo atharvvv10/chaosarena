@@ -138,6 +138,28 @@ def test_docs_do_not_overclaim_gate_or_rl():
     assert "saved" in phase6.lower()
 
 
+def test_benchmark_evidence_files_exist_and_are_committed():
+    for name in ["rl_benchmark.json", "defender_benchmark.json"]:
+        path = ROOT / "ml" / name
+        assert path.exists(), f"missing {path}"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload, f"empty benchmark evidence: {path}"
+    rl = json.loads((ROOT / "ml" / "rl_benchmark.json").read_text(encoding="utf-8"))
+    defender = json.loads((ROOT / "ml" / "defender_benchmark.json").read_text(encoding="utf-8"))
+    assert rl["learned_does_more_damage"] is True
+    assert "defender_forest_plus_deviation" in defender["detectors"]
+
+
+def test_readme_reports_detection_timing_and_comparisons():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    results = (DOCS / "RESULTS.md").read_text(encoding="utf-8")
+    combined = (readme + "\n" + results).lower()
+    for label in ["detected in", "recovered in", "learned vs random", "detector comparison"]:
+        assert label in combined, f"missing result section: {label}"
+    assert "more damage than random" in combined.lower()
+    assert "false" in combined.lower() and "positive" in combined.lower()
+
+
 def test_final_project_has_no_secret_or_paid_ui_markers():
     sources = [
         *sorted((DASHBOARD / "src").glob("*")),

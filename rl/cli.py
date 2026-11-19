@@ -50,6 +50,14 @@ def _parser() -> argparse.ArgumentParser:
     real.add_argument("--table", default=str(Q_TABLE))
     real.add_argument("--dry-run", action="store_true", help="print commands, run nothing")
 
+    benchmark = sub.add_parser(
+        "benchmark", help="learned vs random attacker in the seeded simulator"
+    )
+    benchmark.add_argument("--episodes", type=int, default=200)
+    benchmark.add_argument("--seed", type=int, default=7)
+    benchmark.add_argument("--table", default=str(Q_TABLE))
+    benchmark.add_argument("--output", default="ml/rl_benchmark.json")
+
     return parser
 
 
@@ -116,6 +124,21 @@ def main(argv: list[str] | None = None) -> int:
             "epsilon": agent.epsilon,
             "policy": {state: agent.ranked(state, limit=5) for state in STATES},
         }, indent=2))
+        return 0
+
+    if args.command == "benchmark":
+        if args.episodes < 1:
+            parser.error("--episodes must be at least 1")
+        from .benchmark import compare
+
+        agent = _load_or_train(args.table)
+        agent.epsilon = 0.0  # measure what was learned, not exploration
+        report = compare(agent, episodes=args.episodes, seed=args.seed)
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        report["saved"] = str(output)
+        print(json.dumps(report, indent=2))
         return 0
 
     if args.command == "real":

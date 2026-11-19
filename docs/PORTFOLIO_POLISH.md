@@ -15,6 +15,11 @@ features. Everything here is local and free.
    scope" section.
 5. Scan every commit in git history for a real Groq/GitHub key.
 6. Re-run the full verification suite, push, and check Actions.
+7. Replace the weak 70/C headline with a real detected-and-repaired 100/A battle
+   and record detection and recovery time in the evidence.
+8. Add two reproducible offline benchmarks: learned vs random attacker, and
+   rule-based vs Isolation Forest vs Defender, with committed JSON evidence.
+9. Re-verify assets, Actions and repo About, then push again.
 
 ## Files created / changed
 
@@ -23,8 +28,12 @@ features. Everything here is local and free.
 | `README.md` | Pitch, demo GIF, results table, honest scope, dashboard-first quickstart. |
 | `docs/BUILD_NOTES.md` | All former build-log sections, with corrected wording. |
 | `docs/PORTFOLIO_POLISH.md` | This note. |
-| `docs/RESULTS.md` | Current committed battle evidence and honest-scope note. |
-| `docs/phase3.md`, `docs/phase4.md`, `docs/phase6.md` | Precise wording about baseline, score 65 and CI fixtures. |
+| `docs/RESULTS.md` | Headline battle, both benchmark tables and honest-scope note. |
+| `docs/phase3.md`, `docs/phase4.md`, `docs/phase6.md`, `docs/phase8.md`, `docs/phase9.md`, `docs/TESTING.md` | Precise wording about baseline, score 65, CI fixtures, timing and benchmarks. |
+| `controller/score.py`, `controller/battle.py` | Record `detection_seconds` and `recovery_seconds` for every battle. |
+| `rl/benchmark.py`, `defender/benchmark.py` | Reproducible learned-vs-random and detector-comparison benchmarks. |
+| `ml/rl_benchmark.json`, `ml/defender_benchmark.json` | Committed benchmark evidence. |
+| `tests/test_phase3.py`, `test_phase4.py`, `test_phase8.py`, `test_phase9.py` | Guards for timing, benchmarks and claim accuracy. |
 | `docs/screenshots/dashboard.png` | Real full-page dashboard capture. |
 | `docs/screenshots/grafana.png` | Real Grafana `ChaosArena - ShopApp Live` capture. |
 | `docs/screenshots/demo.gif` | Short animated loop of a live battle and its result. |
@@ -50,6 +59,14 @@ features. Everything here is local and free.
 $commits = git rev-list --all
 git grep -I -n -E '(gsk_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})' $commits -- .
 
+# Headline detected-and-repaired battle (writes ml/last_battle.json)
+$env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
+.\.venv\Scripts\python.exe -m controller.cli evaluate --attack network-latency --target payment-service --duration 30 --threshold 70 --settle 45 --version release-candidate
+
+# Two offline benchmarks (write ml/rl_benchmark.json and ml/defender_benchmark.json)
+.\.venv\Scripts\python.exe -m rl.cli benchmark
+.\.venv\Scripts\python.exe -m defender.cli benchmark
+
 # Final checks
 .\.venv\Scripts\python.exe scripts\verify_all.py
 ```
@@ -66,12 +83,22 @@ nothing is mutated.
 - Secret audit: **clean across all commits**. The only matches are documentation
   placeholders (`gsk_your_free_key_here`) and test fakes (`free-key`, `unused`,
   `secret`).
-- Real dashboard battles recorded for the demo: `network-partition` on
-  `payment-service` produced both **100/A/PROMOTE** (detected at 7.3 s,
-  diagnosed `latency_spike`, recovered) and **70/C/PROMOTE** (not detected in
-  that run). Both had cleanup ok and 0 objects left. The final committed evidence
-  is in `ml/last_battle.json`.
-- Demo video duration: **1 min 10 s** (`demo.mp4`), GIF ≈ 16 s, dashboard and
+- Headline real battle (`ml/last_battle.json`): `network-latency` on
+  `payment-service`, **detected in 13.8 s**, diagnosed `latency_spike` on
+  `order-service`, restarted, **recovered in 61.6 s**, **100/A/PROMOTE** at
+  threshold 70, cleanup ok, 0 objects left.
+- The demo video itself records a dashboard battle that also detected the fault
+  (at 7.3 s) and scored **100/A/PROMOTE** with 0 objects left. The earlier
+  10-second `network-partition` run scored **70/C/PROMOTE** with `detected:
+  false` because it healed inside the 30-second Prometheus window; that honest
+  explanation is now in README, not hidden.
+- Offline learned-vs-random benchmark: learned damage **30.0** vs random **16.9**
+  (resilience 70.0 vs 83.1) → **1.77×** more damage. Evidence:
+  `ml/rl_benchmark.json`.
+- Offline detector comparison: rule-based 3-sigma 100% recall / 1 false alarm;
+  plain Isolation Forest 0% recall; shipped Defender 76.2% recall / **0** false
+  alarms. Evidence: `ml/defender_benchmark.json`.
+- Demo video duration: **1 min 9 s** (`demo.mp4`), GIF ≈ 16 s, dashboard and
   Grafana PNGs captured at 1440×900 and 1600×1000 respectively.
 - `attacker.cli status` after capture: `chaos_objects: []`, all pods Running.
 - Test suite and cluster-free verification pass; details in the final summary.
@@ -84,6 +111,10 @@ nothing is mutated.
 | "CI proves the gate can stop a bad release" | Actions re-scores saved JSON fixtures; there is no cluster or live attack on the runner. | Explicitly described as a saved-fixture logic self-test. |
 | "RL attacker / PPO implication" | The implementation is a small tabular Q-table, not PPO or deep RL. | README says **tabular Q-learning, not PPO**, with the Q-table file linked. |
 | "40-sample baseline" without context | Fine for a demo, misleading for production. | Explained why it is enough for steady synthetic load and what production needs. |
+| "70/100, not detected but recovered" as the headline | Sits on the threshold and invites "why did the detector miss it?" | Headline is now a sustained latency battle detected in 13.8 s, repaired in 61.6 s, 100/A; the missed 10 s partition is explained. |
+| "Learned Q ≈ 1.50" | Meaningless to a recruiter. | Replaced with a learner-vs-random result: 1.77× more damage, with committed JSON and a one-line command. |
+| "Diagnosed and recovered" with no numbers | No evidence of speed. | Detection 13.8 s and recovery 61.6 s recorded in `BattleResult` and shown in the table. |
+| No rule-based / Isolation Forest comparison | The most convincing result for a detector project was missing. | Added a like-for-like offline table; reported honestly, including that a 3-sigma rule wins recall while the Defender wins precision. |
 
 ## Common errors and fixes
 

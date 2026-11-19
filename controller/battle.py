@@ -162,6 +162,9 @@ class BattleRunner:
         while float(final.get("score", 0.0)) > threshold and time.monotonic() < deadline:
             time.sleep(self.poll_interval)
             final = run_cli("defender.cli", "detect")
+        recovery_seconds: float | None = None
+        if float(final.get("score", 0.0)) <= threshold:
+            recovery_seconds = round(time.monotonic() - started, 1)
 
         verification = defender_output.get("verification", {})
         recovered = bool(verification.get("recovered")) or not bool(final.get("anomaly"))
@@ -172,6 +175,7 @@ class BattleRunner:
             version=version,
             detected=detected,
             detection_seconds=detection_seconds,
+            recovery_seconds=recovery_seconds,
             recovered=recovered,
             final_score=float(final.get("score", 0.0)),
             defender_threshold=threshold,

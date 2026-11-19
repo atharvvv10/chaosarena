@@ -61,11 +61,14 @@ No dependency changes: `requirements-dev.txt` is unchanged. No `torch`,
 # One real battle (needs the local Kind cluster)
 $env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
 .\.venv\Scripts\python.exe -m rl.cli real --episodes 1 --duration 10 --settle 20 --threshold 0
+
+# Offline learned-vs-random benchmark (no cluster; writes ml/rl_benchmark.json)
+.\.venv\Scripts\python.exe -m rl.cli benchmark
 ```
 
 ## Verified results
 
-- **98 tests pass** (14 new Phase 8 tests).
+- **117 tests pass** overall; this phase contributes 18 tests.
 - Simulator trained for 200 episodes; epsilon decayed `1.0 → 0.05`.
 - Learned calm-state ranking:
   1. `network-partition@payment-service` — Q = 1.4999
@@ -78,6 +81,10 @@ $env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\r
 - Cluster after the battle: `chaos_objects: []`, all listed pods `Running`.
 - `ci.gate check --evidence ml/last_battle.json --threshold 70 --expect PROMOTE`
   still passes with the RL battle as evidence.
+- Offline learned-vs-random benchmark (`ml/rl_benchmark.json`): learned damage
+  **30.0** vs random **16.9** (resilience **70.0** vs **83.1**), i.e. **1.77×**
+  more damage. This is a seeded simulator result, not a live battle; see
+  [RESULTS.md](RESULTS.md#learned-vs-random-attacker).
 
 ## How the reward works
 

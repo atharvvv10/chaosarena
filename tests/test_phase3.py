@@ -1,12 +1,13 @@
 """Phase 3 acceptance tests: Isolation Forest, diagnosis, bounded actions."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
 import pytest
 
-from defender import actions, collect, model, verify
+from defender import actions, benchmark as defender_benchmark, cli as defender_cli, collect, model, verify
 from defender.actions import ActionRejected
 from defender.diagnose import diagnose
 from defender.features import FEATURE_NAMES, SERVICES, vector_from
@@ -73,6 +74,36 @@ def test_detector_trains_and_flags_an_anomaly():
     assert detector.score(attack) > detector.threshold
     assert detector.is_anomaly(attack) is True
     assert detector.is_anomaly(normal) is False
+
+
+def test_detector_comparison_shows_deviation_term_is_essential():
+    report = defender_benchmark.compare()
+    detectors = report["detectors"]
+    assert report["offline"] is True
+    assert set(detectors) == {
+        "rule_based_3sigma",
+        "isolation_forest_only",
+        "defender_forest_plus_deviation",
+    }
+    # A plain forest dilutes a single-service spike across 18 features, so the
+    # capped deviation term is what makes detection work at all here.
+    assert (
+        detectors["defender_forest_plus_deviation"]["recall"]
+        > detectors["isolation_forest_only"]["recall"]
+    )
+    # The shipped Defender trades recall for precision: zero false alarms on
+    # the recorded normal baseline, which matters for a release gate.
+    assert detectors["defender_forest_plus_deviation"]["false_positive_rate"] == 0.0
+    assert detectors["defender_forest_plus_deviation"]["precision"] == 1.0
+
+
+def test_defender_benchmark_cli_writes_committed_evidence(tmp_path, capsys):
+    output = tmp_path / "benchmark.json"
+    assert defender_cli.main(["benchmark", "--output", str(output)]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["saved"] == str(output)
+    assert "defender_forest_plus_deviation" in payload["detectors"]
+    assert output.exists()
 
 
 def test_detector_save_load_roundtrip(tmp_path):

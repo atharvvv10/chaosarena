@@ -1,0 +1,18 @@
+{
+  "simulated": true,
+  "episodes": 200,
+  "seed": 7,
+  "note": "offline seeded simulator; not a live cluster battle",
+  "learned": {
+    "avg_reward": 0.3,
+    "avg_resilience_score": 70.0,
+    "best_action": "network-partition@payment-service"
+  },
+  "random": {
+    "avg_reward": 0.1694,
+    "avg_resilience_score": 83.06
+  },
+  "damage_ratio": 1.77,
+  "score_delta": -13.06,
+  "learned_does_more_damage": true
+}

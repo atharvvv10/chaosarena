@@ -56,6 +56,14 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument("--data", default=str(DEFAULT_BASELINE))
     run.add_argument("--act", action="store_true", help="allow remedial actions")
     run.add_argument("--wait", type=float, default=10.0)
+
+    benchmark = sub.add_parser(
+        "benchmark", help="offline rule-based vs Isolation Forest vs Defender comparison"
+    )
+    benchmark.add_argument("--data", default=str(DEFAULT_BASELINE))
+    benchmark.add_argument("--model", default=str(DEFAULT_MODEL))
+    benchmark.add_argument("--seed", type=int, default=7)
+    benchmark.add_argument("--output", default="ml/defender_benchmark.json")
     return parser
 
 
@@ -128,6 +136,19 @@ def main(argv: list[str] | None = None) -> int:
         result = verify(detector, vector, wait=args.wait)
         print(json.dumps(result.as_dict(), indent=2))
         return 0 if result.recovered else 1
+
+    if args.command == "benchmark":
+        from .benchmark import compare, save_report
+
+        report = compare(
+            baseline_path=args.data,
+            model_path=args.model,
+            seed=args.seed,
+        )
+        output = save_report(report, args.output)
+        report["saved"] = str(output)
+        print(json.dumps(report, indent=2))
+        return 0
 
     if args.command == "run":
         detector = _load_detector(args.model)

@@ -33,13 +33,15 @@ def frame(page, name: str) -> None:
 
 
 def fill_battle_form(page) -> None:
-    page.locator("select").first.select_option("network-partition")
+    # network-latency is the sustained fault the Defender reliably detects, so
+    # the recording shows a real detect -> diagnose -> repair -> PROMOTE loop.
+    page.locator("select").first.select_option("network-latency")
     inputs = page.locator("input")
     inputs.nth(0).fill("payment-service")   # target
-    inputs.nth(1).fill("10")                # duration
-    inputs.nth(2).fill("20")                # settle
+    inputs.nth(1).fill("30")                # duration
+    inputs.nth(2).fill("45")                # settle
     inputs.nth(3).fill("70")                # threshold (PROMOTE boundary)
-    inputs.nth(4).fill("demo-v1")           # version
+    inputs.nth(4).fill("release-candidate")  # version
 
 
 def wait_for_battle(page) -> None:

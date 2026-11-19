@@ -14,12 +14,12 @@ CLIs**. It never imports their modules, so it cannot bypass their allowlists.
 
 | Path | Purpose |
 |---|---|
-| `controller/score.py` | 0–100 score with named deductions and a grade |
+| `controller/score.py` | 0–100 score with named deductions, grade and detection/recovery timing |
 | `controller/gate.py` | Promotion decision + append-only decision log |
 | `controller/battle.py` | Runs one battle by calling `attacker.cli` and `defender.cli` |
 | `controller/api.py` | FastAPI: `/health`, `POST /gate/evaluate`, `/gate/last` |
 | `controller/cli.py` | `python -m controller.cli ...` commands |
-| `tests/test_phase4.py` | 9 tests |
+| `tests/test_phase4.py` | 12 tests |
 | `Makefile` | `battle`, `gate`, `gate-api` |
 | `docs/phase4.md` | This file |
 
@@ -76,7 +76,7 @@ cd D:\Projects\1\chaosarena
 
 ## Results actually measured on this laptop
 
-- **48 tests pass** (9 + 18 + 12 + 9).
+- **117 tests pass** across all nine phases after the final evidence checks.
 - First `network-latency` battle: detected at 13.8 s, diagnosed `latency_spike`
   on `order-service`, restarted it, but the final Prometheus sample was still
   inside the 30-second attack window → score **65**, verdict **BLOCK**.
@@ -88,6 +88,11 @@ cd D:\Projects\1\chaosarena
 - A short `pod-kill` battle through `POST /gate/evaluate` returned score **70**,
   verdict **PROMOTE** — quick self-healing is allowed, but it costs points
   because the Defender never saw an anomaly.
+- The controller now records `detection_seconds` and `recovery_seconds` in every
+  `BattleResult`. The committed headline battle (`ml/last_battle.json`) was
+  detected in **13.8 s**, recovered in **61.6 s**, diagnosed `latency_spike` on
+  `order-service`, restarted it, and scored **100 / A / PROMOTE** with zero
+  deductions and zero chaos objects left.
 - API `/health` and `/gate/last` verified live; decision log contains both
   BLOCK and PROMOTE entries.
 

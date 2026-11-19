@@ -9,6 +9,7 @@ import pytest
 
 from attacker.allowlist import ALLOWED_SERVICES
 from controller.battle import KNOWN_ATTACKS
+from rl import benchmark as rl_benchmark
 from rl import cli as rl_cli
 from rl.agent import QLearningAgent
 from rl.arena import (
@@ -94,6 +95,30 @@ def test_q_learning_prefers_the_weakest_defender_matchup():
     assert best.attack == "network-partition"
     assert agent.q["calm"][best.key] > 0.5
     assert agent.epsilon < 1.0
+
+
+def test_learned_attacker_does_more_damage_than_random():
+    agent = rl_cli.train_agent(episodes=200, seed=7)
+    agent.epsilon = 0.0
+    report = rl_benchmark.compare(agent, episodes=200, seed=7)
+    assert report["simulated"] is True
+    assert report["learned_does_more_damage"] is True
+    assert report["damage_ratio"] > 1.5
+    assert report["learned"]["avg_resilience_score"] < report["random"]["avg_resilience_score"]
+    assert report["learned"]["best_action"] == "network-partition@payment-service"
+
+
+def test_rl_benchmark_cli_writes_committed_evidence(tmp_path, capsys):
+    table = tmp_path / "q.json"
+    output = tmp_path / "benchmark.json"
+    rl_cli.train_agent(episodes=200, seed=7).save(table)
+    assert rl_cli.main([
+        "benchmark", "--table", str(table), "--output", str(output)
+    ]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["saved"] == str(output)
+    assert payload["learned_does_more_damage"] is True
+    assert output.exists()
 
 
 def test_training_is_deterministic_with_a_seed():

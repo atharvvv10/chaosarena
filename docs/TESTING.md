@@ -47,8 +47,12 @@ Expected: `chaos_objects: []`, all pods `Running`.
 To run one real gated battle:
 
 ```powershell
-.\.venv\Scripts\python.exe -m controller.cli evaluate --attack network-partition --target payment-service --duration 10 --threshold 70 --settle 20
+.\.venv\Scripts\python.exe -m controller.cli evaluate --attack network-latency --target payment-service --duration 30 --threshold 70 --settle 45
 ```
+
+The sustained latency fault is detected and repaired; a 10-second partition can
+heal inside the 30-second Prometheus window and go unseen. Both are honest
+results, explained in [RESULTS.md](RESULTS.md#headline-gated-battle).
 
 Or let the RL attacker choose:
 
@@ -57,6 +61,21 @@ Or let the RL attacker choose:
 ```
 
 Always confirm cleanup afterwards with `attacker.cli status`.
+
+## Offline benchmarks (no cluster)
+
+These regenerate the two committed evidence files used in the README results
+table. They are reproducible and cluster-free:
+
+```powershell
+.\.venv\Scripts\python.exe -m rl.cli benchmark        # writes ml/rl_benchmark.json
+.\.venv\Scripts\python.exe -m defender.cli benchmark  # writes ml/defender_benchmark.json
+```
+
+The first shows the learned attacker does more damage than random; the second
+compares a rule-based detector, a plain Isolation Forest and the shipped Defender
+on the recorded baseline plus seeded fault signatures. Both are offline
+benchmarks, not live battles.
 
 ## Media capture (optional)
 
