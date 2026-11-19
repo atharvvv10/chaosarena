@@ -102,8 +102,8 @@ def test_workflow_is_valid_free_and_minimal():
     uses = [step.get("uses", "") for step in job["steps"]]
     assert any("python -m pytest -q" in item for item in runs)
     assert any("python -m ci.gate check" in item for item in runs)
-    assert "actions/checkout@v4" in uses
-    assert "actions/setup-python@v5" in uses
+    assert "actions/checkout@v7.0.1" in uses
+    assert "actions/setup-python@v7.1.0" in uses
 
     lowered = raw.lower()
     for banned in ["self-hosted", "aws", "azure", "gcp", "marketplace", "groq_api_key"]:

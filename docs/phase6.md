@@ -84,6 +84,7 @@ workflow**. No extra setup is needed.
 | `ModuleNotFoundError: yaml` in CI | PyYAML was only installed locally by chance | Added `PyYAML==6.0.3` to `requirements-dev.txt` |
 | Gate step fails with `GATE FAILED: expected PROMOTE, got BLOCK` | The committed battle genuinely failed | Fix the service/defender, run a new `controller.cli evaluate`, commit the new evidence |
 | Self-test step fails | Gate is too permissive | Check `controller/score.py` and `controller/gate.py`; failing fixture must score 0 |
+| `Node.js 20 is deprecated` warning | Old `checkout@v4` / `setup-python@v5` were forced onto Node 24 | Upgraded to `checkout@v7.0.1` and `setup-python@v7.1.0`; run is clean |
 | Worried about billing | GitHub free tier has minute limits for private repos | Public repos are unlimited; this job takes ~1 minute and uses no paid add-ons |
 
 ## Why this is safe and free
