@@ -229,7 +229,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .section {
   scroll-margin-top: 24px;
-  margin-bottom: 48px;
+  margin-bottom: 40px;
+}
+
+.report {
+  max-width: 72ch;
 }
 
 .intro {
@@ -440,7 +444,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .kpi .overline { margin-bottom: 10px; }
 
 .kpi .number {
-  font: 600 32px/1.2 var(--mono);
+  font: 700 36px/1.1 var(--mono);
   letter-spacing: -0.05em;
 }
 
@@ -638,7 +642,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .gateverdict h3 {
-  font-size: 32px;
+  font-size: 36px;
   line-height: 1.2;
   letter-spacing: -0.04em;
   margin: 0;
