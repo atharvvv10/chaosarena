@@ -137,8 +137,23 @@ nothing is mutated.
 - The capture script is optional and excluded from CI, so the free workflow stays
   fast and deterministic.
 
+## Dashboard UI pass (after the evidence work)
+
+A second pass made the interface easier to scan and added real interactions while
+keeping the free/local constraint and every existing claim exact:
+
+- `GET /evidence` bundles `ml/last_battle.json`, `ml/rl_benchmark.json` and
+  `ml/defender_benchmark.json`, tolerating missing or malformed files with `null`.
+- The dashboard gained sticky section navigation, an always-visible key-results
+  strip, a real battle timeline, learned-vs-random and detector comparison panels,
+  searchable/filterable history, report copy/download buttons and a result toast.
+- Benchmark panels are explicitly labelled **offline** and **not a live battle**;
+  only the timeline is described as the real recorded battle.
+- Details and verification commands: `docs/DASHBOARD.md`.
+
 ## Cost check
 
 No paid service. Playwright, Pillow and imageio-ffmpeg are open-source Python
 packages. Microsoft Edge is already installed. GitHub metadata changes use the
-existing free API and credential. No new secret was created.
+existing free API and credential. No new secret was created. No charting or UI
+framework was added to the React app.

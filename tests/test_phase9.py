@@ -19,7 +19,7 @@ def test_all_final_docs_exist():
         path = DOCS / f"phase{number}.md"
         assert path.exists(), f"missing {path}"
         assert len(path.read_text(encoding="utf-8")) > 200
-    for name in ["RESULTS.md", "TESTING.md", "BUILD_NOTES.md", "PORTFOLIO_POLISH.md"]:
+    for name in ["RESULTS.md", "TESTING.md", "BUILD_NOTES.md", "PORTFOLIO_POLISH.md", "DASHBOARD.md"]:
         assert (DOCS / name).exists()
 
 
@@ -103,6 +103,48 @@ def test_frontend_uses_polished_panels_and_rl_endpoint():
     for feature in ["score-ring", "trend-bar", "phase-strip", "rl-panel"]:
         assert feature in app and feature in css
     assert "shop-test" in app
+
+
+def test_evidence_endpoint_returns_committed_local_evidence():
+    response = TestClient(api.app).get("/evidence")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["last_battle"]["decision"]["verdict"] == "PROMOTE"
+    assert payload["last_battle"]["battle"]["detection_seconds"] > 0
+    assert payload["rl_benchmark"]["damage_ratio"] > 1
+    assert "defender_forest_plus_deviation" in payload["defender_benchmark"]["detectors"]
+
+
+def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeypatch):
+    bad = tmp_path / "bad.json"
+    bad.write_text("{not json", encoding="utf-8")
+    monkeypatch.setattr(api, "LAST_BATTLE_FILE", tmp_path / "missing.json")
+    monkeypatch.setattr(api, "RL_BENCHMARK_FILE", bad)
+    monkeypatch.setattr(api, "DEFENDER_BENCHMARK_FILE", tmp_path / "missing.json")
+
+    response = TestClient(api.app).get("/evidence")
+    assert response.status_code == 200
+    assert response.json() == {
+        "last_battle": None,
+        "rl_benchmark": None,
+        "defender_benchmark": None,
+    }
+
+
+def test_frontend_has_navigation_timeline_filters_and_report_actions():
+    api_js = (DASHBOARD / "src" / "api.js").read_text(encoding="utf-8")
+    app = (DASHBOARD / "src" / "App.jsx").read_text(encoding="utf-8")
+    css = (DASHBOARD / "src" / "styles.css").read_text(encoding="utf-8")
+
+    assert "/evidence" in api_js
+    for label in [
+        "Overview", "Battle", "Evidence", "History",
+        "Battle timeline", "Learned vs random", "Detector comparison",
+        "Search decision history", "Download", "Copy", "toast",
+    ]:
+        assert label in app, f"missing UI feature: {label}"
+    for feature in ["subnav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:
+        assert feature in css, f"missing style: {feature}"
 
 
 def test_main_entry_avoids_duplicate_dev_requests():

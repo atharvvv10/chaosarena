@@ -8,11 +8,13 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
+The GIF and MP4 record the detected 100/A battle; the PNG shows the current dashboard after the navigation/evidence-panel polish.
+
 ## Results at a glance
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **117 passing** across all 9 phases (`make verify`) |
+| Automated tests | **120 passing** across all 9 phases (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.8 s**, recovered in **61.6 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.8 s**, recovered in **61.6 s**; diagnosed `latency_spike` → restarted `order-service`; 40-sample baseline (threshold 0.7397) |
@@ -64,7 +66,7 @@ gate, where a false alarm blocks a good build.
 1. **Attacker** — seven Chaos Mesh experiments behind a hard `shop-test` allowlist; `finally` cleanup always runs.
 2. **Defender** — reads only Prometheus signals, uses Isolation Forest plus a capped deviation term, then detect → diagnose → act → verify. It never imports or reads the attacker.
 3. **Controller** — drives both sides through their public CLIs, recomputes the resilience score from observed facts, and records the gate decision and audit trail.
-4. **Dashboard + CI** — a local React UI for running battles and reading history/policy, plus a free GitHub workflow that re-scores saved fixtures on every push.
+4. **Dashboard + CI** — a local React UI with a section nav, always-visible key results, a real battle timeline, labelled offline benchmark panels, searchable history and report actions, plus a free GitHub workflow that re-scores saved fixtures on every push. See [DASHBOARD.md](docs/DASHBOARD.md).
 
 ## Honest scope — read this before an interview
 
@@ -86,7 +88,8 @@ http://127.0.0.1:8080     gate API
 2. In **Run a battle**, use: attack `network-latency`, target `payment-service`, duration `30`, settle `45`, threshold `70`, version `release-candidate`.
 3. Click **Run battle** and wait about a minute. Do not click twice.
 4. Read the **Release gate** card for score/grade/verdict and **Why**. A new row appears in **Decision history**.
-5. Check **RL attacker** for the learned policy and **Incident report** for the generated report.
+5. Check **RL attacker** for the learned policy. In **Incident report**, use **Copy** or **Download**.
+6. Use the sticky nav to open **Evidence**: the timeline is the recorded real battle; **Learned vs random** and **Detector comparison** are clearly labelled offline benchmarks. In **History**, search or filter PROMOTE/BLOCK rows.
 
 If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the dashboard is closed, run `cd dashboard && npm run dev`.
 
@@ -139,6 +142,6 @@ flowchart LR
 - [Final results](docs/RESULTS.md) · [Testing guide](docs/TESTING.md) · [Build notes](docs/BUILD_NOTES.md) · [Portfolio polish](docs/PORTFOLIO_POLISH.md)
 - [Phase 1 ShopApp](docs/phase1.md) · [Phase 2 attacks](docs/phase2.md) · [Phase 3 defender](docs/phase3.md) · [Phase 4 controller](docs/phase4.md) · [Phase 5 reporter](docs/phase5.md)
 - [Phase 6 CI](docs/phase6.md) · [Phase 7 dashboard](docs/phase7.md) · [Phase 8 RL attacker](docs/phase8.md) · [Phase 9 polish](docs/phase9.md)
-- [Dashboard README](dashboard/README.md)
+- [Dashboard README](dashboard/README.md) · [Dashboard UI and evidence panels](docs/DASHBOARD.md)
 
 Everything here is free and local. No paid service, no cloud account, no secret and no marketplace action is required.

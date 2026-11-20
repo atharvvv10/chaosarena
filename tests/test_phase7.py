@@ -98,7 +98,7 @@ def test_dashboard_uses_only_free_local_packages():
 
 def test_frontend_calls_all_gate_endpoints():
     api_js = (DASHBOARD / "src" / "api.js").read_text(encoding="utf-8")
-    for endpoint in ["/health", "/gate/last", "/gate/history", "/report/latest", "/gate/evaluate"]:
+    for endpoint in ["/health", "/gate/last", "/gate/history", "/report/latest", "/gate/evaluate", "/evidence"]:
         assert endpoint in api_js
     assert "VITE_API_URL" in api_js
 

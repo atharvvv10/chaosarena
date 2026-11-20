@@ -19,7 +19,7 @@ cluster battle.
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 12 tests; one `make verify`, real screenshots/GIF/video, recruiter README and claim/benchmark guards |
 
-**Total: 117 automated tests pass.**
+**Total: 120 automated tests pass.**
 
 ## Headline gated battle
 

@@ -21,6 +21,9 @@ from .score import score_battle
 
 app = FastAPI(title="ChaosArena Gate", version="1.0.0")
 RL_TABLE = Path("ml/rl_q_table.json")
+LAST_BATTLE_FILE = Path("ml/last_battle.json")
+RL_BENCHMARK_FILE = Path("ml/rl_benchmark.json")
+DEFENDER_BENCHMARK_FILE = Path("ml/defender_benchmark.json")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -46,6 +49,27 @@ class EvaluateRequest(BaseModel):
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "service": "chaosarena-gate"}
+
+
+def _read_evidence(path: Path) -> dict | None:
+    """Return committed local evidence, or None when a file is absent/invalid."""
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+@app.get("/evidence")
+def evidence() -> dict:
+    """Bundled local evidence used by the dashboard's battle and benchmark panels."""
+    return {
+        "last_battle": _read_evidence(LAST_BATTLE_FILE),
+        "rl_benchmark": _read_evidence(RL_BENCHMARK_FILE),
+        "defender_benchmark": _read_evidence(DEFENDER_BENCHMARK_FILE),
+    }
 
 
 @app.post("/gate/evaluate")
