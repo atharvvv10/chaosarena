@@ -26,7 +26,7 @@ To run it without `make`:
 | `pytest -q tests/test_phase3.py` | Defender isolation, features, model, bounded actions |
 | `pytest -q tests/test_phase4.py` | Battle, score, gate, API, CLI-only boundaries |
 | `pytest -q tests/test_phase5.py` | Offline/Groq reporters and six-section report |
-| `pytest -q tests/test_phase6.py` | Free workflow YAML, tamper-proof CI gate |
+| `pytest -q tests/test_phase6.py` | Free workflow YAML, CI gate decision recomputation |
 | `pytest -q tests/test_phase7.py` | Dashboard API, CORS, free packages, panels |
 | `pytest -q tests/test_phase8.py` | RL safety, Q-learning, sim/real paths |
 | `pytest -q tests/test_phase9.py` | Final docs, RL policy API, polish, no-paid scan |

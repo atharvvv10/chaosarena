@@ -8,7 +8,25 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
-**Technical demo:** `python scripts/technical_demo.py` (or `make technical-demo`) replays the architecture, real payment-service fault evidence, scoring and an independent audit recomputation in one command — no cluster needed. [Read the generated transcript](docs/DEMO_TRANSCRIPT.md).
+## Evaluate ChaosArena
+
+Choose the level of depth that fits your time.
+
+**Option 1: Quick technical demonstration**
+
+```powershell
+.\.venv\Scripts\python.exe scripts/technical_demo.py
+```
+
+No running Kubernetes cluster required. The replay reads committed evidence and a real audit artifact, then recomputes the release decision with the project's own gate code. [Read the generated transcript](docs/DEMO_TRANSCRIPT.md).
+
+**Option 2: Inspect the dashboard**
+
+Start the existing FastAPI backend and React frontend using the documented setup in [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md#1-deterministic-demo-from-committed-evidence). No live battle is needed to see the published results.
+
+**Option 3: Reproduce a live experiment**
+
+Follow [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) to run a controlled battle in the isolated Kind environment. [DEMO_AUDIT.md](docs/DEMO_AUDIT.md) records the last real run and its environmental limitations.
 
 The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control and bad-release panels.
 

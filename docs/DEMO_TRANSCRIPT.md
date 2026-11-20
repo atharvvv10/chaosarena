@@ -69,7 +69,7 @@ Start at 100. Penalties are explicit; the gate then adds hard safety checks.
 - **gate reasons:** score 70 meets threshold 70; attack cleanup succeeded; no chaos objects left behind
 - **stored verdict:** PROMOTE (recomputed: PROMOTE)
 
-## 5. Real audit artifact: independent recomputation
+## 5. Real audit artifact: decision recomputation from recorded facts
 Artifact: docs/audit/live_battle_2026-11-20.json
 
 $ python -m ci.gate check --evidence docs/audit/live_battle_2026-11-20.json --threshold 70 --expect BLOCK
@@ -133,6 +133,6 @@ GATE PASSED: BLOCK (score 65, threshold 70)
 - Controlled payment-service fault shown from the generated Chaos Mesh manifest and attacker log.
 - Detection, recovery and cleanup read from the committed battle evidence.
 - Scoring recomputed live by the real controller code for PROMOTE and BLOCK cases.
-- Tampered stored decision ignored; the independent gate still returned BLOCK.
+- Stored verdict was not trusted; the gate recomputed BLOCK from the recorded battle facts.
 
 TECHNICAL DEMO PASSED

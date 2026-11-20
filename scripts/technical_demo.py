@@ -2,7 +2,8 @@
 
 The replay does not run a cluster battle and does not fake one. It reads the
 committed headline evidence and the real live audit artifact, calls the real
-scoring/gate code, and shows that a tampered stored decision is still rejected.
+scoring/gate code, and shows that release decisions are recomputed from recorded
+battle facts rather than trusted from the verdict stored in the evidence.
 """
 from __future__ import annotations
 
@@ -186,7 +187,7 @@ def scoring(out: Out) -> dict:
 
 
 def audit(out: Out) -> str:
-    out.section(5, "Real audit artifact: independent recomputation")
+    out.section(5, "Real audit artifact: decision recomputation from recorded facts")
     out.line(f"Artifact: {AUDIT_BLOCK.relative_to(ROOT).as_posix()}")
     out.line()
     out.line("$ python -m ci.gate check --evidence docs/audit/live_battle_2026-11-20.json --threshold 70 --expect BLOCK")
@@ -274,7 +275,7 @@ def main(argv: list[str] | None = None) -> int:
     out.bullet("Controlled payment-service fault shown from the generated Chaos Mesh manifest and attacker log.")
     out.bullet("Detection, recovery and cleanup read from the committed battle evidence.")
     out.bullet("Scoring recomputed live by the real controller code for PROMOTE and BLOCK cases.")
-    out.bullet("Tampered stored decision ignored; the independent gate still returned BLOCK.")
+    out.bullet("Stored verdict was not trusted; the gate recomputed BLOCK from the recorded battle facts.")
     out.line()
     out.line("TECHNICAL DEMO PASSED")
     return 0

@@ -7,8 +7,9 @@ state for the published numbers; use the live path to prove the loop really runs
 
 For the shortest recruiter-friendly walkthrough, run
 `python scripts/technical_demo.py` (or `make technical-demo`). It replays the
-architecture, controlled fault, measured evidence, scoring and tamper-proof audit
-from real artifacts without touching a cluster. The generated transcript is
+architecture, controlled fault, measured evidence, scoring and independent
+decision recomputation from recorded facts without touching a cluster. The
+generated transcript is
 [DEMO_TRANSCRIPT.md](DEMO_TRANSCRIPT.md).
 
 The audit results and the exact live artifacts from the most recent pass are in
