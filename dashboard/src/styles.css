@@ -85,15 +85,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .brandcaption {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   letter-spacing: 0.08em;
   color: var(--dim);
   margin-top: 4px;
 }
 
 .navcap, .overline {
-  font: 10px var(--mono);
-  letter-spacing: 0.12em;
+  font: 12px var(--mono);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -131,7 +131,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .nav .n {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
 }
 
@@ -149,7 +149,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .envtitle {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
   margin-bottom: 10px;
   letter-spacing: 0.08em;
@@ -166,7 +166,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .envline span:first-child { color: var(--muted); }
 
 .envline strong {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   font-weight: 500;
   color: var(--text);
 }
@@ -175,7 +175,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .envline strong.amber { color: var(--amber); }
 
 .footnote {
-  font: 9px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   padding: 16px 10px 0;
 }
@@ -208,7 +208,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: flex;
   gap: 10px;
   align-items: center;
-  font: 10px var(--mono);
+  font: 12px var(--mono);
 }
 
 .topright .mode {
@@ -260,7 +260,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .intro aside {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   text-align: right;
   white-space: nowrap;
@@ -288,13 +288,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .sectionheading .right {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
 }
 
 .overline {
-  font: 10px var(--mono);
-  letter-spacing: 0.12em;
+  font: 12px var(--mono);
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--dim);
 }
@@ -316,13 +316,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .panelheader h3 {
-  font-size: 15px;
+  font-size: 16px;
   margin: 0;
   font-weight: 600;
 }
 
 .panelheader small {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   max-width: 60%;
   overflow-wrap: anywhere;
@@ -350,7 +350,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   display: flex;
   gap: 12px;
   align-items: center;
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
 }
 
@@ -399,7 +399,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 16px;
   padding: 12px 20px;
   border-top: 1px solid var(--line);
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
 }
 
@@ -451,7 +451,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .kpi .sub {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   margin-top: 8px;
 }
@@ -483,7 +483,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .field.wide { grid-column: 1 / -1; }
 
 .field label {
-  font: 11px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
 }
 
@@ -547,7 +547,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .actions small, .note {
-  font: 10px/1.7 var(--mono);
+  font: 11px/1.7 var(--mono);
   color: var(--dim);
 }
 
@@ -575,7 +575,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .event .time {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   padding-top: 3px;
   text-align: right;
@@ -646,7 +646,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .gateverdict p {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
   margin: 4px 0 0;
 }
@@ -711,7 +711,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .evcard h3 {
-  font-size: 15px;
+  font-size: 16px;
   letter-spacing: -0.02em;
   margin: 10px 0 6px;
 }
@@ -730,7 +730,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   align-items: end;
   justify-content: space-between;
   gap: 10px;
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
 }
 
@@ -764,13 +764,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   overflow-wrap: anywhere;
   max-height: 400px;
   overflow: auto;
-  font: 12px/1.8 var(--mono);
+  font: 13px/1.8 var(--mono);
   color: #a8b5bc;
   margin: 0;
 }
 
 .report h3 {
-  font-size: 15px;
+  font-size: 16px;
   margin: 18px 0 8px;
   color: var(--text);
 }
@@ -778,7 +778,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .report h4 {
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: var(--green);
   margin: 16px 0 6px;
 }
@@ -821,7 +821,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   color: var(--muted);
   padding: 0 12px;
   border-radius: 5px;
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   height: 38px;
 }
 
@@ -842,7 +842,7 @@ table {
 th {
   text-align: left;
   padding: 12px 16px;
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
   background: #141b21;
   font-weight: 400;
@@ -861,7 +861,7 @@ td:first-child {
 }
 
 .tag {
-  font: 10px var(--mono);
+  font: 12px var(--mono);
   border-radius: 4px;
   padding: 4px 8px;
   color: var(--green);
@@ -888,7 +888,7 @@ td:first-child {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  font: 9px var(--mono);
+  font: 12px var(--mono);
   color: var(--dim);
 }
 
@@ -940,7 +940,7 @@ td:first-child {
   .topbar { padding: 0 16px; }
   .container { padding: 28px 16px 48px; }
   .intro aside { display: none; }
-  .intro h1 { font-size: 34px; }
+  .intro h1 { font-size: 30px; }
   .arenafigure { padding: 12px 8px; }
   .arenafigure svg { min-width: 580px; }
   .arenafigure { overflow: auto; }
@@ -980,7 +980,7 @@ td:first-child {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font: 11px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
   margin-bottom: 6px;
 }
@@ -999,7 +999,7 @@ td:first-child {
 .track > span.green { background: var(--green); }
 .track > span.red { background: var(--red); }
 .recovery-note {
-  font: 10px/1.7 var(--mono);
+  font: 11px/1.7 var(--mono);
   color: var(--dim);
   margin-top: 10px;
 }
@@ -1031,7 +1031,7 @@ td:first-child {
 
 .subnav a {
   padding: 12px 0;
-  font: 11px var(--mono);
+  font: 12px var(--mono);
   color: var(--muted);
   border-bottom: 2px solid transparent;
 }

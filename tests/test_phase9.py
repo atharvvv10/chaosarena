@@ -192,8 +192,7 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
         "Overview", "Battle", "Evidence", "History",
         "Battle timeline", "Learned vs random", "Detector comparison",
         "Recovery control", "Bad release vs rollback",
-        "With Defender", "speed score", "Gate caught the bad release",
-        "Search decisions", "Download", "Copy", "toast",
+        "With Defender", "speed score", "Main finding: the gate blocked",        "Search decisions", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
     for feature in ["subnav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:
