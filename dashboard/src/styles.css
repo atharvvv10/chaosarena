@@ -804,7 +804,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .detector-table, .detector-notes { min-width: 0; }
 .detector-notes { padding-top: 35px; }
-.score-compare, .track-pair { display: grid; gap: 12px; }
+.score-compare { display: grid; gap: 12px; }
 .compare-row .track { margin-top: 6px; }
 .block-text { color: var(--red) !important; }
 .promote-text { color: var(--green) !important; }
@@ -1159,13 +1159,12 @@ table.compact-table { min-width: 0; }
 .metric-row:last-child { border-bottom: 0; }
 .metric-row strong { font: 500 13px var(--mono); color: var(--text); }
 .recovery-tracks { display: grid; gap: 14px; }
-.track-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font: 12px var(--mono);
-  color: var(--muted);
-  margin-bottom: 6px;
+.metric-group-label {
+  font: 11px var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 0;
 }
 .track {
   height: 6px;
@@ -1200,28 +1199,4 @@ table.compact-table { min-width: 0; }
 .history-tools { display: flex; }
 .rl-panel { display: block; }
 .toast { display: block; }
-.subnav {
-  position: sticky;
-  top: 0;
-  z-index: 8;
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  border-bottom: 1px solid var(--line);
-  display: flex;
-  gap: 20px;
-  padding: 0 32px;
-  backdrop-filter: blur(10px);
-}
-
-.subnav a {
-  padding: 12px 0;
-  font: 12px var(--mono);
-  color: var(--muted);
-  border-bottom: 2px solid transparent;
-}
-
-.subnav a:hover, .subnav a.active {
-  color: var(--green);
-  border-color: var(--green);
-}
-
 .rl-panel { margin-top: 12px; }

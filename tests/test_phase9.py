@@ -195,7 +195,7 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
         "With Defender", "speed score", "Main finding: the gate blocked",        "Search decisions", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
-    for feature in ["subnav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:
+    for feature in [".nav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:
         assert feature in css, f"missing style: {feature}"
 
 
