@@ -22,7 +22,10 @@ charts, no API keys and no external UI kits.
 - **Recovery control** — compares the gated battle with a no-remediation run of the same
   fault and says plainly that two single runs are not a statistical study.
 - **Bad release vs rollback** — shows the live gate blocking a deliberately bad payment
-  config at 65/D, then promoting the rollback at 100/A.
+  config at 65/D, then promoting the rollback at 100/A. The panel says the rollback
+  was script-driven and the gate, not the Defender, caught the release.
+- **Score meaning** — the score card says it measures detection, recovery yes/no
+  and cleanup, not recovery speed.
 - **History tools** — search by version, attack, target or verdict, plus one-click
   PROMOTE/BLOCK filters.
 - **Report actions** — copy the incident report to the clipboard or download it as Markdown.

@@ -30,7 +30,7 @@ policy. No new service, no new dependency, no new cost.
 | `dashboard/src/styles.css` | Polished dark theme, gradients, hover states, responsive breakpoints. |
 | `dashboard/src/main.jsx` | Removed `StrictMode` duplicate dev fetches. |
 | `dashboard/README.md` | Documents the new RL panel and trend. |
-| `tests/test_phase9.py` | 8 final acceptance tests. |
+| `tests/test_phase9.py` | 17 final acceptance tests. |
 | `Makefile` | `verify` target. |
 | `README.md` | Final status, checklist and docs links. |
 

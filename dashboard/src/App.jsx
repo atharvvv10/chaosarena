@@ -67,7 +67,7 @@ function ScoreRing({ score, grade }) {
       </div>
       <div className="score-copy">
         <span className="eyebrow">Resilience score</span>
-        <p>Measured from detection, recovery and cleanup — not a stored opinion.</p>
+        <p>Measured from detection, recovery yes/no and cleanup — not a stored opinion or a speed score.</p>
       </div>
     </div>
   )
@@ -310,7 +310,7 @@ function Benchmarks({ evidence }) {
             <span className="eyebrow">Recovery control</span>
             <span className="tag">two single local runs</span>
           </div>
-          <p className="muted small">Same fault and target, one with Defender repair and one observe-only. Not a statistical study.</p>
+          <p className="muted small">Same fault and target, one with a Defender repair request and one observe-only. Not a statistical study.</p>
           <div className="table-wrap">
             <table className="compare-table">
               <thead>
@@ -318,7 +318,7 @@ function Benchmarks({ evidence }) {
               </thead>
               <tbody>
                 <tr className="highlight">
-                  <td>With Defender restart</td>
+                  <td>With Defender repair request</td>
                   <td>{evidence?.last_battle?.battle?.detection_seconds != null
                     ? `T+${evidence.last_battle.battle.detection_seconds}s` : '--'}</td>
                   <td>{evidence?.last_battle?.battle?.recovery_seconds != null
@@ -342,7 +342,7 @@ function Benchmarks({ evidence }) {
             <span className="eyebrow">Bad release vs rollback</span>
             <span className="tag">live gate · two local runs</span>
           </div>
-          <p className="muted small">A deliberately bad payment config (100% failures) was gated, rolled back and gated again.</p>
+          <p className="muted small">A deliberately bad payment config (100% failures) was gated, rolled back by the script and gated again.</p>
           <div className="table-wrap">
             <table className="compare-table">
               <thead>
@@ -364,7 +364,7 @@ function Benchmarks({ evidence }) {
           </div>
           <p className="muted small">
             {badRelease.result?.gate_caught_bad_release
-              ? 'The gate blocked the bad release and promoted the rollback.'
+              ? 'The gate blocked the bad release and promoted the rollback. The rollback was script-driven; the Defender mislabelled the failure and did not catch the release.'
               : 'See the committed JSON for the full result.'}
           </p>
         </div>

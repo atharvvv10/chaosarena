@@ -1,4 +1,4 @@
-# Phase 3 — Defender (Isolation Forest detect → diagnose → act → verify)
+# Phase 3 — Defender (Isolation Forest detect → diagnose → request repair → verify)
 
 ## What this phase adds
 
@@ -34,7 +34,7 @@ replicas. It cannot delete anything and cannot reach `shop-prod`.
 1. **Detect** — score the current 18-number vector. Above threshold = anomaly.
 2. **Diagnose** — find which service/metric deviated most and name the family
    (`latency_spike`, `error_spike`, `traffic_drop`).
-3. **Act** — apply one small, logged repair: restart a deployment, or scale it
+3. **Act** — request one small, logged repair: restart a deployment, or scale it
    to 3 replicas.
 4. **Verify** — sample again and check the score is back below threshold.
 
@@ -87,10 +87,10 @@ peak/off-peak cycles, drift detection and held-out incidents.
 |---|---|---|
 | Normal traffic | 0.567 | `anomaly: false` |
 | During latency attack | 1.123 | `anomaly: true` |
-| After restart + cleanup | 0.586 | `anomaly: false`, `recovered: true` |
+| After restart request + cleanup | 0.586 | `anomaly: false`, `recovered: true` |
 
 The full loop diagnosed **`latency_spike` on `order-service`** (evidence:
-`order-service_p95_latency z=+237.6`), chose `restart`, applied it to
+`order-service_p95_latency z=+237.6`), chose `restart`, requested it for
 `shop-test`, and verification reported `recovered: true`. Chaos cleanup left
 zero objects and `attacker.cli status` showed no active experiments.
 

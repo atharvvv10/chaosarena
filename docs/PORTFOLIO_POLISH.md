@@ -98,8 +98,8 @@ nothing is mutated.
 - Offline detector comparison: rule-based 3-sigma 100% recall / 1 false alarm;
   plain Isolation Forest 0% recall; shipped Defender 76.2% recall / **0** false
   alarms. Evidence: `ml/defender_benchmark.json`.
-- Demo video duration: **1 min 22 s** (`demo.mp4`), GIF ≈ 26 s, dashboard and
-  Grafana PNGs captured at 1440×900 and 1600×1000 respectively.
+- Demo video duration: **1 min 22 s** (`demo.mp4`), GIF ≈ 26 s, dashboard PNG
+  captured full-page at 1440×3372, Grafana PNG at 1600×1000.
 - `attacker.cli status` after capture: `chaos_objects: []`, all pods Running.
 - Test suite and cluster-free verification pass; details in the final summary.
 
@@ -107,7 +107,7 @@ nothing is mutated.
 
 | Earlier wording | Why it was risky | Current wording |
 | --- | --- | --- |
-| "Live BLOCK score 65 proved the gate can stop a release" | The BLOCK came from sampling before the 30-second Prometheus window cleared, not from a bad release. | Explicitly called a measurement-timing artefact, fixed with a settle period. |
+| "Phase 4 score 65/BLOCK proved the gate can stop a release" | That specific BLOCK came from sampling before the 30-second Prometheus window cleared, not from a bad release. | Explicitly called a measurement-timing artefact, fixed with a settle period. Labelled distinct from the later live bad-release **65/D/BLOCK**. |
 | "CI proves the gate can stop a bad release" | Actions re-scores saved JSON fixtures; there is no cluster or live attack on the runner. | Explicitly described as a saved-fixture logic self-test. |
 | "RL attacker / PPO implication" | The implementation is a small tabular Q-table, not PPO or deep RL. | README says **tabular Q-learning, not PPO**, with the Q-table file linked. |
 | "40-sample baseline" without context | Fine for a demo, misleading for production. | Explained why it is enough for steady synthetic load and what production needs. |
@@ -116,7 +116,8 @@ nothing is mutated.
 | "Diagnosed and recovered" with no numbers | No evidence of speed. | Detection (13.3 s) and recovery 76.2 s recorded in `BattleResult` and shown in the table. |
 | "The Defender's restart fixed the fault" | The attack targeted `payment-service`, but the diagnoser blamed the symptomatic `order-service`, and the fault self-heals. | Added a no-Defender control run: same fault, no remediation, recovered in 50.8 s. Stated that the diagnoser finds symptoms, not always the origin. |
 | "Detected in 0.0 s" without context | Looks like a fake or a clock that started too late. | The controller now waits for a normal baseline before launch; the headline uses 13.3 s on the same clock as the control. `0.0 s` appears only when the anomaly was already present (bad-release run). |
-| "The gate can stop a bad release" without a live run | Saved fixtures are not a live gate test. | Added `scripts/bad_release_experiment.py`: a bad payment config is BLOCKed at 65/D, then the rollback is PROMOTEd at 100/A. |
+| "The gate can stop a bad release" without a live run | Saved fixtures are not a live gate test. | Added `scripts/bad_release_experiment.py`: a bad payment config is BLOCKed at 65/D, then the rollback is PROMOTEd at 100/A. The script performs the rollback; the gate, not the Defender, catches the release. |
+| "100/A means it recovered quickly" | The score checks recovery yes/no, not speed; the 76.2 s time includes a Prometheus observation window. | Stated in README/RESULTS that the score is not a speed metric and that the no-Defender control recovered sooner. |
 | No rule-based / Isolation Forest comparison | The most convincing result for a detector project was missing. | Added a like-for-like offline table; reported honestly, including that a 3-sigma rule wins recall while the Defender wins precision. |
 
 ## Common errors and fixes

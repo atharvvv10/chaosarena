@@ -2,7 +2,7 @@
 
 [![ChaosArena Resilience Gate](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml/badge.svg)](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml)
 
-**A resilience-gated CI/CD lab that treats a release like a fight.** A tabular Q-learning attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and repairs the fault; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute, hosted database or API key. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
+**A resilience-gated CI/CD lab that treats a release like a fight.** A tabular Q-learning attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and requests a repair; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute, hosted database or API key. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
 
 ![ChaosArena demo — run a battle, watch the gate and read the learned policy](docs/screenshots/demo.gif)
 
@@ -21,7 +21,7 @@ The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture
 | Gate vs bad release | A deliberately bad payment config (`PAYMENT_FAILURE_RATE=1.0`) scored **65/D, BLOCK**; rollback to `0.01` scored **100/A, PROMOTE** on the same battle |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
-| CI | Free `ubuntu-latest` Actions, green on every push, no cluster, no secrets |
+| CI | Free `ubuntu-latest` Actions, latest push green (13/13 runs to date), no cluster, no secrets |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
 
 ## Learned vs random attacker
@@ -65,13 +65,13 @@ gate, where a false alarm blocks a good build.
 ## What is in the loop
 
 1. **Attacker** — seven Chaos Mesh experiments behind a hard `shop-test` allowlist; `finally` cleanup always runs.
-2. **Defender** — reads only Prometheus signals, uses Isolation Forest plus a capped deviation term, then detect → diagnose → act → verify. It never imports or reads the attacker.
+2. **Defender** — reads only Prometheus signals, uses Isolation Forest plus a capped deviation term, then detect → diagnose → request a repair → verify. It requests the action; it does not repair by itself. It never imports or reads the attacker.
 3. **Controller** — drives both sides through their public CLIs, recomputes the resilience score from observed facts, and records the gate decision and audit trail.
 4. **Dashboard + CI** — a local React UI with a section nav, always-visible key results, a real battle timeline, labelled offline benchmark panels, searchable history and report actions, plus a free GitHub workflow that re-scores saved fixtures on every push. See [DASHBOARD.md](docs/DASHBOARD.md).
 
 ## Honest scope — read this before an interview
 
-- The early **score 65 / BLOCK** was a *measurement timing* issue: the final Prometheus sample was still inside the attack window. A bounded settle period fixed the measurement; it was **not** a bad release being caught.
+- The early **Phase 4 score 65 / BLOCK** was a *measurement timing* issue: the final Prometheus sample was still inside the attack window. A bounded settle period fixed the measurement; it was **not** a bad release being caught. Do not confuse that old 65 with the live bad-release **65/D/BLOCK** below — they are two different runs.
 - GitHub Actions does **not** run a live battle. It re-scores **saved** passing and failing JSON fixtures on a cluster-free runner. The real battles were run locally and their evidence is committed.
 - The attacker is **tabular Q-learning** (a JSON Q-table with epsilon-greedy exploration), **not PPO** or a deep RL model.
 - The Defender baseline is **40 samples**. That is enough for a deterministic local demo with steady synthetic load; production would need days of traffic across peak/off-peak cycles, drift detection and held-out incidents. See [BUILD_NOTES.md](docs/BUILD_NOTES.md).
@@ -80,8 +80,9 @@ gate, where a false alarm blocks a good build.
 - The diagnoser identifies the symptomatic service, not always the origin. In the headline battle the fault targeted `payment-service`, but `order-service` showed the strongest latency signal and was restarted.
 - A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **76.2 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
 - The headline battle now waits for a normal baseline before launching, so its detection time uses the same clock as the control. The old `0.0 s` came from starting a battle while the previous run was still inside Prometheus's 30-second window. A `0.0 s` value appears only in the bad-release run, where the release was already failing before the battle began.
-- The live gate caught a deliberately bad payment release: **65/D/BLOCK** while `PAYMENT_FAILURE_RATE=1.0`, then **100/A/PROMOTE** after rolling back to `0.01`. This is one pair of local runs, not a statistical guarantee; it shows the gate rejected a release that could not pass the resilience check.
+- The live gate caught a deliberately bad payment release: **65/D/BLOCK** while `PAYMENT_FAILURE_RATE=1.0`, then **100/A/PROMOTE** after rolling back to `0.01`. This is one pair of local runs, not a statistical guarantee; it shows the gate rejected a release that could not pass the resilience check. The rollback was performed by the experiment script, **not** the Defender. In the bad-release run the Defender requested a restart of `order-service` while labelling the failure `latency_spike`, despite `order-service_error_rate z=+99.2` and `payment-service_error_rate z=+93.6`; the gate, not the Defender, identified the release as bad.
 - For the network-latency fault, recovery was **not attributable to the Defender**: a no-Defender control recovered on its own. A restart may not fix Chaos Mesh latency because chaos can reattach to the new pod.
+- The **100/A** is not a fast-recovery claim. The score checks whether the fault was detected, whether it recovered, cleanup, the final anomaly score and attacker errors; it does not penalise a slow recovery. `recovery_seconds` is reported separately and includes up to one 30-second Prometheus scrape/window of observation lag. The control recovered sooner on the same clock.
 - The learned attacker's best action comes from a seeded simulator backed by only a few real battles. Treat it as a demo policy, not a production-trained agent.
 - The detector benchmark reuses the same 40 normal samples as the baseline and adds 160 synthetic faults. Treat its F1 numbers as a demo, not production evidence.
 

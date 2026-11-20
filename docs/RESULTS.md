@@ -11,15 +11,15 @@ cluster battle.
 | --- | --- | --- |
 | 1 | 5 FastAPI services + loadgen, shared observability, Kustomize, Prometheus/Grafana/Loki | Local Python run + Docker Compose + Kind deploy verified; 9 tests |
 | 2 | Chaos Mesh 2.8.8, 7 attacks, hard `shop-test` allowlist, guaranteed cleanup | `clusterScoped=true`; 18 tests; cleanup always runs; 0 leftover objects |
-| 3 | Defender detect → diagnose → act → verify | Isolation Forest + capped deviation; real latency attack diagnosed `latency_spike` on `order-service`, restarted, recovered; offline detector comparison added; 16 tests |
-| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact; the headline battle now waits for a normal baseline, scores 100/A, detects in 13.3 s and recovers in 76.2 s; 12 tests |
+| 3 | Defender detect → diagnose → request repair → verify | Isolation Forest + capped deviation; real latency attack diagnosed `latency_spike` on `order-service`, requested a restart, recovered; offline detector comparison added; 16 tests |
+| 4 | Arena Controller, Resilience Score, gate, API | Early **Phase 4 score 65 / BLOCK** was a settle-timing artefact; the headline battle now waits for a normal baseline, scores 100/A, detects in 13.3 s and recovers in 76.2 s; 12 tests |
 | 5 | Incident reporter, offline + free Groq opt-in | `ml/incident_report.md` and `ml/incident_report_groq.md` with all six sections; 16 tests |
-| 6 | Free GitHub Actions resilience gate | Recomputes score from facts; bad fixture BLOCK, good fixture PROMOTE; 9 tests; all runs green |
+| 6 | Free GitHub Actions resilience gate | Recomputes score from facts; bad fixture BLOCK, good fixture PROMOTE; 9 tests; latest push green |
 | 7 | Local React dashboard | 7 tests; `npm run build` clean; browser battle detected and scored 100 PROMOTE, cleanup ok, 0 objects |
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
-| 9 | Final docs, results, tests and UI polish | 12 tests; one `make verify`, real screenshots/GIF/video, recruiter README and claim/benchmark guards |
+| 9 | Final docs, results, tests and UI polish | 17 tests; one `make verify`, real screenshots/GIF/video, evidence/baseline/experiment checks, recruiter README and claim/benchmark guards |
 
-**Total: 122 automated tests pass.**
+**Total: 122 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media).
 
 ## Headline gated battle
 
@@ -43,6 +43,17 @@ previous `0.0 s` was a measurement artefact: the battle started while the prior
 run was still inside Prometheus's 30-second window. `ml/last_battle.json` carries
 the basis explicitly in `detection_basis`. A `0.0 s` value is used only in the
 bad-release run, where the release was already failing before the battle began.
+
+**Why 100/A despite a 76.2 s recovery.** The score is intentionally simple:
+it checks whether the fault was detected, whether it recovered at all, whether
+cleanup succeeded, whether the final anomaly score is below threshold, and
+whether the attacker reported an error. It does **not** reward faster recovery.
+`recovery_seconds` is reported separately and is measured by polling
+`defender.cli detect`, so it includes up to one 30-second Prometheus
+scrape/window of observation lag. The 100/A therefore means "detected,
+recovered and cleaned up", not "recovered quickly". The no-Defender control
+recovered sooner on the same clock, so the slow time is not evidence that the
+Defender helped.
 
 CI independently recomputes the score from these facts; it never trusts the
 stored decision. The earlier 10-second `network-partition` demo scored
@@ -97,6 +108,19 @@ battle. The bad-release battle records `detection_seconds: 0.0` because the
 release was already failing before the attack started; it is not a clean-start
 measurement. This is one pair of local runs, not a statistical guarantee, but it
 is a direct live-gate demonstration rather than a saved-fixture self-test.
+
+This **65/D/BLOCK** is a different result from the old **Phase 4 65/BLOCK**
+timing artefact. The bad-release BLOCK came from a real release that failed to
+recover; the Phase 4 BLOCK came from measuring before the Prometheus window
+cleared.
+
+The rollback was performed by the experiment script with `kubectl set env`, not
+by the Defender. In the bad-release run the Defender requested a restart of
+`order-service` and labelled the fault `latency_spike` (confidence 0.99) even
+though the evidence included `order-service_error_rate z=+99.2` and
+`payment-service_error_rate z=+93.6`. The Defender did **not** identify the bad
+config. The **gate** caught the bad release; do not credit the Defender with that
+result.
 
 ## Inconclusive CPU-stress control
 
@@ -161,8 +185,18 @@ comparison is like-for-like. These are offline benchmarks, not live battles.
   battle.
 - The RL attacker is **tabular Q-learning**, not PPO or deep RL.
 - The 40-sample baseline fits a steady synthetic demo, not production traffic.
-- No claim is made about a bad release being blocked or about improved recovery
-  times: neither was measured.
+- A bad release **was** measured: the live gate BLOCKed `PAYMENT_FAILURE_RATE=1.0`
+  at **65/D** and PROMOTEd the `0.01` rollback at **100/A**. That verdict came
+  from the gate, not the Defender: the script performed the rollback and the
+  Defender mislabelled the failure as `latency_spike` on `order-service` despite
+  error-rate z-scores of **+99.2** and **+93.6**.
+- Recovery speed was **not** improved by the Defender in the network-latency
+  control: **76.2 s** with a requested restart versus **50.8 s** without one.
+  Do not claim improved recovery times.
+- The **100/A** is not a fast-recovery score. The gate checks detection,
+  recovery yes/no, cleanup, final anomaly score and attacker errors; it does not
+  reward speed. `recovery_seconds` includes up to one 30-second Prometheus
+  observation window.
 
 ## GitHub Actions
 
@@ -172,7 +206,8 @@ Badge: see the top of `README.md`.
 - Free `ubuntu-latest` runner, public repo, no secrets, no cluster.
 - Actions used: `checkout@v7.0.1`, `setup-python@v7.1.0`, `setup-node@v7.1.0`.
 - Steps: safety guard → pytest → React build → bad-battle BLOCK → good-battle PROMOTE → audit trail.
-- All runs to date are green; the final run is checked after push.
+- Latest push green; **13/13** runs to date succeeded. The latest run is checked
+  after push.
 
 ## Cost statement
 

@@ -22,6 +22,11 @@ def test_all_final_docs_exist():
     for name in ["RESULTS.md", "TESTING.md", "BUILD_NOTES.md", "PORTFOLIO_POLISH.md", "DASHBOARD.md"]:
         assert (DOCS / name).exists()
 
+    results = (DOCS / "RESULTS.md").read_text(encoding="utf-8")
+    phase_test_counts = [int(value) for value in re.findall(r"^\| \d+ \|.*?(\d+) tests\b", results, re.MULTILINE)]
+    assert len(phase_test_counts) == 9, f"phase table count mismatch: {phase_test_counts}"
+    assert sum(phase_test_counts) == 122, f"phase table does not sum to 122: {sum(phase_test_counts)}"
+
 
 def test_readme_leads_with_pitch_demo_and_honest_scope():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -187,6 +192,7 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
         "Overview", "Battle", "Evidence", "History",
         "Battle timeline", "Learned vs random", "Detector comparison",
         "Recovery control", "Bad release vs rollback",
+        "With Defender repair request", "speed score", "script-driven",
         "Search decision history", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
@@ -224,6 +230,12 @@ def test_docs_do_not_overclaim_gate_or_rl():
         assert overclaim not in text
     assert "not ppo" in readme.lower()
     assert "measurement artefact" in results.lower() or "measurement timing" in readme.lower()
+    assert "detects, diagnoses and requests a repair" in readme.lower()
+    assert "green on every push" not in readme.lower()
+    assert "neither was measured" not in results.lower()
+    assert "The rollback was performed by the experiment script" in results
+    assert "The score is intentionally simple" in results
+    assert "different result" in results and "phase 4 score 65 / block" in results.lower()
     assert "saved" in phase6.lower()
 
 

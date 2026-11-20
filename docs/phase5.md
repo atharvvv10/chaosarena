@@ -65,7 +65,7 @@ $env:GROQ_API_KEY='gsk_your_free_key_here'
 
 - **64 tests pass** (48 earlier + 16 new).
 - Fresh battle: detected at **14.0 s**, diagnosed `latency_spike` on
-  `order-service` (`z=+289.5`), restarted it, score **100**, verdict **PROMOTE**
+  `order-service` (`z=+289.5`), requested a restart for it, score **100**, verdict **PROMOTE**
   for `v1.0.3`.
 - Offline report written to `ml/incident_report.md` with all six sections and
   the real numbers above.

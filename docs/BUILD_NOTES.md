@@ -9,7 +9,7 @@ See [local-setup.md](local-setup.md) — installed tool versions and WSL2 setup.
 See [phase2.md](phase2.md) — the 7 attacks, hard allowlist, cleanup design and
 measured results. Chaos Mesh is installed in the `chaos-mesh` namespace.
 See [phase3.md](phase3.md) — the Defender's model, bounded actions and the full
-detect → diagnose → act → verify result.
+detect → diagnose → request repair → verify result.
 See [phase4.md](phase4.md) — the battle, score rules, gate decision and API.
 See [phase5.md](phase5.md) — the incident report, offline backend and free Groq setup.
 See [phase6.md](phase6.md) — the free GitHub Actions workflow and CI gate.
@@ -57,12 +57,13 @@ non-zero lines for all five services in the request-rate, error-rate and latency
   order-service p95 from **0.24 s → 0.845 s → 0.24 s** (before / during / after).
 - Phase 3: 40-sample baseline trained to threshold **0.7397**. During a real
   latency attack the Defender scored **1.123**, diagnosed `latency_spike` on
-  `order-service` (`z=+237.6`), restarted it in `shop-test`, and verification
+  `order-service` (`z=+237.6`), requested a restart in `shop-test`, and verification
   returned **0.586** with `recovered: true`. No attacker import in `defender/`.
 - Phase 4: the first `network-latency` battle scored **65 / BLOCK** because the
   final Prometheus sample was still inside the attack window — a measurement
-  timing issue, not a rejected bad release. A bounded settle period fixed the
-  measurement; the next battle scored **100 / PROMOTE** for `v1.0.1`.
+  timing issue, not a rejected bad release. This old 65 is distinct from the
+  live bad-release **65/D/BLOCK** recorded later. A bounded settle period fixed
+  the measurement; the next battle scored **100 / PROMOTE** for `v1.0.1`.
   `/gate/evaluate` also ran a `pod-kill` battle live through uvicorn; decisions
   are in `ml/gate_decisions.jsonl`. No attacker/defender import in `controller/`.
 - Phase 5: a fresh 20-second battle produced `ml/last_battle.json`; the offline

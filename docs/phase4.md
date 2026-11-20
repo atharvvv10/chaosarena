@@ -77,11 +77,12 @@ cd D:\Projects\1\chaosarena
 ## Results actually measured on this laptop
 
 - **122 tests pass** across all nine phases after the final evidence checks.
-- First `network-latency` battle: detected in **13.3 s**, diagnosed `latency_spike`
-  on `order-service`, restarted it, but the final Prometheus sample was still
-  inside the 30-second attack window → score **65**, verdict **BLOCK**.
+- First Phase 4 `network-latency` battle: detected, diagnosed `latency_spike`
+  on `order-service`, requested a restart for it, but the final Prometheus sample
+  was still inside the 30-second attack window → score **65**, verdict **BLOCK**.
   This was a measurement artefact, not a rejected bad release; it is fixed by
-  the bounded settle period below.
+  the bounded settle period below. This old **Phase 4 65/BLOCK** is distinct from
+  the later live bad-release **65/D/BLOCK**.
 - Added a bounded settle period (up to 45 s, polling every 5 s). Second battle:
   detected at 13.9 s, final score **0.598** vs threshold **0.740** → score
   **100**, grade **A**, verdict **PROMOTE** for `v1.0.1`.
@@ -91,7 +92,7 @@ cd D:\Projects\1\chaosarena
 - The controller now records `detection_seconds` and `recovery_seconds` in every
   `BattleResult`. The committed headline battle (`ml/last_battle.json`) was
   detected in **13.3 s**, recovered in **76.2 s**, diagnosed `latency_spike` on
-  `order-service`, restarted it, and scored **100 / A / PROMOTE** with zero
+  `order-service`, requested a restart for it, and scored **100 / A / PROMOTE** with zero
   deductions and zero chaos objects left.
 - API `/health` and `/gate/last` verified live; decision log contains both
   BLOCK and PROMOTE entries.
