@@ -8,7 +8,7 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
-The GIF and MP4 record the detected 100/A battle; the PNG shows the current dashboard after the navigation/evidence-panel polish.
+The GIF and MP4 record the detected 100/A battle on the current dashboard; the PNG is a full-page capture of the same UI.
 
 ## Results at a glance
 
@@ -16,7 +16,7 @@ The GIF and MP4 record the detected 100/A battle; the PNG shows the current dash
 | --- | --- |
 | Automated tests | **120 passing** across all 9 phases (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
-| Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.8 s**, recovered in **61.6 s**, cleanup ok, 0 objects left |
+| Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **0.0 s (first poll)**, recovered in **57.4 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.8 s**, recovered in **61.6 s**; diagnosed `latency_spike` → restarted `order-service`; 40-sample baseline (threshold 0.7397) |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |

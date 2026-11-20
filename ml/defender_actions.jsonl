@@ -8,3 +8,5 @@
 {"timestamp": "2026-11-19T14:21:45+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
 {"timestamp": "2026-11-19T14:23:16+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
 {"timestamp": "2026-11-19T14:31:18+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T05:46:32+00:00", "namespace": "shop-test", "action": "scale", "service": "payment-service", "requested": 3, "applied": 3}
+{"timestamp": "2026-11-20T06:00:41+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}

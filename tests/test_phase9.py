@@ -110,7 +110,9 @@ def test_evidence_endpoint_returns_committed_local_evidence():
     assert response.status_code == 200
     payload = response.json()
     assert payload["last_battle"]["decision"]["verdict"] == "PROMOTE"
-    assert payload["last_battle"]["battle"]["detection_seconds"] > 0
+    assert payload["last_battle"]["battle"]["detected"] is True
+    assert payload["last_battle"]["battle"]["detection_seconds"] >= 0
+    assert payload["last_battle"]["battle"]["recovery_seconds"] > 0
     assert payload["rl_benchmark"]["damage_ratio"] > 1
     assert "defender_forest_plus_deviation" in payload["defender_benchmark"]["detectors"]
 

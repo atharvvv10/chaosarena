@@ -84,8 +84,8 @@ nothing is mutated.
   placeholders (`gsk_your_free_key_here`) and test fakes (`free-key`, `unused`,
   `secret`).
 - Headline real battle (`ml/last_battle.json`): `network-latency` on
-  `payment-service`, **detected in 13.8 s**, diagnosed `latency_spike` on
-  `order-service`, restarted, **recovered in 61.6 s**, **100/A/PROMOTE** at
+  `payment-service`, **detected on the first poll (0.0 s recorded)**, diagnosed
+  `latency_spike` on `order-service`, restarted, **recovered in 57.4 s**, **100/A/PROMOTE** at
   threshold 70, cleanup ok, 0 objects left.
 - The demo video itself records a dashboard battle that also detected the fault
   (at 7.3 s) and scored **100/A/PROMOTE** with 0 objects left. The earlier
@@ -98,7 +98,7 @@ nothing is mutated.
 - Offline detector comparison: rule-based 3-sigma 100% recall / 1 false alarm;
   plain Isolation Forest 0% recall; shipped Defender 76.2% recall / **0** false
   alarms. Evidence: `ml/defender_benchmark.json`.
-- Demo video duration: **1 min 9 s** (`demo.mp4`), GIF ≈ 16 s, dashboard and
+- Demo video duration: **1 min 22 s** (`demo.mp4`), GIF ≈ 26 s, dashboard and
   Grafana PNGs captured at 1440×900 and 1600×1000 respectively.
 - `attacker.cli status` after capture: `chaos_objects: []`, all pods Running.
 - Test suite and cluster-free verification pass; details in the final summary.
@@ -111,9 +111,9 @@ nothing is mutated.
 | "CI proves the gate can stop a bad release" | Actions re-scores saved JSON fixtures; there is no cluster or live attack on the runner. | Explicitly described as a saved-fixture logic self-test. |
 | "RL attacker / PPO implication" | The implementation is a small tabular Q-table, not PPO or deep RL. | README says **tabular Q-learning, not PPO**, with the Q-table file linked. |
 | "40-sample baseline" without context | Fine for a demo, misleading for production. | Explained why it is enough for steady synthetic load and what production needs. |
-| "70/100, not detected but recovered" as the headline | Sits on the threshold and invites "why did the detector miss it?" | Headline is now a sustained latency battle detected in 13.8 s, repaired in 61.6 s, 100/A; the missed 10 s partition is explained. |
+| "70/100, not detected but recovered" as the headline | Sits on the threshold and invites "why did the detector miss it?" | Headline is now a sustained latency battle detected on the first poll (0.0 s recorded), repaired in 57.4 s, 100/A; the missed 10 s partition is explained. |
 | "Learned Q ≈ 1.50" | Meaningless to a recruiter. | Replaced with a learner-vs-random result: 1.77× more damage, with committed JSON and a one-line command. |
-| "Diagnosed and recovered" with no numbers | No evidence of speed. | Detection 13.8 s and recovery 61.6 s recorded in `BattleResult` and shown in the table. |
+| "Diagnosed and recovered" with no numbers | No evidence of speed. | Detection (first poll, 0.0 s recorded) and recovery 57.4 s recorded in `BattleResult` and shown in the table. |
 | No rule-based / Isolation Forest comparison | The most convincing result for a detector project was missing. | Added a like-for-like offline table; reported honestly, including that a 3-sigma rule wins recall while the Defender wins precision. |
 
 ## Common errors and fixes
@@ -123,6 +123,7 @@ nothing is mutated.
 | `new_context` attribute error | Playwright creates contexts from a launched `browser`, not `chromium` | `browser = playwright.chromium.launch(...)`, then `browser.new_context(...)`. |
 | Battle wait times out | Waiting for the button to become disabled after the battle already finished | Only wait for it to be enabled again plus the `Last battle:` text. |
 | Grafana API 401 | Basic auth is not accepted by the running instance | Log in through the browser form, click **Skip**, reuse the session cookie. |
+| First battle after a Docker restart scored 65/BLOCK | Both loadgens kept an in-memory username registered before `user-service` pods restarted, so `/login` returned 401 and steady traffic no longer matched the baseline. | Restart the `loadgen` deployment in both `shop-test` and `shop-prod`, wait until `defender.cli detect` reports `anomaly: false`, then rerun the battle. |
 | GIF frames have different sizes | Mixed viewport/full-page screenshots | Capture frames at one fixed viewport and resize in Pillow. |
 | No real key found but docs mention keys | Placeholders are intentional | Keep placeholders; never commit an actual key. |
 

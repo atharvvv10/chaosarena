@@ -12,7 +12,7 @@ cluster battle.
 | 1 | 5 FastAPI services + loadgen, shared observability, Kustomize, Prometheus/Grafana/Loki | Local Python run + Docker Compose + Kind deploy verified; 9 tests |
 | 2 | Chaos Mesh 2.8.8, 7 attacks, hard `shop-test` allowlist, guaranteed cleanup | `clusterScoped=true`; 18 tests; cleanup always runs; 0 leftover objects |
 | 3 | Defender detect → diagnose → act → verify | Isolation Forest + capped deviation; real latency attack diagnosed `latency_spike` on `order-service`, restarted, recovered; offline detector comparison added; 16 tests |
-| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact; with a settle window the headline battle scores 100/A, detected in 13.8 s and recovered in 61.6 s; timing now recorded; 12 tests |
+| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact; with a settle window the headline battle scores 100/A, detected on the first poll (0.0 s recorded) and recovered in 57.4 s; timing now recorded; 12 tests |
 | 5 | Incident reporter, offline + free Groq opt-in | `ml/incident_report.md` and `ml/incident_report_groq.md` with all six sections; 16 tests |
 | 6 | Free GitHub Actions resilience gate | Recomputes score from facts; bad fixture BLOCK, good fixture PROMOTE; 9 tests; all runs green |
 | 7 | Local React dashboard | 7 tests; `npm run build` clean; browser battle detected and scored 100 PROMOTE, cleanup ok, 0 objects |
@@ -28,10 +28,10 @@ recorded `network-latency` attack on `payment-service` (`release-candidate`):
 
 | Fact | Measured value |
 | --- | --- |
-| Detected | yes, in **13.8 s** |
+| Detected | yes, on the first poll (**0.0 s** recorded) |
 | Diagnosed | `latency_spike` on `order-service` (confidence 0.99, z=+329.4) |
 | Action | `restart` requested for `order-service` in `shop-test` |
-| Recovered | yes, anomaly score back below threshold in **61.6 s** |
+| Recovered | yes, anomaly score back below threshold in **57.4 s** |
 | Cleanup | `cleanup_ok: true`, `chaos_objects_remaining: 0` |
 | Score / grade / verdict | **100 / A / PROMOTE** at threshold 70 |
 | Deductions | none |
