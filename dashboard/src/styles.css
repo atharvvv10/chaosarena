@@ -631,14 +631,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .diagnostic-details summary::marker { color: var(--green); }
 .diagnostic-details pre {
   margin: 8px 0 0;
-  padding: 10px 12px;
-  max-height: 220px;
+  padding: 11px 13px;
+  max-height: 240px;
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 5px;
   background: #0c1116;
-  font: 12px/1.6 var(--mono);
-  color: var(--muted);
+  font: 13px/1.7 var(--mono);
+  color: var(--text);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -802,6 +802,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   align-items: start;
 }
 .detector-table, .detector-notes { min-width: 0; }
+.detector-notes { padding-top: 35px; }
 .score-compare, .track-pair { display: grid; gap: 12px; }
 .compare-row .track { margin-top: 6px; }
 .block-text { color: var(--red) !important; }
@@ -1022,6 +1023,27 @@ table.compact-table { min-width: 0; }
   background: var(--red-bg);
 }
 
+.pill {
+  display: inline-block;
+  font: 12px var(--mono);
+  letter-spacing: 0.02em;
+  padding: 4px 9px;
+  border-radius: 4px;
+  border: 1px solid var(--line2);
+  background: var(--raised);
+  color: var(--muted);
+}
+.pill.promote {
+  color: var(--green);
+  background: var(--green-bg);
+  border-color: #3c5f4d;
+}
+.pill.block {
+  color: var(--red);
+  background: var(--red-bg);
+  border-color: #65403f;
+}
+
 .empty {
   padding: 24px;
   color: var(--muted);
@@ -1067,6 +1089,7 @@ table.compact-table { min-width: 0; }
   .kpis, .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .evidencegrid { grid-template-columns: repeat(2, 1fr); }
   .benchmark-grid, .detector-layout { grid-template-columns: 1fr; }
+  .detector-notes { padding-top: 0; }
   .twocol { grid-template-columns: 1fr; }
   .gateverdict { flex-wrap: wrap; }
   .decision-pair { margin-left: 56px; text-align: left; padding-left: 0; }
