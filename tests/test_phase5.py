@@ -108,8 +108,8 @@ def test_template_report_has_all_sections_and_real_numbers(bundle):
     report = IncidentReporter(TemplateLLM()).report(incident)
     assert missing_sections(report.text) == []
     assert "# Incident Report - v1.0.1" in report.text
-    assert "**100/100 (grade A)**" in report.text
-    assert "**PROMOTE**" in report.text
+    assert "100/100 (grade A)" in report.text
+    assert "PROMOTE" in report.text
     assert "13.9 seconds" in report.text
     assert "latency_spike" in report.text
     assert report.backend == "template"
@@ -193,7 +193,7 @@ def test_cli_report_writes_markdown_file(tmp_path, bundle, capsys):
     ])
     assert code == 0
     saved = out.read_text(encoding="utf-8")
-    assert "**Root cause**" in saved
+    assert "Root cause" in saved
     assert "v1.0.1" in saved
     assert '"backend": "template"' in capsys.readouterr().out
 

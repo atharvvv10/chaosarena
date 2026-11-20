@@ -76,17 +76,17 @@ class TemplateLLM:
             [
                 f"# Incident Report - {_text(facts.get('version'), 'candidate')}",
                 "",
-                "**Summary**",
+                "1. Summary",
                 (
                     f"A `{_text(facts.get('attack'))}` fault was injected into "
                     f"`{_text(facts.get('target'))}` in `shop-test` for release candidate "
                     f"`{_text(facts.get('version'), 'candidate')}`. "
-                    f"Resilience score: **{_text(facts.get('score'), 0)}/100 "
-                    f"(grade {_text(facts.get('grade'))})**. "
-                    f"Gate verdict: **{_text(facts.get('verdict'))}**."
+                    f"Resilience score: {_text(facts.get('score'), 0)}/100 "
+                    f"(grade {_text(facts.get('grade'))}). "
+                    f"Gate verdict: {_text(facts.get('verdict'))}."
                 ),
                 "",
-                "**Timeline**",
+                "2. Timeline",
                 f"- Evaluated at: {_text(facts.get('evaluated_at'))}",
                 f"- Fault detected: {detected}"
                 + (f" after {seconds:.1f} seconds" if seconds is not None else ""),
@@ -99,17 +99,17 @@ class TemplateLLM:
                 f"- Chaos cleanup: {cleanup}",
                 f"- Chaos objects remaining: {_text(facts.get('chaos_objects_remaining'), 0)}",
                 "",
-                "**Root cause**",
+                "3. Root cause",
                 f"- Category: {_text(diagnosis.get('category'))}",
                 f"- Service: {_text(diagnosis.get('service'))}",
                 f"- Confidence: {_text(diagnosis.get('confidence'))}",
                 "- Evidence:",
                 _bullet_list(evidence, indent="  "),
                 "",
-                "**Actions taken**",
+                "4. Actions taken",
                 action_line,
                 "",
-                "**Outcome**",
+                "5. Outcome",
                 f"- Returned to normal: {recovered}",
                 f"- Final anomaly score: {_text(facts.get('final_score'))} (threshold {_text(facts.get('defender_threshold'))})",
                 "- Gate reasons:",
@@ -117,7 +117,7 @@ class TemplateLLM:
                 "- Score deductions:",
                 _bullet_list(deductions, indent="  "),
                 "",
-                "**Follow-ups**",
+                "6. Follow-ups",
                 _bullet_list(follow_ups),
                 "",
             ]

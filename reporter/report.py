@@ -29,15 +29,28 @@ class IncidentReport:
         }
 
 
+import re
+
+def _heading_present(text: str, section: str) -> bool:
+    target = section.lower()
+    for raw_line in text.splitlines():
+        line = raw_line.strip().lower()
+        if not line:
+            continue
+        if line == target:
+            return True
+        if line.startswith("## ") and line[3:].strip() == target:
+            return True
+        if line.startswith("**") and line.endswith("**") and line.strip("*").strip() == target:
+            return True
+        if re.match(r"^\d+\.\s*" + re.escape(target) + r"$", line):
+            return True
+    return False
+
+
 def missing_sections(text: str) -> list[str]:
-    """Accept both `## Heading` and `**Heading**` from real LLM responses."""
-    lowered = text.lower()
-    return [
-        section
-        for section in REQUIRED_SECTIONS
-        if f"## {section.lower()}" not in lowered
-        and f"**{section.lower()}**" not in lowered
-    ]
+    """Accept common heading styles from templates and real LLM responses."""
+    return [section for section in REQUIRED_SECTIONS if not _heading_present(text, section)]
 
 
 class IncidentReporter:
