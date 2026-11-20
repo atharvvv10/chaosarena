@@ -324,6 +324,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .panelheader small {
   font: 10px var(--mono);
   color: var(--dim);
+  max-width: 60%;
+  overflow-wrap: anywhere;
 }
 
 .arena {
@@ -423,7 +425,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   color: var(--dim);
 }
 
-.kpis {
+.kpis, .kpi-grid {
   display: grid;
   grid-template-columns: 1.3fr repeat(3, 1fr);
   gap: 10px;
@@ -913,7 +915,7 @@ td:first-child {
 }
 
 @media (max-width: 1100px) {
-  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .kpis, .kpi-grid { grid-template-columns: repeat(2, 1fr); }
   .evidencegrid { grid-template-columns: repeat(2, 1fr); }
   .twocol { grid-template-columns: 1fr; }
 }
@@ -942,8 +944,8 @@ td:first-child {
   .arenafigure { padding: 12px 8px; }
   .arenafigure svg { min-width: 580px; }
   .arenafigure { overflow: auto; }
-  .kpis, .gategrid, .evidencegrid { grid-template-columns: 1fr; }
-  .twocol { grid-template-columns: 1fr; }
+  .kpis, .kpi-grid, .gategrid, .evidencegrid { grid-template-columns: 1fr; }
+  .twocol, .two-panel { grid-template-columns: 1fr !important; }
   .section { margin-bottom: 56px; }
   .arenacaption .last { margin-left: 0; }
   .three { gap: 8px; }
@@ -957,6 +959,55 @@ td:first-child {
     transition: none !important;
     animation: none !important;
   }
+}
+
+/* component support */
+.error { color: var(--red); }
+.state { padding: 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.metric-row:last-child { border-bottom: 0; }
+.metric-row strong { font: 500 13px var(--mono); color: var(--text); }
+.recovery-tracks { display: grid; gap: 14px; }
+.track-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 11px var(--mono);
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.track {
+  height: 6px;
+  background: #25303b;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.track > span {
+  display: block;
+  height: 100%;
+  background: var(--blue);
+  border-radius: 4px;
+}
+.track > span.green { background: var(--green); }
+.track > span.red { background: var(--red); }
+.recovery-note {
+  font: 10px/1.7 var(--mono);
+  color: var(--dim);
+  margin-top: 10px;
+}
+.two-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 /* navigation and panel aliases */
