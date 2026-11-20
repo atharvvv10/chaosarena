@@ -8,13 +8,16 @@ TARGET ?= order-service
 DURATION ?= 30
 THRESHOLD ?= 70
 
-.PHONY: help verify demo-media benchmarks cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
+.PHONY: help verify technical-demo demo-media benchmarks cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
 verify: ## Phase 9: run every cluster-free check in one command
 	$(PYTHON) scripts/verify_all.py
+
+technical-demo: ## Short evidence-based technical demo (no cluster needed)
+	$(PYTHON) scripts/technical_demo.py
 
 demo-media: ## Optional: recapture screenshots, demo GIF and video (Playwright + Edge)
 	$(PYTHON) scripts/capture_demo.py

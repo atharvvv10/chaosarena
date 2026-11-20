@@ -8,6 +8,8 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
+**Technical demo:** `python scripts/technical_demo.py` (or `make technical-demo`) replays the architecture, real payment-service fault evidence, scoring and an independent audit recomputation in one command — no cluster needed. [Read the generated transcript](docs/DEMO_TRANSCRIPT.md).
+
 The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control and bad-release panels.
 
 ## Results at a glance
