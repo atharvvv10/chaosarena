@@ -44,15 +44,33 @@ $env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\r
 
 Expected: `chaos_objects: []`, all pods `Running`.
 
+A live battle also needs Prometheus on `localhost:9090`. Start it in its own
+terminal before running the defender:
+
+```powershell
+kubectl -n monitoring port-forward svc/prometheus 9090:9090
+.\.venv\Scripts\python.exe -m defender.cli detect   # must be below the printed threshold
+```
+
+If the pre-attack score is already anomalous, the committed 40-sample baseline
+does not describe current traffic; recalibrate with the documented
+`defender.cli baseline --samples 40 --interval 3 --window 30s` and
+`defender.cli train`, then restore the committed files when returning to the
+published demo. See [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md) and
+[DEMO_AUDIT.md](DEMO_AUDIT.md).
+
 To run one real gated battle:
 
 ```powershell
-.\.venv\Scripts\python.exe -m controller.cli evaluate --attack network-latency --target payment-service --duration 30 --threshold 70 --settle 45
+.\.venv\Scripts\python.exe -m controller.cli evaluate --attack network-latency --target payment-service --duration 30 --threshold 70 --settle 45 --version release-candidate
 ```
 
-The sustained latency fault is detected and repaired; a 10-second partition can
-heal inside the 30-second Prometheus window and go unseen. Both are honest
-results, explained in [RESULTS.md](RESULTS.md#headline-gated-battle).
+The sustained latency fault is sized to stay visible across a Prometheus window,
+but detection is not guaranteed: a 10-second partition can heal inside that
+window, and a stale baseline can either hide the fault or make normal traffic
+look anomalous. These are honest results, explained in
+[RESULTS.md](RESULTS.md#headline-gated-battle) and
+[DEMO_AUDIT.md](DEMO_AUDIT.md).
 
 Or let the RL attacker choose:
 

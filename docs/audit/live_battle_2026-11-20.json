@@ -1,0 +1,58 @@
+{
+  "battle": {
+    "attack": "network-latency",
+    "target": "payment-service",
+    "version": "release-candidate",
+    "detected": true,
+    "detection_seconds": 0.0,
+    "detection_basis": "seconds since attacker launch until first anomaly observation",
+    "recovery_seconds": null,
+    "recovered": false,
+    "final_score": 1.1184,
+    "defender_threshold": 0.7397,
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "diagnosis": {
+      "category": "latency_spike",
+      "service": "product-service",
+      "confidence": 0.99,
+      "evidence": [
+        "order-service_p95_latency z=-156.2",
+        "payment-service_p95_latency z=-58.4",
+        "user-service_request_rate z=+43.6"
+      ]
+    },
+    "action_taken": {
+      "timestamp": "2026-11-20T14:41:13+00:00",
+      "namespace": "shop-test",
+      "action": "restart",
+      "service": "product-service",
+      "status": "requested"
+    },
+    "attack_error": null
+  },
+  "score": {
+    "score": 65,
+    "grade": "D",
+    "deductions": [
+      "service did not return to a normal score (-25)",
+      "final anomaly score is still above threshold (-10)"
+    ]
+  },
+  "decision": {
+    "verdict": "BLOCK",
+    "promote": false,
+    "score": 65,
+    "threshold": 70,
+    "grade": "D",
+    "version": "release-candidate",
+    "attack": "network-latency",
+    "target": "payment-service",
+    "reasons": [
+      "score 65 is below threshold 70",
+      "attack cleanup succeeded",
+      "no chaos objects left behind"
+    ],
+    "evaluated_at": "2026-11-20T14:42:17+00:00"
+  }
+}

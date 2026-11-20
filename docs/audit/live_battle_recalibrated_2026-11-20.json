@@ -1,0 +1,42 @@
+{
+  "battle": {
+    "attack": "network-latency",
+    "target": "payment-service",
+    "version": "release-candidate",
+    "detected": false,
+    "detection_seconds": null,
+    "detection_basis": "seconds since attacker launch until first anomaly observation",
+    "recovery_seconds": 37.2,
+    "recovered": true,
+    "final_score": 0.632,
+    "defender_threshold": 0.7539,
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "diagnosis": null,
+    "action_taken": null,
+    "attack_error": null
+  },
+  "score": {
+    "score": 70,
+    "grade": "C",
+    "deductions": [
+      "fault was never detected (-30)"
+    ]
+  },
+  "decision": {
+    "verdict": "PROMOTE",
+    "promote": true,
+    "score": 70,
+    "threshold": 70,
+    "grade": "C",
+    "version": "release-candidate",
+    "attack": "network-latency",
+    "target": "payment-service",
+    "reasons": [
+      "score 70 meets threshold 70",
+      "attack cleanup succeeded",
+      "no chaos objects left behind"
+    ],
+    "evaluated_at": "2026-11-20T14:47:24+00:00"
+  }
+}

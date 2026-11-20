@@ -70,6 +70,22 @@ kubectl -n monitoring port-forward svc/loki 3100:3100
 
 Then open http://localhost:3000 (admin / admin) → **ChaosArena - ShopApp Live**.
 
+The Prometheus port-forward is also a hard prerequisite for any live battle: the
+defender reads `http://localhost:9090`, and `controller.cli evaluate` fails in
+`defender.cli detect` without it. If the host or cluster was restarted, confirm
+the traffic profile still matches the committed 40-sample baseline before
+attacking:
+
+```powershell
+.\.venv\Scripts\python.exe -m defender.cli detect
+```
+
+An anomalous pre-attack score means the baseline is stale; recalibrate with
+`defender.cli baseline --samples 40 --interval 3 --window 30s` and
+`defender.cli train`, then restore the committed model for the published demo.
+The complete sequence is in [DEMO_RUNBOOK.md](DEMO_RUNBOOK.md), and the live
+findings from this environment are in [DEMO_AUDIT.md](DEMO_AUDIT.md).
+
 ### One fix made during deployment
 
 Kustomize refuses ConfigMap file sources outside its root, so the Grafana

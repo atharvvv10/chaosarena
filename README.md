@@ -79,7 +79,7 @@ gate, where a false alarm blocks a good build.
 - The learned-vs-random and detector-comparison tables are **offline, seeded benchmarks**, not live cluster battles. Their exact commands and data are linked above.
 - The diagnoser identifies the symptomatic service, not always the origin. In the headline battle the fault targeted `payment-service`, but `order-service` showed the strongest latency signal and was restarted.
 - A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **76.2 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
-- The headline battle now waits for a normal baseline before launching, so its detection time uses the same clock as the control. The old `0.0 s` came from starting a battle while the previous run was still inside Prometheus's 30-second window. A `0.0 s` value appears only in the bad-release run, where the release was already failing before the battle began.
+- The headline battle waits for a normal baseline before launching, so its detection time uses the same clock as the control. A `0.0 s` value means the detector was already anomalous at launch, not that detection was instantaneous. Earlier it came from starting a battle while a previous run was still inside Prometheus's 30-second window; in the 2026-11-20 audit it came from a stale baseline after a host restart. That audit artifact is kept separately from the committed headline evidence; see [DEMO_AUDIT.md](docs/DEMO_AUDIT.md).
 - The live gate caught a deliberately bad payment release: **65/D/BLOCK** while `PAYMENT_FAILURE_RATE=1.0`, then **100/A/PROMOTE** after rolling back to `0.01`. This is one pair of local runs, not a statistical guarantee; it shows the gate rejected a release that could not pass the resilience check. The rollback was performed by the experiment script, **not** the Defender. In the bad-release run the Defender requested a restart of `order-service` while labelling the failure `latency_spike`, despite `order-service_error_rate z=+99.2` and `payment-service_error_rate z=+93.6`; the gate, not the Defender, identified the release as bad.
 - For the network-latency fault, recovery was **not attributable to the Defender**: a no-Defender control recovered on its own. A restart may not fix Chaos Mesh latency because chaos can reattach to the new pod.
 - The **100/A** is not a fast-recovery claim. The score checks whether the fault was detected, whether it recovered, cleanup, the final anomaly score and attacker errors; it does not penalise a slow recovery. `recovery_seconds` is reported separately and includes up to one 30-second Prometheus scrape/window of observation lag. The control recovered sooner on the same clock.
@@ -102,17 +102,28 @@ http://127.0.0.1:8080     gate API
 
 If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the dashboard is closed, run `cd dashboard && npm run dev`.
 
+For a technical evaluator, [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) gives the exact
+committed-state and live-battle commands, and [DEMO_AUDIT.md](docs/DEMO_AUDIT.md)
+records what was actually verified in the isolated Kind environment, including
+environmental limitations. A live battle requires the Prometheus port-forward
+(`kubectl -n monitoring port-forward svc/prometheus 9090:9090`); the dashboard
+alone only reads committed evidence unless a live battle is run.
+
 ## Fresh clone
 
 ```bash
 make cluster     # Kind cluster with shop-test, shop-prod, monitoring
 make deploy      # build and load 6 images, apply manifests
+make metrics     # REQUIRED before a live battle: Prometheus on :9090
 make gate-api    # local gate API on :8080
 cd dashboard && npm install && npm run dev
 make verify      # all cluster-free checks: tests, guards, gate fixtures, UI build
 ```
 
-Plain-Python and Docker Compose alternatives are in [BUILD_NOTES.md](docs/BUILD_NOTES.md).
+`make metrics` blocks, so run it in its own terminal. On Windows, use the
+PowerShell equivalents in [local-setup.md](docs/local-setup.md); the `make`
+targets call `chmod` and shell scripts. Plain-Python and Docker Compose
+alternatives are in [BUILD_NOTES.md](docs/BUILD_NOTES.md).
 
 ## Architecture
 
