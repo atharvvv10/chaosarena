@@ -18,7 +18,7 @@ Choose the level of depth that fits your time.
 .\.venv\Scripts\python.exe scripts/technical_demo.py
 ```
 
-No running Kubernetes cluster required. The replay reads committed evidence and a real audit artifact, then recomputes the release decision with the project's own gate code. [Read the generated transcript](docs/DEMO_TRANSCRIPT.md).
+No running Kubernetes cluster required. The replay reads committed evidence and a real audit artifact, then recomputes the release decision with the project's own gate code. This demonstrates that stored verdicts are not trusted — not that the underlying measurements themselves cannot be altered. [Read the generated transcript](docs/DEMO_TRANSCRIPT.md).
 
 **Option 2: Inspect the dashboard**
 
