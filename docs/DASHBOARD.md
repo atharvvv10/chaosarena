@@ -15,7 +15,11 @@ charts, no API keys and no external UI kits.
 - **Battle form** — unchanged safety contract: allowlisted `shop-test` targets only,
   with the same five inputs and one attacker selector.
 - **Battle timeline** — turns the committed `ml/last_battle.json` record into an ordered
-  detect → diagnose → repair → recover → cleanup story with the measured timings.
+  inject → symptom → repair request → recover → cleanup story with the measured timings.
+  A `0.0 s` detection time is labelled "anomaly present on first poll after launch";
+  the JSON carries the same clarification in `detection_basis`.
+- **Recovery control** — compares the gated battle with a no-remediation run of the same
+  fault and says plainly that two single runs are not a statistical study.
 - **History tools** — search by version, attack, target or verdict, plus one-click
   PROMOTE/BLOCK filters.
 - **Report actions** — copy the incident report to the clipboard or download it as Markdown.
@@ -23,24 +27,27 @@ charts, no API keys and no external UI kits.
 
 ## New evidence API
 
-`GET /evidence` returns three local files in one response:
+`GET /evidence` returns four local files in one response:
 
 | Field | Source | Label in the UI |
 | --- | --- | --- |
 | `last_battle` | `ml/last_battle.json` | Real battle timeline |
 | `rl_benchmark` | `ml/rl_benchmark.json` | Learned vs random (offline seeded simulator) |
 | `defender_benchmark` | `ml/defender_benchmark.json` | Detector comparison (offline seeded samples) |
+| `no_defender_baseline` | `ml/no_defender_baseline.json` | Recovery control (real local run, no remediation) |
 
 Missing or malformed files produce `null` for that field instead of breaking the page.
 The UI labels the two benchmark panels as **offline** and **not a live battle**; only the
-timeline is described as a real battle.
+timeline and the recovery-control row are described as real local runs.
 
 ## Why this is honest
 
 The dashboard does not claim that the benchmarks were produced by live chaos runs. The
 learned-vs-random numbers come from 200 seeded simulator episodes. The detector numbers
 come from 40 recorded normal samples plus 160 seeded fault injections. The headline
-`network-latency` battle is the real detect-and-repair run recorded in `ml/last_battle.json`.
+`network-latency` battle is the real detected run recorded in `ml/last_battle.json`;
+its repair was requested but not proven necessary, because a separate no-Defender run
+of the same fault recovered without any action.
 
 ## Verify locally
 

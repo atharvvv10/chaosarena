@@ -85,7 +85,7 @@ nothing is mutated.
   `secret`).
 - Headline real battle (`ml/last_battle.json`): `network-latency` on
   `payment-service`, **detected on the first poll (0.0 s recorded)**, diagnosed
-  `latency_spike` on `order-service`, restarted, **recovered in 57.4 s**, **100/A/PROMOTE** at
+  `latency_spike` on `order-service`, restart requested, **recovered in 57.4 s**, **100/A/PROMOTE** at
   threshold 70, cleanup ok, 0 objects left.
 - The demo video itself records a dashboard battle that also detected the fault
   (at 7.3 s) and scored **100/A/PROMOTE** with 0 objects left. The earlier
@@ -111,9 +111,11 @@ nothing is mutated.
 | "CI proves the gate can stop a bad release" | Actions re-scores saved JSON fixtures; there is no cluster or live attack on the runner. | Explicitly described as a saved-fixture logic self-test. |
 | "RL attacker / PPO implication" | The implementation is a small tabular Q-table, not PPO or deep RL. | README says **tabular Q-learning, not PPO**, with the Q-table file linked. |
 | "40-sample baseline" without context | Fine for a demo, misleading for production. | Explained why it is enough for steady synthetic load and what production needs. |
-| "70/100, not detected but recovered" as the headline | Sits on the threshold and invites "why did the detector miss it?" | Headline is now a sustained latency battle detected on the first poll (0.0 s recorded), repaired in 57.4 s, 100/A; the missed 10 s partition is explained. |
+| "70/100, not detected but recovered" as the headline | Sits on the threshold and invites "why did the detector miss it?" | Headline is now a sustained latency battle detected on the first poll (0.0 s recorded), recovered in 57.4 s with a repair requested, 100/A; the missed 10 s partition is explained. |
 | "Learned Q ≈ 1.50" | Meaningless to a recruiter. | Replaced with a learner-vs-random result: 1.77× more damage, with committed JSON and a one-line command. |
 | "Diagnosed and recovered" with no numbers | No evidence of speed. | Detection (first poll, 0.0 s recorded) and recovery 57.4 s recorded in `BattleResult` and shown in the table. |
+| "The Defender's restart fixed the fault" | The attack targeted `payment-service`, but the diagnoser blamed the symptomatic `order-service`, and the fault self-heals. | Added a no-Defender control run: same fault, no remediation, recovered in 50.8 s. Stated that the diagnoser finds symptoms, not always the origin. |
+| "Detected in 0.0 s" without context | Looks like a fake or a clock that started too late. | `detection_basis` now says the clock starts at attacker launch; `0.0 s` means the anomaly was already present on the first poll. |
 | No rule-based / Isolation Forest comparison | The most convincing result for a detector project was missing. | Added a like-for-like offline table; reported honestly, including that a 3-sigma rule wins recall while the Defender wins precision. |
 
 ## Common errors and fixes

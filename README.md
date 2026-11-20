@@ -8,16 +8,16 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
-The GIF and MP4 record the detected 100/A battle on the current dashboard; the PNG is a full-page capture of the same UI.
+The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control panel.
 
 ## Results at a glance
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **120 passing** across all 9 phases (`make verify`) |
+| Automated tests | **121 passing** across all 9 phases (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **0.0 s (first poll)**, recovered in **57.4 s**, cleanup ok, 0 objects left |
-| Defender | Detected in **13.8 s**, recovered in **61.6 s**; diagnosed `latency_spike` → restarted `order-service`; 40-sample baseline (threshold 0.7397) |
+| Defender | Detected in **0.0 s (first poll)**, recovered in **57.4 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
 | CI | Free `ubuntu-latest` Actions, green on every push, no cluster, no secrets |
@@ -74,8 +74,13 @@ gate, where a false alarm blocks a good build.
 - GitHub Actions does **not** run a live battle. It re-scores **saved** passing and failing JSON fixtures on a cluster-free runner. The real battles were run locally and their evidence is committed.
 - The attacker is **tabular Q-learning** (a JSON Q-table with epsilon-greedy exploration), **not PPO** or a deep RL model.
 - The Defender baseline is **40 samples**. That is enough for a deterministic local demo with steady synthetic load; production would need days of traffic across peak/off-peak cycles, drift detection and held-out incidents. See [BUILD_NOTES.md](docs/BUILD_NOTES.md).
-- An earlier demo used a **10-second `network-partition`** and scored **70/C/PROMOTE** because the fault healed inside the 30-second Prometheus window and was never flagged. The headline battle instead uses a sustained **30-second `network-latency`** fault that the Defender clearly detects and repairs. Both runs are real; see [PORTFOLIO_POLISH.md](docs/PORTFOLIO_POLISH.md).
+- An earlier demo used a **10-second `network-partition`** and scored **70/C/PROMOTE** because the fault healed inside the 30-second Prometheus window and was never flagged. The headline battle instead uses a sustained **30-second `network-latency`** fault that the Defender clearly detects; a repair was requested, but a no-Defender control run recovered without it. Both runs are real; see [PORTFOLIO_POLISH.md](docs/PORTFOLIO_POLISH.md).
 - The learned-vs-random and detector-comparison tables are **offline, seeded benchmarks**, not live cluster battles. Their exact commands and data are linked above.
+- The diagnoser identifies the symptomatic service, not always the origin. In the headline battle the fault targeted `payment-service`, but `order-service` showed the strongest latency signal and was restarted.
+- A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **57.4 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
+- The `0.0 s` detection value means the anomaly was already present on the first poll after the attacker launched. It is measured from attack start, not from when the Defender began observing; the dashboard labels it as a first-poll detection.
+- The learned attacker's best action comes from a seeded simulator backed by only a few real battles. Treat it as a demo policy, not a production-trained agent.
+- The detector benchmark reuses the same 40 normal samples as the baseline and adds 160 synthetic faults. Treat its F1 numbers as a demo, not production evidence.
 
 ## Try it in the dashboard
 

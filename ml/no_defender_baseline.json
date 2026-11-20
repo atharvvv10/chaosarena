@@ -1,0 +1,18 @@
+{
+  "attack": "network-latency",
+  "target": "payment-service",
+  "duration": 30,
+  "hold": 30,
+  "defender_remediation": false,
+  "note": "observe-only baseline: defender.cli detect was polled, but no diagnose/act/run/verify action was taken and the controller was not used",
+  "detected": true,
+  "detection_seconds": 10.3,
+  "detection_basis": "seconds since attacker launch until first anomaly observation",
+  "recovered": true,
+  "recovery_seconds": 50.8,
+  "final_score": 0.6576,
+  "defender_threshold": 0.7397,
+  "cleanup_ok": true,
+  "chaos_objects_remaining": 0,
+  "attacker_output": "{\n  \"name\": \"network-latency\",\n  \"manifest\": \"chaosarena-network-latency-dba1547a\",\n  \"target\": \"payment-service\",\n  \"namespace\": \"shop-test\",\n  \"started_at\": \"2026-11-20T06:13:10+00:00\",\n  \"ended_at\": \"2026-11-20T06:13:42+00:00\",\n  \"cleanup_ok\": true,\n  \"error\": null,\n  \"ok\": true\n}"
+}

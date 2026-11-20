@@ -183,13 +183,16 @@ function BattleTimeline({ battle }) {
     },
     {
       title: 'Defender detected',
-      detail: `score ${battle.final_score ?? '--'} vs threshold ${battle.defender_threshold ?? '--'}`,
+      detail: `score ${battle.final_score ?? '--'} vs threshold ${battle.defender_threshold ?? '--'}`
+        + ` · ${battle.detection_seconds === 0
+          ? 'anomaly present on first poll after launch'
+          : battle.detection_basis || 'measured from attack start'}`,
       time: battle.detection_seconds != null ? `T+${battle.detection_seconds}s` : '--',
       tone: 'good',
     },
     {
-      title: 'Root cause identified',
-      detail: `${diagnosis.category || 'unknown'} · ${diagnosis.service || 'unknown'} · ${confidence}`,
+      title: 'Symptom identified',
+      detail: `${diagnosis.category || 'unknown'} on ${diagnosis.service || 'unknown'} · ${confidence} (symptomatic, not proven origin)`,
     },
     {
       title: 'Repair requested',
@@ -197,7 +200,7 @@ function BattleTimeline({ battle }) {
     },
     {
       title: 'Service recovered',
-      detail: 'Defender re-checked health after the repair',
+      detail: 'anomaly score back below threshold after the observation window',
       time: battle.recovery_seconds != null ? `T+${battle.recovery_seconds}s` : '--',
       tone: 'good',
     },
@@ -232,7 +235,8 @@ function BattleTimeline({ battle }) {
 function Benchmarks({ evidence }) {
   const rl = evidence?.rl_benchmark
   const defender = evidence?.defender_benchmark
-  if (!rl && !defender) {
+  const baseline = evidence?.no_defender_baseline
+  if (!rl && !defender && !baseline) {
     return <p className="muted">No benchmark evidence found in the local ml/ folder.</p>
   }
 
@@ -298,6 +302,38 @@ function Benchmarks({ evidence }) {
           </table>
         </div>
       </div>
+
+      {baseline && (
+        <div className="benchmark-block">
+          <div className="benchmark-head">
+            <span className="eyebrow">Recovery control</span>
+            <span className="tag">two single local runs</span>
+          </div>
+          <p className="muted small">Same fault and target, one with Defender repair and one observe-only. Not a statistical study.</p>
+          <div className="table-wrap">
+            <table className="compare-table">
+              <thead>
+                <tr><th>Run</th><th>Detected</th><th>Recovered</th></tr>
+              </thead>
+              <tbody>
+                <tr className="highlight">
+                  <td>With Defender restart</td>
+                  <td>{evidence?.last_battle?.battle?.detection_seconds != null
+                    ? `T+${evidence.last_battle.battle.detection_seconds}s` : '--'}</td>
+                  <td>{evidence?.last_battle?.battle?.recovery_seconds != null
+                    ? `T+${evidence.last_battle.battle.recovery_seconds}s` : '--'}</td>
+                </tr>
+                <tr>
+                  <td>No Defender remediation</td>
+                  <td>{baseline.detection_seconds != null ? `T+${baseline.detection_seconds}s` : '--'}</td>
+                  <td>{baseline.recovery_seconds != null ? `T+${baseline.recovery_seconds}s` : '--'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="muted small">The observe-only run also recovered, so in this pair of runs the restart was not required for recovery.</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -698,7 +734,7 @@ export default function App() {
             <div>
               <span className="eyebrow">Measured evidence</span>
               <h2>Battle timeline &amp; comparisons</h2>
-              <p className="muted">One real battle, plus two clearly-labelled offline benchmarks</p>
+              <p className="muted">Two real local runs, plus two clearly-labelled offline benchmarks</p>
             </div>
             <span className="tag">local JSON · no cloud</span>
           </div>

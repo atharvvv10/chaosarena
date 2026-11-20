@@ -19,7 +19,7 @@ cluster battle.
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 12 tests; one `make verify`, real screenshots/GIF/video, recruiter README and claim/benchmark guards |
 
-**Total: 120 automated tests pass.**
+**Total: 121 automated tests pass.**
 
 ## Headline gated battle
 
@@ -29,12 +29,18 @@ recorded `network-latency` attack on `payment-service` (`release-candidate`):
 | Fact | Measured value |
 | --- | --- |
 | Detected | yes, on the first poll (**0.0 s** recorded) |
-| Diagnosed | `latency_spike` on `order-service` (confidence 0.99, z=+329.4) |
+| Diagnosed | `latency_spike` on `order-service` (confidence 0.99, z=+296.5; symptomatic service, not necessarily the attack origin) |
 | Action | `restart` requested for `order-service` in `shop-test` |
 | Recovered | yes, anomaly score back below threshold in **57.4 s** |
 | Cleanup | `cleanup_ok: true`, `chaos_objects_remaining: 0` |
 | Score / grade / verdict | **100 / A / PROMOTE** at threshold 70 |
 | Deductions | none |
+
+`detection_seconds` is measured from attacker launch to the first anomaly
+observation. The recorded `0.0 s` means the anomaly was already present on the
+first poll immediately after launch, not that the Defender started observing
+before the attack. `ml/last_battle.json` carries this basis explicitly in
+`detection_basis`, and the dashboard timeline shows the same clarification.
 
 CI independently recomputes the score from these facts; it never trusts the
 stored decision. The earlier 10-second `network-partition` demo scored
@@ -45,6 +51,30 @@ sustained fault the Defender can clearly see.
 
 The deliberately bad fixture `ci/fixtures/failing_battle.json` is score 0, grade F,
 **BLOCK**, with six deductions. Both directions are tested.
+
+## No-Defender control run
+
+To check whether the Defender's restart was what fixed the fault, the same
+`network-latency` fault was run once with **no remediation at all**
+(`scripts/no_defender_baseline.py`). The script only polls `defender.cli detect`;
+it never calls `diagnose`, `act`, `run` or `verify`, and the controller is not
+involved. Evidence: `ml/no_defender_baseline.json`.
+
+| Fact | With Defender (gated battle) | No Defender remediation |
+| --- | --- | --- |
+| Fault | `network-latency` → `payment-service`, 30 s | same |
+| Detected | yes, first poll (0.0 s recorded) | yes, at 10.3 s |
+| Repair | `restart` requested on `order-service` | none (observe-only) |
+| Recovered | 57.4 s | 50.8 s |
+| Final anomaly score | 0.6320 | 0.6576 (threshold 0.7397) |
+| Cleanup | ok, 0 objects | ok, 0 objects |
+
+The no-remediation run recovered **without any repair action**, and slightly
+sooner than the gated run. These are two single local runs, not a statistical
+study, but they show the restart was **not required for recovery in this
+environment**. This does not prove the Defender is useless: detection and
+diagnosis still ran, and production incidents may not self-heal. It does answer
+the question "did the restart fix it?" with **no evidence that it did** here.
 
 ## Learned vs random attacker
 

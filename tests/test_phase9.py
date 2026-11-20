@@ -112,9 +112,11 @@ def test_evidence_endpoint_returns_committed_local_evidence():
     assert payload["last_battle"]["decision"]["verdict"] == "PROMOTE"
     assert payload["last_battle"]["battle"]["detected"] is True
     assert payload["last_battle"]["battle"]["detection_seconds"] >= 0
+    assert "attacker launch" in payload["last_battle"]["battle"]["detection_basis"]
     assert payload["last_battle"]["battle"]["recovery_seconds"] > 0
     assert payload["rl_benchmark"]["damage_ratio"] > 1
     assert "defender_forest_plus_deviation" in payload["defender_benchmark"]["detectors"]
+    assert payload["no_defender_baseline"]["defender_remediation"] is False
 
 
 def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeypatch):
@@ -123,6 +125,7 @@ def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeyp
     monkeypatch.setattr(api, "LAST_BATTLE_FILE", tmp_path / "missing.json")
     monkeypatch.setattr(api, "RL_BENCHMARK_FILE", bad)
     monkeypatch.setattr(api, "DEFENDER_BENCHMARK_FILE", tmp_path / "missing.json")
+    monkeypatch.setattr(api, "NO_DEFENDER_FILE", tmp_path / "missing.json")
 
     response = TestClient(api.app).get("/evidence")
     assert response.status_code == 200
@@ -130,7 +133,25 @@ def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeyp
         "last_battle": None,
         "rl_benchmark": None,
         "defender_benchmark": None,
+        "no_defender_baseline": None,
     }
+
+
+def test_no_defender_baseline_is_observe_only_and_recovered():
+    payload = json.loads((ROOT / "ml" / "no_defender_baseline.json").read_text(encoding="utf-8"))
+    assert payload["defender_remediation"] is False
+    assert payload["detected"] is True
+    assert payload["recovered"] is True
+    assert payload["detection_seconds"] >= 0
+    assert "attacker launch" in payload["detection_basis"]
+    assert payload["recovery_seconds"] > 0
+    assert payload["cleanup_ok"] is True
+    assert payload["chaos_objects_remaining"] == 0
+
+    script = (ROOT / "scripts" / "no_defender_baseline.py").read_text(encoding="utf-8")
+    assert 'cli("defender.cli", "detect")' in script
+    assert 'cli("attacker.cli", "cleanup")' in script
+    assert "diagnose/act/run/verify action was taken" in script
 
 
 def test_frontend_has_navigation_timeline_filters_and_report_actions():
@@ -142,7 +163,7 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
     for label in [
         "Overview", "Battle", "Evidence", "History",
         "Battle timeline", "Learned vs random", "Detector comparison",
-        "Search decision history", "Download", "Copy", "toast",
+        "Recovery control", "Search decision history", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
     for feature in ["subnav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:

@@ -13,6 +13,7 @@ class BattleResult:
     version: str = "candidate"
     detected: bool = False
     detection_seconds: float | None = None
+    detection_basis: str = "seconds since attacker launch until first anomaly observation"
     recovery_seconds: float | None = None
     recovered: bool = False
     final_score: float | None = None
@@ -30,6 +31,7 @@ class BattleResult:
             "version": self.version,
             "detected": self.detected,
             "detection_seconds": self.detection_seconds,
+            "detection_basis": self.detection_basis,
             "recovery_seconds": self.recovery_seconds,
             "recovered": self.recovered,
             "final_score": self.final_score,

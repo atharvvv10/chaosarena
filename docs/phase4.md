@@ -76,7 +76,7 @@ cd D:\Projects\1\chaosarena
 
 ## Results actually measured on this laptop
 
-- **120 tests pass** across all nine phases after the final evidence checks.
+- **121 tests pass** across all nine phases after the final evidence checks.
 - First `network-latency` battle: detected on the first poll (0.0 s recorded), diagnosed `latency_spike`
   on `order-service`, restarted it, but the final Prometheus sample was still
   inside the 30-second attack window → score **65**, verdict **BLOCK**.

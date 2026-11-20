@@ -5,6 +5,7 @@
     "version": "release-candidate",
     "detected": true,
     "detection_seconds": 0.0,
+    "detection_basis": "seconds since attacker launch until first anomaly observation",
     "recovery_seconds": 57.4,
     "recovered": true,
     "final_score": 0.632,
