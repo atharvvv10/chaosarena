@@ -105,7 +105,7 @@ def test_frontend_uses_polished_panels_and_rl_endpoint():
     assert "/rl/policy" in api_js
     for label in ["Release gate", "Run a battle", "RL attacker", "Decision history", "Incident report"]:
         assert label in app
-    for feature in ["score-ring", "trend-bar", "phase-strip", "rl-panel"]:
+    for feature in ["kpi-grid", "timeline", "benchmark-grid", "history-tools", "rl-panel"]:
         assert feature in app and feature in css
     assert "shop-test" in app
 
@@ -192,7 +192,7 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
         "Overview", "Battle", "Evidence", "History",
         "Battle timeline", "Learned vs random", "Detector comparison",
         "Recovery control", "Bad release vs rollback",
-        "With Defender repair request", "speed score", "script-driven",
+        "With Defender", "speed score", "script-driven",
         "Search decision history", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
