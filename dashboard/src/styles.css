@@ -919,11 +919,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .report ul ul { margin-top: 4px; margin-bottom: 4px; }
 .report-summary {
-  margin: 0 0 12px;
+  margin: 0 0 14px;
   max-width: 72ch;
   color: var(--muted);
   font-size: 14px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 .report-disclosure {
   border-top: 1px solid var(--line);
@@ -1083,6 +1083,10 @@ table.compact-table { min-width: 0; }
 .toast.show {
   opacity: 1;
   transform: none;
+}
+
+@media (min-width: 1101px) {
+  .detector-table .compact-table { table-layout: fixed; }
 }
 
 @media (max-width: 1100px) {

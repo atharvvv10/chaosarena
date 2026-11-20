@@ -126,6 +126,7 @@ function Evidence({evidence,policy,loading}){
   const rule=detectors?.rule_based_3sigma;
   const iso=detectors?.isolation_forest_only;
   const isoText=iso?.recall===0?'isolation forest alone detects none':`isolation forest alone at ${rate(iso?.recall)} recall`;
+  const ruleFpText=rule?.false_positives===1?'1 false positive':`${rule?.false_positives??'—'} false positives`;
   return <div className="evidence-groups">
     <section className="evidence-group">
       <div className="evidence-group-head"><h3>Resilience comparisons</h3><p>Recorded gate decisions and observe-only control.</p></div>
@@ -163,13 +164,13 @@ function Evidence({evidence,policy,loading}){
       <Panel title="Detector comparison" subtitle="DEFENDER BENCHMARK"><div className="cardbody">
         <div className="detector-layout">
           <div className="detector-table">
-            {loading?<div className="state">Loading detectors.</div>:detectors&&Object.keys(detectors).length?<div className="tablewrap"><table className="compact-table"><thead><tr><th>Detector</th><th className="n">Recall</th><th className="n">Precision</th><th className="n">False positives</th></tr></thead><tbody>{Object.entries(detectors).map(([name,data])=><tr key={name} className={name==='defender_forest_plus_deviation'?'self':''}><td>{DETECTOR_LABELS[name]||name}</td><td className="n">{data.recall!=null?rate(data.recall):'—'}</td><td className="n">{data.precision!=null?rate(data.precision):'—'}</td><td className="n">{data.false_positives??'—'}</td></tr>)}</tbody></table></div>:<div className="state">No detector benchmark available.</div>}
+            {loading?<div className="state">Loading detectors.</div>:detectors&&Object.keys(detectors).length?<div className="tablewrap"><table className="compact-table"><colgroup><col style={{width:'42%'}}/><col style={{width:'16%'}}/><col style={{width:'18%'}}/><col style={{width:'24%'}}/></colgroup><thead><tr><th>Detector</th><th className="n">Recall</th><th className="n">Precision</th><th className="n">False positives</th></tr></thead><tbody>{Object.entries(detectors).map(([name,data])=><tr key={name} className={name==='defender_forest_plus_deviation'?'self':''}><td>{DETECTOR_LABELS[name]||name}</td><td className="n">{data.recall!=null?rate(data.recall):'—'}</td><td className="n">{data.precision!=null?rate(data.precision):'—'}</td><td className="n">{data.false_positives??'—'}</td></tr>)}</tbody></table></div>:<div className="state">No detector benchmark available.</div>}
           </div>
           <div className="detector-notes">
             <div className="metric-row"><span>Normal samples</span><strong>{show(evidence?.defender_benchmark?.dataset?.normal,'—')}</strong></div>
             <div className="metric-row"><span>Fault injections</span><strong>{show(evidence?.defender_benchmark?.dataset?.attacks,'—')}</strong></div>
             <div className="metric-row"><span>Features / seed</span><strong>{show(evidence?.defender_benchmark?.dataset?.features,'—')} / {show(evidence?.defender_benchmark?.dataset?.seed,'—')}</strong></div>
-            <p className="recovery-note">Offline seeded benchmark: shipped Defender at {rate(shipped?.recall)} recall and {rate(shipped?.precision)} precision with {shipped?.false_positives??'—'} false positives; rule-based 3sigma at {rate(rule?.recall)} recall with {rule?.false_positives??'—'}; {isoText}. Not a live battle.</p>
+            <p className="recovery-note">Offline seeded benchmark: shipped Defender at {rate(shipped?.recall)} recall and {rate(shipped?.precision)} precision with {shipped?.false_positives??'—'} false positives; rule-based 3sigma at {rate(rule?.recall)} recall with {ruleFpText}; {isoText}. Not a live battle.</p>
           </div>
         </div>
       </div></Panel>
