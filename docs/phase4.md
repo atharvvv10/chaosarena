@@ -76,8 +76,8 @@ cd D:\Projects\1\chaosarena
 
 ## Results actually measured on this laptop
 
-- **121 tests pass** across all nine phases after the final evidence checks.
-- First `network-latency` battle: detected on the first poll (0.0 s recorded), diagnosed `latency_spike`
+- **122 tests pass** across all nine phases after the final evidence checks.
+- First `network-latency` battle: detected in **13.3 s**, diagnosed `latency_spike`
   on `order-service`, restarted it, but the final Prometheus sample was still
   inside the 30-second attack window → score **65**, verdict **BLOCK**.
   This was a measurement artefact, not a rejected bad release; it is fixed by
@@ -90,7 +90,7 @@ cd D:\Projects\1\chaosarena
   because the Defender never saw an anomaly.
 - The controller now records `detection_seconds` and `recovery_seconds` in every
   `BattleResult`. The committed headline battle (`ml/last_battle.json`) was
-  detected in **0.0 s (first poll)**, recovered in **57.4 s**, diagnosed `latency_spike` on
+  detected in **13.3 s**, recovered in **76.2 s**, diagnosed `latency_spike` on
   `order-service`, restarted it, and scored **100 / A / PROMOTE** with zero
   deductions and zero chaos objects left.
 - API `/health` and `/gate/last` verified live; decision log contains both

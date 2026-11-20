@@ -8,16 +8,17 @@
 
 [Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
-The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control panel.
+The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control and bad-release panels.
 
 ## Results at a glance
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **121 passing** across all 9 phases (`make verify`) |
+| Automated tests | **122 passing** across all 9 phases (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
-| Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **0.0 s (first poll)**, recovered in **57.4 s**, cleanup ok, 0 objects left |
-| Defender | Detected in **0.0 s (first poll)**, recovered in **57.4 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
+| Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
+| Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
+| Gate vs bad release | A deliberately bad payment config (`PAYMENT_FAILURE_RATE=1.0`) scored **65/D, BLOCK**; rollback to `0.01` scored **100/A, PROMOTE** on the same battle |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
 | CI | Free `ubuntu-latest` Actions, green on every push, no cluster, no secrets |
@@ -77,8 +78,10 @@ gate, where a false alarm blocks a good build.
 - An earlier demo used a **10-second `network-partition`** and scored **70/C/PROMOTE** because the fault healed inside the 30-second Prometheus window and was never flagged. The headline battle instead uses a sustained **30-second `network-latency`** fault that the Defender clearly detects; a repair was requested, but a no-Defender control run recovered without it. Both runs are real; see [PORTFOLIO_POLISH.md](docs/PORTFOLIO_POLISH.md).
 - The learned-vs-random and detector-comparison tables are **offline, seeded benchmarks**, not live cluster battles. Their exact commands and data are linked above.
 - The diagnoser identifies the symptomatic service, not always the origin. In the headline battle the fault targeted `payment-service`, but `order-service` showed the strongest latency signal and was restarted.
-- A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **57.4 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
-- The `0.0 s` detection value means the anomaly was already present on the first poll after the attacker launched. It is measured from attack start, not from when the Defender began observing; the dashboard labels it as a first-poll detection.
+- A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **76.2 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
+- The headline battle now waits for a normal baseline before launching, so its detection time uses the same clock as the control. The old `0.0 s` came from starting a battle while the previous run was still inside Prometheus's 30-second window. A `0.0 s` value appears only in the bad-release run, where the release was already failing before the battle began.
+- The live gate caught a deliberately bad payment release: **65/D/BLOCK** while `PAYMENT_FAILURE_RATE=1.0`, then **100/A/PROMOTE** after rolling back to `0.01`. This is one pair of local runs, not a statistical guarantee; it shows the gate rejected a release that could not pass the resilience check.
+- For the network-latency fault, recovery was **not attributable to the Defender**: a no-Defender control recovered on its own. A restart may not fix Chaos Mesh latency because chaos can reattach to the new pod.
 - The learned attacker's best action comes from a seeded simulator backed by only a few real battles. Treat it as a demo policy, not a production-trained agent.
 - The detector benchmark reuses the same 40 normal samples as the baseline and adds 160 synthetic faults. Treat its F1 numbers as a demo, not production evidence.
 

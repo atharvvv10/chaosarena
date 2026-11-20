@@ -12,14 +12,14 @@ cluster battle.
 | 1 | 5 FastAPI services + loadgen, shared observability, Kustomize, Prometheus/Grafana/Loki | Local Python run + Docker Compose + Kind deploy verified; 9 tests |
 | 2 | Chaos Mesh 2.8.8, 7 attacks, hard `shop-test` allowlist, guaranteed cleanup | `clusterScoped=true`; 18 tests; cleanup always runs; 0 leftover objects |
 | 3 | Defender detect → diagnose → act → verify | Isolation Forest + capped deviation; real latency attack diagnosed `latency_spike` on `order-service`, restarted, recovered; offline detector comparison added; 16 tests |
-| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact; with a settle window the headline battle scores 100/A, detected on the first poll (0.0 s recorded) and recovered in 57.4 s; timing now recorded; 12 tests |
+| 4 | Arena Controller, Resilience Score, gate, API | Early score 65 was a settle-timing artefact; the headline battle now waits for a normal baseline, scores 100/A, detects in 13.3 s and recovers in 76.2 s; 12 tests |
 | 5 | Incident reporter, offline + free Groq opt-in | `ml/incident_report.md` and `ml/incident_report_groq.md` with all six sections; 16 tests |
 | 6 | Free GitHub Actions resilience gate | Recomputes score from facts; bad fixture BLOCK, good fixture PROMOTE; 9 tests; all runs green |
 | 7 | Local React dashboard | 7 tests; `npm run build` clean; browser battle detected and scored 100 PROMOTE, cleanup ok, 0 objects |
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 12 tests; one `make verify`, real screenshots/GIF/video, recruiter README and claim/benchmark guards |
 
-**Total: 121 automated tests pass.**
+**Total: 122 automated tests pass.**
 
 ## Headline gated battle
 
@@ -28,19 +28,21 @@ recorded `network-latency` attack on `payment-service` (`release-candidate`):
 
 | Fact | Measured value |
 | --- | --- |
-| Detected | yes, on the first poll (**0.0 s** recorded) |
-| Diagnosed | `latency_spike` on `order-service` (confidence 0.99, z=+296.5; symptomatic service, not necessarily the attack origin) |
+| Detected | yes, in **13.3 s** from attacker launch |
+| Diagnosed | `latency_spike` on `order-service` (confidence 0.99, z=+403.7; symptomatic service, not necessarily the attack origin) |
 | Action | `restart` requested for `order-service` in `shop-test` |
-| Recovered | yes, anomaly score back below threshold in **57.4 s** |
+| Recovered | yes, anomaly score back below threshold in **76.2 s** |
 | Cleanup | `cleanup_ok: true`, `chaos_objects_remaining: 0` |
 | Score / grade / verdict | **100 / A / PROMOTE** at threshold 70 |
 | Deductions | none |
 
 `detection_seconds` is measured from attacker launch to the first anomaly
-observation. The recorded `0.0 s` means the anomaly was already present on the
-first poll immediately after launch, not that the Defender started observing
-before the attack. `ml/last_battle.json` carries this basis explicitly in
-`detection_basis`, and the dashboard timeline shows the same clarification.
+observation. The controller now waits for a normal baseline before launching, so
+the headline's **13.3 s** is on the same clock as the no-Defender control. The
+previous `0.0 s` was a measurement artefact: the battle started while the prior
+run was still inside Prometheus's 30-second window. `ml/last_battle.json` carries
+the basis explicitly in `detection_basis`. A `0.0 s` value is used only in the
+bad-release run, where the release was already failing before the battle began.
 
 CI independently recomputes the score from these facts; it never trusts the
 stored decision. The earlier 10-second `network-partition` demo scored
@@ -63,18 +65,49 @@ involved. Evidence: `ml/no_defender_baseline.json`.
 | Fact | With Defender (gated battle) | No Defender remediation |
 | --- | --- | --- |
 | Fault | `network-latency` → `payment-service`, 30 s | same |
-| Detected | yes, first poll (0.0 s recorded) | yes, at 10.3 s |
+| Detected | yes, at 13.3 s | yes, at 10.3 s |
 | Repair | `restart` requested on `order-service` | none (observe-only) |
-| Recovered | 57.4 s | 50.8 s |
-| Final anomaly score | 0.6320 | 0.6576 (threshold 0.7397) |
+| Recovered | 76.2 s | 50.8 s |
+| Final anomaly score | 0.5548 | 0.6576 (threshold 0.7397) |
 | Cleanup | ok, 0 objects | ok, 0 objects |
 
-The no-remediation run recovered **without any repair action**, and slightly
-sooner than the gated run. These are two single local runs, not a statistical
-study, but they show the restart was **not required for recovery in this
-environment**. This does not prove the Defender is useless: detection and
-diagnosis still ran, and production incidents may not self-heal. It does answer
-the question "did the restart fix it?" with **no evidence that it did** here.
+The no-remediation run recovered **without any repair action**, and sooner than
+the gated run. These are two single local runs, not a statistical study, but
+**for this fault, recovery was not attributable to the Defender**. This does not
+prove the Defender is useless: detection and diagnosis still ran, and production
+incidents may not self-heal. A restart also may not fix Chaos Mesh latency,
+because the chaos can reattach to the new pod. The question "did the restart fix
+it?" gets **no supporting evidence** here.
+
+## Bad release vs rollback
+
+To test a release that a rollback can actually fix, `scripts/bad_release_experiment.py`
+sets `PAYMENT_FAILURE_RATE=1.0` on the live payment deployment (every payment
+fails), runs the same `network-latency` battle through the real controller and
+gate, then rolls the env var back to `0.01` and reruns it. Evidence:
+`ml/bad_release_experiment.json`.
+
+| Release | Detection | Recovery | Final score | Verdict |
+| --- | --- | --- | --- | --- |
+| `bad-payment-v2` (`PAYMENT_FAILURE_RATE=1.0`) | 0.0 s (already failing) | never | 65 / D | **BLOCK** |
+| `payment-v1-rollback` (`PAYMENT_FAILURE_RATE=0.01`) | 13.2 s | 77.3 s | 100 / A | **PROMOTE** |
+
+The gate **BLOCKed** the bad release and **PROMOTEd** the rollback on the same
+battle. The bad-release battle records `detection_seconds: 0.0` because the
+release was already failing before the attack started; it is not a clean-start
+measurement. This is one pair of local runs, not a statistical guarantee, but it
+is a direct live-gate demonstration rather than a saved-fixture self-test.
+
+## Inconclusive CPU-stress control
+
+A `cpu-stress` pair on `order-service` was also attempted with
+`scripts/defender_value_experiment.py` (`ml/defender_value_experiment.json`).
+The with-Defender run detected at 11.2 s and recovered at 62.8 s. The
+no-Defender run **never crossed the anomaly threshold**, so there is no valid
+timing comparison. This pair is recorded but **not used as evidence of Defender
+value**: a single-pod CPU stressor can land on a pod that is not carrying enough
+traffic to move the service-level metrics. The bad-release experiment above is
+the stronger, reproducible demonstration.
 
 ## Learned vs random attacker
 

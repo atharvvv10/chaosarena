@@ -540,6 +540,8 @@ code {
 .compare-table { font-size: 11px; }
 .compare-table th, .compare-table td { padding: 7px 8px; }
 .compare-table tr.highlight td { color: var(--accent-2); font-weight: 800; background: rgba(86, 224, 200, 0.06); }
+.compare-table .verdict-good { color: var(--good); font-weight: 800; }
+.compare-table .verdict-bad { color: var(--bad); font-weight: 800; }
 
 /* Table + report -------------------------------------------------------- */
 .table-wrap { overflow-x: auto; }

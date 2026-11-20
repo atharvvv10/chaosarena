@@ -111,12 +111,13 @@ def test_evidence_endpoint_returns_committed_local_evidence():
     payload = response.json()
     assert payload["last_battle"]["decision"]["verdict"] == "PROMOTE"
     assert payload["last_battle"]["battle"]["detected"] is True
-    assert payload["last_battle"]["battle"]["detection_seconds"] >= 0
+    assert payload["last_battle"]["battle"]["detection_seconds"] > 0
     assert "attacker launch" in payload["last_battle"]["battle"]["detection_basis"]
     assert payload["last_battle"]["battle"]["recovery_seconds"] > 0
     assert payload["rl_benchmark"]["damage_ratio"] > 1
     assert "defender_forest_plus_deviation" in payload["defender_benchmark"]["detectors"]
     assert payload["no_defender_baseline"]["defender_remediation"] is False
+    assert payload["bad_release_experiment"]["result"]["gate_caught_bad_release"] is True
 
 
 def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeypatch):
@@ -126,6 +127,7 @@ def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeyp
     monkeypatch.setattr(api, "RL_BENCHMARK_FILE", bad)
     monkeypatch.setattr(api, "DEFENDER_BENCHMARK_FILE", tmp_path / "missing.json")
     monkeypatch.setattr(api, "NO_DEFENDER_FILE", tmp_path / "missing.json")
+    monkeypatch.setattr(api, "BAD_RELEASE_FILE", tmp_path / "missing.json")
 
     response = TestClient(api.app).get("/evidence")
     assert response.status_code == 200
@@ -134,6 +136,7 @@ def test_evidence_endpoint_tolerates_missing_and_invalid_files(tmp_path, monkeyp
         "rl_benchmark": None,
         "defender_benchmark": None,
         "no_defender_baseline": None,
+        "bad_release_experiment": None,
     }
 
 
@@ -154,6 +157,26 @@ def test_no_defender_baseline_is_observe_only_and_recovered():
     assert "diagnose/act/run/verify action was taken" in script
 
 
+def test_bad_release_experiment_blocks_then_promotes_after_rollback():
+    payload = json.loads((ROOT / "ml" / "bad_release_experiment.json").read_text(encoding="utf-8"))
+    bad = payload["bad_release"]["evidence"]
+    rollback = payload["rollback"]["evidence"]
+    assert bad["decision"]["verdict"] == "BLOCK"
+    assert bad["score"]["score"] < 70
+    assert bad["battle"]["recovered"] is False
+    assert bad["battle"]["cleanup_ok"] is True
+    assert rollback["decision"]["verdict"] == "PROMOTE"
+    assert rollback["score"]["score"] >= 70
+    assert rollback["battle"]["recovered"] is True
+    assert rollback["battle"]["detection_seconds"] > 0
+    assert payload["result"]["gate_caught_bad_release"] is True
+
+    script = (ROOT / "scripts" / "bad_release_experiment.py").read_text(encoding="utf-8")
+    assert "PAYMENT_FAILURE_RATE=1.0" in script
+    assert "evaluate_gate" in script
+    assert "set_failure_rate(original)" in script
+
+
 def test_frontend_has_navigation_timeline_filters_and_report_actions():
     api_js = (DASHBOARD / "src" / "api.js").read_text(encoding="utf-8")
     app = (DASHBOARD / "src" / "App.jsx").read_text(encoding="utf-8")
@@ -163,7 +186,8 @@ def test_frontend_has_navigation_timeline_filters_and_report_actions():
     for label in [
         "Overview", "Battle", "Evidence", "History",
         "Battle timeline", "Learned vs random", "Detector comparison",
-        "Recovery control", "Search decision history", "Download", "Copy", "toast",
+        "Recovery control", "Bad release vs rollback",
+        "Search decision history", "Download", "Copy", "toast",
     ]:
         assert label in app, f"missing UI feature: {label}"
     for feature in ["subnav", "kpi-grid", "timeline", "benchmark-grid", "history-tools", ".toast"]:

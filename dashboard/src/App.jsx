@@ -236,7 +236,8 @@ function Benchmarks({ evidence }) {
   const rl = evidence?.rl_benchmark
   const defender = evidence?.defender_benchmark
   const baseline = evidence?.no_defender_baseline
-  if (!rl && !defender && !baseline) {
+  const badRelease = evidence?.bad_release_experiment
+  if (!rl && !defender && !baseline && !badRelease) {
     return <p className="muted">No benchmark evidence found in the local ml/ folder.</p>
   }
 
@@ -332,6 +333,40 @@ function Benchmarks({ evidence }) {
             </table>
           </div>
           <p className="muted small">The observe-only run also recovered, so in this pair of runs the restart was not required for recovery.</p>
+        </div>
+      )}
+
+      {badRelease && (
+        <div className="benchmark-block">
+          <div className="benchmark-head">
+            <span className="eyebrow">Bad release vs rollback</span>
+            <span className="tag">live gate · two local runs</span>
+          </div>
+          <p className="muted small">A deliberately bad payment config (100% failures) was gated, rolled back and gated again.</p>
+          <div className="table-wrap">
+            <table className="compare-table">
+              <thead>
+                <tr><th>Release</th><th>Score</th><th>Verdict</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{badRelease.bad_release?.version || 'bad release'}</td>
+                  <td>{badRelease.bad_release?.evidence?.score?.score ?? '--'}</td>
+                  <td className="verdict-bad">{badRelease.bad_release?.evidence?.decision?.verdict || '--'}</td>
+                </tr>
+                <tr className="highlight">
+                  <td>{badRelease.rollback?.version || 'rollback'}</td>
+                  <td>{badRelease.rollback?.evidence?.score?.score ?? '--'}</td>
+                  <td className="verdict-good">{badRelease.rollback?.evidence?.decision?.verdict || '--'}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="muted small">
+            {badRelease.result?.gate_caught_bad_release
+              ? 'The gate blocked the bad release and promoted the rollback.'
+              : 'See the committed JSON for the full result.'}
+          </p>
         </div>
       )}
     </div>
@@ -734,7 +769,7 @@ export default function App() {
             <div>
               <span className="eyebrow">Measured evidence</span>
               <h2>Battle timeline &amp; comparisons</h2>
-              <p className="muted">Two real local runs, plus two clearly-labelled offline benchmarks</p>
+              <p className="muted">Real local runs, plus clearly-labelled offline benchmarks</p>
             </div>
             <span className="tag">local JSON · no cloud</span>
           </div>

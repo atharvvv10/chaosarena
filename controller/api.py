@@ -25,6 +25,7 @@ LAST_BATTLE_FILE = Path("ml/last_battle.json")
 RL_BENCHMARK_FILE = Path("ml/rl_benchmark.json")
 DEFENDER_BENCHMARK_FILE = Path("ml/defender_benchmark.json")
 NO_DEFENDER_FILE = Path("ml/no_defender_baseline.json")
+BAD_RELEASE_FILE = Path("ml/bad_release_experiment.json")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -71,6 +72,7 @@ def evidence() -> dict:
         "rl_benchmark": _read_evidence(RL_BENCHMARK_FILE),
         "defender_benchmark": _read_evidence(DEFENDER_BENCHMARK_FILE),
         "no_defender_baseline": _read_evidence(NO_DEFENDER_FILE),
+        "bad_release_experiment": _read_evidence(BAD_RELEASE_FILE),
     }
 
 

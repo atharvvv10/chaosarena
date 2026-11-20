@@ -10,3 +10,8 @@
 {"timestamp": "2026-11-19T14:31:18+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
 {"timestamp": "2026-11-20T05:46:32+00:00", "namespace": "shop-test", "action": "scale", "service": "payment-service", "requested": 3, "applied": 3}
 {"timestamp": "2026-11-20T06:00:41+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T06:29:11+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T06:33:36+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T06:36:42+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T06:39:40+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}
+{"timestamp": "2026-11-20T06:43:40+00:00", "namespace": "shop-test", "action": "restart", "service": "order-service", "status": "requested"}

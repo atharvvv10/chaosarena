@@ -1,0 +1,55 @@
+{
+  "attack": "cpu-stress",
+  "target": "order-service",
+  "duration": 90,
+  "poll_seconds": 3.0,
+  "detection_basis": "seconds since attacker launch until first anomaly observation",
+  "note": "single pair of local runs; not a statistical study. Both variants use the same attacker, target, duration and polling clock. The no-Defender variant only polls detect; it never diagnoses, acts or verifies.",
+  "with_defender": {
+    "defender_remediation": true,
+    "detected": true,
+    "detection_seconds": 11.2,
+    "recovered": true,
+    "recovery_seconds": 62.8,
+    "final_score": 0.6431,
+    "defender_threshold": 0.7397,
+    "diagnosis": {
+      "category": "latency_spike",
+      "service": "order-service",
+      "confidence": 0.99,
+      "evidence": [
+        "order-service_p95_latency z=+124.6",
+        "cart-service_request_rate z=-5.8",
+        "product-service_request_rate z=-5.4"
+      ]
+    },
+    "action_taken": {
+      "timestamp": "2026-11-20T06:29:11+00:00",
+      "namespace": "shop-test",
+      "action": "restart",
+      "service": "order-service",
+      "status": "requested"
+    },
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "score_after": 0.613,
+    "attacker_output": "{\n  \"name\": \"cpu-stress\",\n  \"manifest\": \"chaosarena-cpu-stress-6b948b57\",\n  \"target\": \"order-service\",\n  \"namespace\": \"shop-test\",\n  \"started_at\": \"2026-11-20T06:28:27+00:00\",\n  \"ended_at\": \"2026-11-20T06:29:59+00:00\",\n  \"cleanup_ok\": true,\n  \"error\": null,\n  \"ok\": true\n}"
+  },
+  "without_defender": {
+    "defender_remediation": false,
+    "detected": false,
+    "detection_seconds": null,
+    "recovered": false,
+    "recovery_seconds": null,
+    "final_score": 0.522,
+    "defender_threshold": 0.7397,
+    "diagnosis": null,
+    "action_taken": null,
+    "cleanup_ok": true,
+    "chaos_objects_remaining": 0,
+    "score_after": 0.5956,
+    "attacker_output": "{\n  \"name\": \"cpu-stress\",\n  \"manifest\": \"chaosarena-cpu-stress-f8e26bdb\",\n  \"target\": \"order-service\",\n  \"namespace\": \"shop-test\",\n  \"started_at\": \"2026-11-20T06:30:20+00:00\",\n  \"ended_at\": \"2026-11-20T06:31:51+00:00\",\n  \"cleanup_ok\": true,\n  \"error\": null,\n  \"ok\": true\n}"
+  },
+  "recovery_delta_seconds": null,
+  "interpretation": "one or both variants did not recover, so no timing comparison is possible"
+}

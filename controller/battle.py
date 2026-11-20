@@ -62,11 +62,13 @@ class BattleRunner:
         poll_interval: float = 5.0,
         defender_wait: float = 10.0,
         settle_seconds: float = 45.0,
+        startup_settle_seconds: float = 90.0,
         log_path: Path | str = ATTACK_LOG,
     ) -> None:
         self.poll_interval = poll_interval
         self.defender_wait = defender_wait
         self.settle_seconds = settle_seconds
+        self.startup_settle_seconds = startup_settle_seconds
         self.log_path = Path(log_path)
 
     def run(
@@ -91,6 +93,18 @@ class BattleRunner:
         # 2. What does normal look like to the Defender?
         baseline = run_cli("defender.cli", "detect")
         threshold = float(baseline.get("threshold", 0.0))
+
+        # 2b. Wait for a genuinely normal starting point. A previous battle can
+        # still sit inside the 30-second Prometheus window, which would make the
+        # next battle look "detected" at 0.0 s even though the fault was new.
+        deadline = time.monotonic() + self.startup_settle_seconds
+        current = baseline
+        while (
+            float(current.get("score", 0.0)) > threshold
+            and time.monotonic() < deadline
+        ):
+            time.sleep(self.poll_interval)
+            current = run_cli("defender.cli", "detect")
 
         # 3. Launch the attack in the background and watch with the Defender.
         self.log_path.parent.mkdir(parents=True, exist_ok=True)

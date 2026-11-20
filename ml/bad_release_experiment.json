@@ -1,0 +1,135 @@
+{
+  "service": "payment-service",
+  "bad_release": {
+    "change": "PAYMENT_FAILURE_RATE=1.0",
+    "version": "bad-payment-v2",
+    "evidence": {
+      "battle": {
+        "attack": "network-latency",
+        "target": "payment-service",
+        "version": "bad-payment-v2",
+        "detected": true,
+        "detection_seconds": 0.0,
+        "detection_basis": "seconds since attacker launch until first anomaly observation",
+        "recovery_seconds": null,
+        "recovered": false,
+        "final_score": 1.1309,
+        "defender_threshold": 0.7397,
+        "cleanup_ok": true,
+        "chaos_objects_remaining": 0,
+        "diagnosis": {
+          "category": "latency_spike",
+          "service": "order-service",
+          "confidence": 0.99,
+          "evidence": [
+            "order-service_p95_latency z=+304.4",
+            "order-service_error_rate z=+99.2",
+            "payment-service_error_rate z=+93.6"
+          ]
+        },
+        "action_taken": {
+          "timestamp": "2026-11-20T06:39:40+00:00",
+          "namespace": "shop-test",
+          "action": "restart",
+          "service": "order-service",
+          "status": "requested"
+        },
+        "attack_error": null
+      },
+      "score": {
+        "score": 65,
+        "grade": "D",
+        "deductions": [
+          "service did not return to a normal score (-25)",
+          "final anomaly score is still above threshold (-10)"
+        ]
+      },
+      "decision": {
+        "verdict": "BLOCK",
+        "promote": false,
+        "score": 65,
+        "threshold": 70,
+        "grade": "D",
+        "version": "bad-payment-v2",
+        "attack": "network-latency",
+        "target": "payment-service",
+        "reasons": [
+          "score 65 is below threshold 70",
+          "attack cleanup succeeded",
+          "no chaos objects left behind"
+        ],
+        "evaluated_at": "2026-11-20T06:41:15+00:00"
+      }
+    }
+  },
+  "rollback": {
+    "change": "PAYMENT_FAILURE_RATE=0.01",
+    "version": "payment-v1-rollback",
+    "normal_after_rollback": {
+      "score": 0.6555,
+      "threshold": 0.7397,
+      "anomaly": false
+    },
+    "evidence": {
+      "battle": {
+        "attack": "network-latency",
+        "target": "payment-service",
+        "version": "payment-v1-rollback",
+        "detected": true,
+        "detection_seconds": 13.2,
+        "detection_basis": "seconds since attacker launch until first anomaly observation",
+        "recovery_seconds": 77.3,
+        "recovered": true,
+        "final_score": 0.5577,
+        "defender_threshold": 0.7397,
+        "cleanup_ok": true,
+        "chaos_objects_remaining": 0,
+        "diagnosis": {
+          "category": "latency_spike",
+          "service": "order-service",
+          "confidence": 0.99,
+          "evidence": [
+            "order-service_p95_latency z=+416.0",
+            "cart-service_request_rate z=-11.5",
+            "product-service_request_rate z=-11.3"
+          ]
+        },
+        "action_taken": {
+          "timestamp": "2026-11-20T06:43:40+00:00",
+          "namespace": "shop-test",
+          "action": "restart",
+          "service": "order-service",
+          "status": "requested"
+        },
+        "attack_error": null
+      },
+      "score": {
+        "score": 100,
+        "grade": "A",
+        "deductions": []
+      },
+      "decision": {
+        "verdict": "PROMOTE",
+        "promote": true,
+        "score": 100,
+        "threshold": 70,
+        "grade": "A",
+        "version": "payment-v1-rollback",
+        "attack": "network-latency",
+        "target": "payment-service",
+        "reasons": [
+          "score 100 meets threshold 70",
+          "attack cleanup succeeded",
+          "no chaos objects left behind"
+        ],
+        "evaluated_at": "2026-11-20T06:44:06+00:00"
+      }
+    }
+  },
+  "note": "single pair of local runs; not a statistical study. The bad release makes every payment fail. The same network-latency battle is scored by the real gate before and after rollback.",
+  "result": {
+    "bad_release_verdict": "BLOCK",
+    "rollback_verdict": "PROMOTE",
+    "gate_caught_bad_release": true
+  }
+}
