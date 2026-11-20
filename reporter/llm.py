@@ -76,40 +76,48 @@ class TemplateLLM:
             [
                 f"# Incident Report - {_text(facts.get('version'), 'candidate')}",
                 "",
-                "## Summary",
+                "**Summary**",
                 (
                     f"A `{_text(facts.get('attack'))}` fault was injected into "
                     f"`{_text(facts.get('target'))}` in `shop-test` for release candidate "
-                    f"`{_text(facts.get('version'), 'candidate')}`. Resilience Score: "
-                    f"**{_text(facts.get('score'), 0)}/100 (grade {_text(facts.get('grade'))})**. "
+                    f"`{_text(facts.get('version'), 'candidate')}`. "
+                    f"Resilience score: **{_text(facts.get('score'), 0)}/100 "
+                    f"(grade {_text(facts.get('grade'))})**. "
                     f"Gate verdict: **{_text(facts.get('verdict'))}**."
                 ),
                 "",
-                "## Timeline",
+                "**Timeline**",
                 f"- Evaluated at: {_text(facts.get('evaluated_at'))}",
                 f"- Fault detected: {detected}"
-                + (f" after {seconds} seconds" if seconds is not None else ""),
+                + (f" after {seconds:.1f} seconds" if seconds is not None else ""),
+                f"- Recovery observed: {recovered}"
+                + (
+                    f" after {facts.get('recovery_seconds'):.1f} seconds"
+                    if isinstance(facts.get("recovery_seconds"), (int, float))
+                    else ""
+                ),
                 f"- Chaos cleanup: {cleanup}",
                 f"- Chaos objects remaining: {_text(facts.get('chaos_objects_remaining'), 0)}",
                 "",
-                "## Root cause",
+                "**Root cause**",
                 f"- Category: {_text(diagnosis.get('category'))}",
                 f"- Service: {_text(diagnosis.get('service'))}",
                 f"- Confidence: {_text(diagnosis.get('confidence'))}",
                 "- Evidence:",
                 _bullet_list(evidence, indent="  "),
                 "",
-                "## Actions taken",
+                "**Actions taken**",
                 action_line,
                 "",
-                "## Outcome",
+                "**Outcome**",
                 f"- Returned to normal: {recovered}",
+                f"- Final anomaly score: {_text(facts.get('final_score'))} (threshold {_text(facts.get('defender_threshold'))})",
                 "- Gate reasons:",
                 _bullet_list(facts.get("reasons"), indent="  "),
                 "- Score deductions:",
                 _bullet_list(deductions, indent="  "),
                 "",
-                "## Follow-ups",
+                "**Follow-ups**",
                 _bullet_list(follow_ups),
                 "",
             ]

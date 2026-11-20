@@ -50,7 +50,7 @@ def test_report_endpoint_returns_markdown(monkeypatch):
             return True
 
         def read_text(self, encoding=None):
-            return "# Incident Report - test\n\n## Summary\nok\n"
+            return "# Incident Report - test\n\n**Summary**\nok\n"
 
         def __str__(self):
             return self.value
@@ -60,7 +60,7 @@ def test_report_endpoint_returns_markdown(monkeypatch):
     response = client.get("/report/latest")
     assert response.status_code == 200
     assert response.json()["file"] == "ml/incident_report.md"
-    assert "## Summary" in response.json()["text"]
+    assert "**Summary**" in response.json()["text"]
 
 
 def test_recent_decisions_helper_is_newest_first(tmp_path):

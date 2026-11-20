@@ -25,7 +25,10 @@ class Incident:
     deductions: list[str]
     cleanup_ok: bool
     chaos_objects_remaining: int
-    evaluated_at: str
+    recovery_seconds: float | None = None
+    final_score: float | None = None
+    defender_threshold: float | None = None
+    evaluated_at: str = ""
 
     def as_dict(self) -> dict:
         return {
@@ -34,6 +37,9 @@ class Incident:
             "target": self.target,
             "detected": self.detected,
             "detection_seconds": self.detection_seconds,
+            "recovery_seconds": self.recovery_seconds,
+            "final_score": self.final_score,
+            "defender_threshold": self.defender_threshold,
             "recovered": self.recovered,
             "diagnosis": self.diagnosis,
             "action_taken": self.action_taken,
@@ -58,6 +64,9 @@ class Incident:
             target=str(decision.get("target", battle.get("target", "unknown"))),
             detected=bool(battle.get("detected")),
             detection_seconds=battle.get("detection_seconds"),
+            recovery_seconds=battle.get("recovery_seconds"),
+            final_score=battle.get("final_score"),
+            defender_threshold=battle.get("defender_threshold"),
             recovered=bool(battle.get("recovered")),
             diagnosis=battle.get("diagnosis"),
             action_taken=battle.get("action_taken"),

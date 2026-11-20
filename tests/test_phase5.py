@@ -193,7 +193,7 @@ def test_cli_report_writes_markdown_file(tmp_path, bundle, capsys):
     ])
     assert code == 0
     saved = out.read_text(encoding="utf-8")
-    assert "## Root cause" in saved
+    assert "**Root cause**" in saved
     assert "v1.0.1" in saved
     assert '"backend": "template"' in capsys.readouterr().out
 
