@@ -440,12 +440,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .kpi .overline { margin-bottom: 10px; }
 
 .kpi .number {
-  font: 600 28px/1.2 var(--mono);
+  font: 600 32px/1.2 var(--mono);
   letter-spacing: -0.05em;
 }
 
 .kpi .number.success {
-  font: 600 28px/1.2 var(--sans);
+  font: 600 32px/1.2 var(--sans);
   letter-spacing: -0.03em;
   color: var(--green);
 }
@@ -551,7 +551,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   color: var(--dim);
 }
 
-.note { margin-top: 14px; }
+.note { margin-top: 12px; }
 
 .timeline {
   padding: 18px 20px 14px;
@@ -638,7 +638,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .gateverdict h3 {
-  font-size: 26px;
+  font-size: 32px;
   line-height: 1.2;
   letter-spacing: -0.04em;
   margin: 0;
@@ -711,13 +711,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .evcard h3 {
-  font-size: 16px;
+  font-size: 17px;
   letter-spacing: -0.02em;
   margin: 10px 0 6px;
 }
 
 .evcard p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   margin: 0;
   line-height: 1.6;
@@ -852,7 +852,7 @@ table {
 
 th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 14px 18px;
   font: 12px var(--mono);
   color: var(--dim);
   background: #141b21;
@@ -860,7 +860,7 @@ th {
 }
 
 td {
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-top: 1px solid var(--line);
   font-size: 13px;
   color: var(--muted);
