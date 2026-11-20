@@ -541,7 +541,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   border: 1px solid var(--line2);
   border-radius: 5px;
   padding: 8px 12px;
-  font-size: 11px;
+  min-height: 38px;
+  font-size: 12px;
 }
 
 .actions {
@@ -909,7 +910,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .report li { margin: 4px 0; }
 
-.report code {
+.report code, .report-summary code {
   font-family: var(--mono);
   font-size: 13px;
   background: var(--raised);

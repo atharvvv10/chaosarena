@@ -34,11 +34,14 @@ function Timeline({battle}){
   if(!battle)return <div className="state">No battle evidence is available. Start the gate API to inspect a recorded experiment.</div>;
   const objects=battle.chaos_objects_left??battle.chaos_objects_remaining??battle.objects_left;
   const diagnosis=battle.diagnosis??battle.diagnosis_category;
+  const action=battle.action_taken??{};
+  const actionService=action.service??battle.requested_service;
+  const actionDesc=`${show(action.action??battle.requested_action??battle.action,'Not recorded')}${actionService?' · '+actionService:''}${action.status?' · '+action.status:''}`;
   const events=[
     ['T+0s','Fault injected',`${show(battle.attack,'Fault')} on ${show(battle.target,'target')}`,'red'],
     [battle.detected===false?'Not detected':hasNumber(battle.detection_seconds)?`T+${fmt(battle.detection_seconds,'s')}`:'Unmeasured','Defender detected',battle.detected===false?'No detection recorded':'Detection reported by Defender',''],
     ['','Symptom identified',<div className="diagnosis-block"><div className="diagnosis-summary">{diagnosisSummary(diagnosis)}</div><details className="diagnostic-details"><summary>Full diagnosis</summary><pre>{diagnosisJson(diagnosis)}</pre></details></div>,''],
-    ['','Repair requested',`${describe(battle.requested_action??battle.action)}${battle.requested_service?' · '+battle.requested_service:''}`,''],
+    ['','Repair requested',actionDesc,''],
     [hasNumber(battle.recovery_seconds)?`T+${fmt(battle.recovery_seconds,'s')}`:'Unmeasured','Service recovered',battle.recovered===false?'Recovery not observed':battle.recovered===true?'Recovery observed':'Recovery status not recorded','green'],
     ['Status','Cleanup verified',`${battle.cleanup_ok===true?'OK':battle.cleanup_ok===false?'FAILED':'Not recorded'} · objects left: ${describe(objects)}`,battle.cleanup_ok===true?'green':battle.cleanup_ok===false?'red':'']
   ];
