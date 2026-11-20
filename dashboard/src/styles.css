@@ -804,8 +804,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .detector-table, .detector-notes { min-width: 0; }
 .detector-notes { padding-top: 35px; }
-.score-compare { display: grid; gap: 12px; }
-.compare-row .track { margin-top: 6px; }
 .block-text { color: var(--red) !important; }
 .promote-text { color: var(--green) !important; }
 .policy-state { margin-top: 16px; }
@@ -1166,20 +1164,6 @@ table.compact-table { min-width: 0; }
   color: var(--dim);
   margin: 0;
 }
-.track {
-  height: 6px;
-  background: #25303b;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.track > span {
-  display: block;
-  height: 100%;
-  background: var(--blue);
-  border-radius: 4px;
-}
-.track > span.green { background: var(--green); }
-.track > span.red { background: var(--red); }
 .recovery-note {
   font: 11px/1.7 var(--mono);
   color: var(--dim);

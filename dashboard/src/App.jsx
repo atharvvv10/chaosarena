@@ -106,7 +106,7 @@ function ReportView({text}){
   return <div className="report">{blocks}</div>;
 }
 function reportSummary(text){if(!text)return 'No incident report recorded.';const lines=String(text).split('\n');const idx=lines.findIndex(line=>/^\d+\.\s*Summary$/i.test(line.trim()));if(idx>=0){for(let i=idx+1;i<lines.length;i++){const line=lines[i].trim();if(line)return line}}const fallback=lines.find(line=>{const t=line.trim();return t && !t.startsWith('#') && !/^\d+\./.test(t)});return fallback?fallback.trim():'No incident report recorded.'}
-function Compare({evidence,battle}){const baseline=evidence?.no_defender_baseline;return <div className="recovery-tracks"><p className="metric-group-label">Detection time · seconds · lower is better</p><div className="metric-row"><span>Detection with Defender</span><strong>{fmt(battle?.detection_seconds,'s')}</strong></div><div className="metric-row"><span>Detection without Defender</span><strong>{fmt(baseline?.detection_seconds,'s')}</strong></div><p className="metric-group-label">Recovery time · seconds · lower is better</p><div className="metric-row"><span>With Defender · recovery</span><strong>{fmt(battle?.recovery_seconds,'s')}</strong></div><div className="metric-row"><span>Without Defender · recovery</span><strong>{fmt(baseline?.recovery_seconds,'s')}</strong></div><p className="recovery-note">Measured battle recovery. {baseline?.defender_remediation===false?'No Defender remediation':'Baseline evidence'}</p><p className="recovery-note">Two single runs, not a statistical study. Repair requested, not repaired by itself. Elapsed time has no fixed upper bound, so no bar scale is applied; a longer bar would wrongly imply a better result.</p></div>}
+function Compare({evidence,battle}){const baseline=evidence?.no_defender_baseline;return <div className="recovery-tracks"><p className="metric-group-label">Detection time · seconds · lower is better</p><div className="metric-row"><span>Detection with Defender</span><strong>{fmt(battle?.detection_seconds,'s')}</strong></div><div className="metric-row"><span>Detection without Defender</span><strong>{fmt(baseline?.detection_seconds,'s')}</strong></div><p className="metric-group-label">Recovery time · seconds · lower is better</p><div className="metric-row"><span>With Defender · recovery</span><strong>{fmt(battle?.recovery_seconds,'s')}</strong></div><div className="metric-row"><span>Without Defender · recovery</span><strong>{fmt(baseline?.recovery_seconds,'s')}</strong></div><p className="recovery-note">Measured battle recovery. {baseline?.defender_remediation===false?'No Defender remediation':'Baseline evidence'}</p><p className="recovery-note">Two single runs, not a statistical study. Repair requested, not repaired by itself.</p></div>}
 function Evidence({evidence,policy,loading}){
   const bad=evidence?.bad_release_experiment;
   const rl=evidence?.rl_benchmark;
@@ -122,7 +122,6 @@ function Evidence({evidence,policy,loading}){
   const rollbackGrade=rollbackEvidence?.score?.grade;
   const withDetection=evidence?.last_battle?.battle?.detection_seconds;
   const withRecovery=evidence?.last_battle?.battle?.recovery_seconds;
-  const pct=n=>hasNumber(n)?`${Math.max(0,Math.min(100,Number(n)))}%`:'0%';
   const rate=n=>n===null||n===undefined?'—':`${Math.round(Number(n)*100)}%`;
   const shipped=detectors?.defender_forest_plus_deviation;
   const rule=detectors?.rule_based_3sigma;
@@ -136,16 +135,8 @@ function Evidence({evidence,policy,loading}){
         <Panel title="Bad release vs rollback" subtitle="RELEASE SAFETY"><div className="cardbody">
           {loading?<div className="state">Loading experiment evidence.</div>:bad?<>
             <p className="metric-group-label">Gate score · 0–100 points · higher is better</p>
-            <div className="score-compare">
-              <div className="compare-row">
-                <div className="metric-row"><span>Bad release · {show(bad.bad_release?.version,'candidate')}</span><strong className="block-text">{show(badVerdict,'—')} · {show(badScore,'—')} / {show(badGrade,'—')}</strong></div>
-                <div className="track"><span className="red" style={{width:pct(badScore)}}/></div>
-              </div>
-              <div className="compare-row">
-                <div className="metric-row"><span>Rollback · {show(bad.rollback?.version,'rollback')}</span><strong className="promote-text">{show(rollbackVerdict,'—')} · {show(rollbackScore,'—')} / {show(rollbackGrade,'—')}</strong></div>
-                <div className="track"><span className="green" style={{width:pct(rollbackScore)}}/></div>
-              </div>
-            </div>
+            <div className="metric-row"><span>Bad release · {show(bad.bad_release?.version,'candidate')}</span><strong className="block-text">{show(badVerdict,'—')} · {show(badScore,'—')} / {show(badGrade,'—')}</strong></div>
+            <div className="metric-row"><span>Rollback · {show(bad.rollback?.version,'rollback')}</span><strong className="promote-text">{show(rollbackVerdict,'—')} · {show(rollbackScore,'—')} / {show(rollbackGrade,'—')}</strong></div>
             <div className="metric-row"><span>Final anomaly / threshold</span><strong>{fmt(badEvidence?.battle?.final_score)} / {fmt(badEvidence?.battle?.defender_threshold)}</strong></div>
             <div className="metric-row"><span>Gate result</span><strong>{bad.result?.gate_caught_bad_release?'Gate caught bad release':'See decision record'}</strong></div>
             <p className="recovery-note">Main finding: the gate blocked the bad release and promoted the rollback. The experiment script performed the rollback; the Defender did not catch the release.</p>
@@ -159,7 +150,6 @@ function Evidence({evidence,policy,loading}){
           <div className="metric-row"><span>Recovery with Defender</span><strong>{fmt(withRecovery,'s')}</strong></div>
           <div className="metric-row"><span>Recovery observe-only</span><strong>{fmt(baseline?.recovery_seconds,'s')}</strong></div>
           <p className="recovery-note">Both runs detected and recovered; recovery timing is not attributable to Defender. Two single runs, not a statistical study.</p>
-          <p className="recovery-note">Elapsed time has no fixed upper bound, so no bar scale is applied; a longer bar would wrongly imply a better result.</p>
         </div></Panel>
       </div>
     </section>
