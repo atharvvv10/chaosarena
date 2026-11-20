@@ -206,8 +206,7 @@ Badge: see the top of `README.md`.
 - Free `ubuntu-latest` runner, public repo, no secrets, no cluster.
 - Actions used: `checkout@v7.0.1`, `setup-python@v7.1.0`, `setup-node@v7.1.0`.
 - Steps: safety guard → pytest → React build → bad-battle BLOCK → good-battle PROMOTE → audit trail.
-- Latest push green; **13/13** runs to date succeeded. The latest run is checked
-  after push.
+- Latest push green. The latest run is checked after push.
 
 ## Cost statement
 

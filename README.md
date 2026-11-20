@@ -21,7 +21,7 @@ The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture
 | Gate vs bad release | A deliberately bad payment config (`PAYMENT_FAILURE_RATE=1.0`) scored **65/D, BLOCK**; rollback to `0.01` scored **100/A, PROMOTE** on the same battle |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
-| CI | Free `ubuntu-latest` Actions, latest push green (13/13 runs to date), no cluster, no secrets |
+| CI | Free `ubuntu-latest` Actions, latest push green, no cluster, no secrets |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
 
 ## Learned vs random attacker
