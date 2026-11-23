@@ -1,0 +1,17 @@
+{
+  "captured_at": "2026-11-23T06:15:00+00:00",
+  "git_head": "be4292a0bc11b1aa1423851c5f0ba75ea24da997",
+  "hashes": {
+    "ml\\last_battle.json": "97941e915a5641f22f7e67b1fa8c64d6b36102fe12adc6ec5c538dbf407a190d",
+    "ml\\last_attack.json": "fd13492f623c8526f1b459ed155618ab9471308db7e5db851eadee28761d2e0a",
+    "ml\\gate_decisions.jsonl": "e5af4a0b2c4d8929b7fd528a20498b285812100f442b9bf7ddbdfc0ab113d9d5",
+    "ml\\defender_actions.jsonl": "37366483f8df48f4ba57d1b35b344e77d23d0e3f8a4f88e6ca0a6ac672bfdb6d",
+    "ml\\baseline.csv": "8efa128c543e6bb9d6005e4124e7c5295417c390f76851cbba5c15c5cfb6226c",
+    "ml\\defender_model.joblib": "12e92c681ab34658ce4420cd1f0bd62fc6b0b630ac00839667abd10c3e31033e",
+    "ml\\incident_report.md": "7e01f2ee01d20ec38dbf354d00f5bde612349106b5c7da1517f849d679586459",
+    "ml\\rl_benchmark.json": "56521d44fb3a8935085211e5f140c18514f105151d73ceb1cbcdd7d696bbea07",
+    "ml\\defender_benchmark.json": "55eeeb5f998c2e333105b9d2bd03bdbca8c7d3aa6260bd825e25a3241fc5c0ef",
+    "ml\\no_defender_baseline.json": "ddb5334e20d5f2f2b262ae05a4572e8414e38fca388ee32894128a5c72d75046",
+    "ml\\bad_release_experiment.json": "882064e4ec66fd1f627ea7a48922a8cee0d5185b7515ad649a5c5d2ddd39f1c6"
+  }
+}

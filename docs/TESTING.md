@@ -95,6 +95,27 @@ compares a rule-based detector, a plain Isolation Forest and the shipped Defende
 on the recorded baseline plus seeded fault signatures. Both are offline
 benchmarks, not live battles.
 
+## v1.1 experimental validation (needs lab)
+
+The repeated-trial harness is separate from the offline benchmarks. It runs real
+Chaos Mesh faults against the isolated `shop-test` namespace and writes only to
+`ml/experimental_validation/`. Full methodology and results are in
+[EXPERIMENTAL_VALIDATION.md](EXPERIMENTAL_VALIDATION.md).
+
+```powershell
+make experimental-validation  # 10 paired trials; default cpu-stress@order-service
+make experimental-holdout     # 30 non-overlapping normal windows, frozen model
+make experimental-summary     # recompute statistics from the recorded JSONL files
+```
+
+Prerequisites are the same as a live battle: Docker Desktop, the `kind-chaosarena`
+cluster, Chaos Mesh, and a Prometheus port-forward
+(`kubectl -n monitoring port-forward svc/prometheus 9090:9090`). The harness
+checks these before starting, records every trial including errors and
+inconclusive runs, and restores `ml/defender_actions.jsonl` after remediation
+trials. If it is interrupted, run
+`python scripts/experimental_validation.py restore-frozen` before retrying.
+
 ## Media capture (optional)
 
 ```powershell

@@ -1,0 +1,181 @@
+{
+  "generated_at": "2026-11-23T07:32:38+00:00",
+  "git_head": "be4292a0bc11b1aa1423851c5f0ba75ea24da997",
+  "trial_records": 20,
+  "holdout_records": 30,
+  "configurations": {
+    "defender-enabled": {
+      "attempted": 10,
+      "terminal": 10,
+      "status_counts": {
+        "completed": 9,
+        "inconclusive_no_detection": 1
+      },
+      "detected": 9,
+      "detection_rate": 0.9,
+      "detection_seconds": {
+        "count": 9,
+        "mean": 21.66,
+        "median": 18.8,
+        "min": 9.2,
+        "max": 46.5,
+        "range": 37.3,
+        "stdev": 12.93,
+        "q1": 9.35,
+        "q3": 30.2,
+        "iqr": 20.85
+      },
+      "recovered": 10,
+      "recovery_rate_of_terminal": 1.0,
+      "recovery_rate_of_detected": 1.0,
+      "recovery_seconds": {
+        "count": 10,
+        "mean": 127.05,
+        "median": 124.2,
+        "min": 124.0,
+        "max": 153.0,
+        "range": 29.0,
+        "stdev": 9.12,
+        "q1": 124.1,
+        "q3": 124.3,
+        "iqr": 0.2
+      },
+      "defender_actions": 9,
+      "final_anomaly_score": {
+        "count": 10,
+        "mean": 0.6,
+        "median": 0.61,
+        "min": 0.54,
+        "max": 0.64,
+        "range": 0.1,
+        "stdev": 0.03,
+        "q1": 0.58,
+        "q3": 0.62,
+        "iqr": 0.04
+      },
+      "gate_verdicts": {
+        "PROMOTE": 10
+      }
+    },
+    "observe-only": {
+      "attempted": 10,
+      "terminal": 10,
+      "status_counts": {
+        "completed": 10
+      },
+      "detected": 10,
+      "detection_rate": 1.0,
+      "detection_seconds": {
+        "count": 10,
+        "mean": 46.64,
+        "median": 45.25,
+        "min": 9.1,
+        "max": 108.6,
+        "range": 99.5,
+        "stdev": 36.96,
+        "q1": 14.0,
+        "q3": 62.4,
+        "iqr": 48.4
+      },
+      "recovered": 10,
+      "recovery_rate_of_terminal": 1.0,
+      "recovery_rate_of_detected": 1.0,
+      "recovery_seconds": {
+        "count": 10,
+        "mean": 141.0,
+        "median": 143.4,
+        "min": 123.9,
+        "max": 149.3,
+        "range": 25.4,
+        "stdev": 8.08,
+        "q1": 142.7,
+        "q3": 144.5,
+        "iqr": 1.8
+      },
+      "defender_actions": 0,
+      "final_anomaly_score": {
+        "count": 10,
+        "mean": 0.62,
+        "median": 0.62,
+        "min": 0.54,
+        "max": 0.7,
+        "range": 0.16,
+        "stdev": 0.04,
+        "q1": 0.6,
+        "q3": 0.65,
+        "iqr": 0.05
+      },
+      "gate_verdicts": {
+        "PROMOTE": 10
+      }
+    }
+  },
+  "paired_recovery_delta_seconds": {
+    "definition": "observe-only recovery minus defender-enabled recovery; positive means Defender-enabled recovered sooner",
+    "count": 10,
+    "mean": 13.95,
+    "median": 19.15,
+    "min": -10.1,
+    "max": 25.1,
+    "range": 35.2,
+    "stdev": 11.68,
+    "q1": 4.6,
+    "q3": 20.5,
+    "iqr": 15.9,
+    "positive_pairs": 8,
+    "negative_pairs": 2
+  },
+  "holdout_normal": {
+    "collected": 30,
+    "valid": 30,
+    "false_positives": 0,
+    "false_positive_rate": 0.0,
+    "one_sided_95_upper_bound": 0.095034,
+    "score": {
+      "count": 30,
+      "mean": 0.61,
+      "median": 0.61,
+      "min": 0.55,
+      "max": 0.67,
+      "range": 0.12,
+      "stdev": 0.03,
+      "q1": 0.6,
+      "q3": 0.63,
+      "iqr": 0.04
+    },
+    "model_sha256": "12e92c681ab34658ce4420cd1f0bd62fc6b0b630ac00839667abd10c3e31033e",
+    "baseline_sha256": "8efa128c543e6bb9d6005e4124e7c5295417c390f76851cbba5c15c5cfb6226c"
+  },
+  "frozen_evidence": {
+    "before": {
+      "ml\\last_battle.json": "97941e915a5641f22f7e67b1fa8c64d6b36102fe12adc6ec5c538dbf407a190d",
+      "ml\\last_attack.json": "fd13492f623c8526f1b459ed155618ab9471308db7e5db851eadee28761d2e0a",
+      "ml\\gate_decisions.jsonl": "e5af4a0b2c4d8929b7fd528a20498b285812100f442b9bf7ddbdfc0ab113d9d5",
+      "ml\\defender_actions.jsonl": "37366483f8df48f4ba57d1b35b344e77d23d0e3f8a4f88e6ca0a6ac672bfdb6d",
+      "ml\\baseline.csv": "8efa128c543e6bb9d6005e4124e7c5295417c390f76851cbba5c15c5cfb6226c",
+      "ml\\defender_model.joblib": "12e92c681ab34658ce4420cd1f0bd62fc6b0b630ac00839667abd10c3e31033e",
+      "ml\\incident_report.md": "7e01f2ee01d20ec38dbf354d00f5bde612349106b5c7da1517f849d679586459",
+      "ml\\rl_benchmark.json": "56521d44fb3a8935085211e5f140c18514f105151d73ceb1cbcdd7d696bbea07",
+      "ml\\defender_benchmark.json": "55eeeb5f998c2e333105b9d2bd03bdbca8c7d3aa6260bd825e25a3241fc5c0ef",
+      "ml\\no_defender_baseline.json": "ddb5334e20d5f2f2b262ae05a4572e8414e38fca388ee32894128a5c72d75046",
+      "ml\\bad_release_experiment.json": "882064e4ec66fd1f627ea7a48922a8cee0d5185b7515ad649a5c5d2ddd39f1c6"
+    },
+    "after": {
+      "ml\\last_battle.json": "97941e915a5641f22f7e67b1fa8c64d6b36102fe12adc6ec5c538dbf407a190d",
+      "ml\\last_attack.json": "fd13492f623c8526f1b459ed155618ab9471308db7e5db851eadee28761d2e0a",
+      "ml\\gate_decisions.jsonl": "e5af4a0b2c4d8929b7fd528a20498b285812100f442b9bf7ddbdfc0ab113d9d5",
+      "ml\\defender_actions.jsonl": "37366483f8df48f4ba57d1b35b344e77d23d0e3f8a4f88e6ca0a6ac672bfdb6d",
+      "ml\\baseline.csv": "8efa128c543e6bb9d6005e4124e7c5295417c390f76851cbba5c15c5cfb6226c",
+      "ml\\defender_model.joblib": "12e92c681ab34658ce4420cd1f0bd62fc6b0b630ac00839667abd10c3e31033e",
+      "ml\\incident_report.md": "7e01f2ee01d20ec38dbf354d00f5bde612349106b5c7da1517f849d679586459",
+      "ml\\rl_benchmark.json": "56521d44fb3a8935085211e5f140c18514f105151d73ceb1cbcdd7d696bbea07",
+      "ml\\defender_benchmark.json": "55eeeb5f998c2e333105b9d2bd03bdbca8c7d3aa6260bd825e25a3241fc5c0ef",
+      "ml\\no_defender_baseline.json": "ddb5334e20d5f2f2b262ae05a4572e8414e38fca388ee32894128a5c72d75046",
+      "ml\\bad_release_experiment.json": "882064e4ec66fd1f627ea7a48922a8cee0d5185b7515ad649a5c5d2ddd39f1c6"
+    }
+  },
+  "source_files": {
+    "trials": "ml\\experimental_validation\\trials.jsonl",
+    "holdout": "ml\\experimental_validation\\holdout_normal.jsonl"
+  }
+}

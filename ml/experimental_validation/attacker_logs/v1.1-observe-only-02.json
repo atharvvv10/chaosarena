@@ -1,0 +1,11 @@
+{
+  "name": "cpu-stress",
+  "manifest": "chaosarena-cpu-stress-0ef158f6",
+  "target": "order-service",
+  "namespace": "shop-test",
+  "started_at": "2026-11-23T06:32:43+00:00",
+  "ended_at": "2026-11-23T06:34:45+00:00",
+  "cleanup_ok": true,
+  "error": null,
+  "ok": true
+}

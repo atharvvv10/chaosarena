@@ -8,7 +8,7 @@ TARGET ?= order-service
 DURATION ?= 30
 THRESHOLD ?= 70
 
-.PHONY: help verify technical-demo demo-media demo-media-offline benchmarks cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
+.PHONY: help verify technical-demo demo-media demo-media-offline benchmarks experimental-validation experimental-holdout experimental-summary cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -28,6 +28,15 @@ demo-media-offline: ## Refresh dashboard PNG/GIF/MP4 from committed evidence (no
 benchmarks: ## Regenerate committed offline RL and detector benchmark evidence
 	$(PYTHON) -m rl.cli benchmark
 	$(PYTHON) -m defender.cli benchmark
+
+experimental-validation: ## Run 10 paired live Defender-vs-observe trials (needs lab)
+	$(PYTHON) scripts/experimental_validation.py run --trials 10
+
+experimental-holdout: ## Collect 30 held-out normal samples with the frozen detector
+	$(PYTHON) scripts/experimental_validation.py holdout --samples 30
+
+experimental-summary: ## Recompute v1.1 validation summary from committed records
+	$(PYTHON) scripts/experimental_validation.py summary
 
 cluster: ## Create the local Kind cluster and namespaces
 	chmod +x scripts/*.sh

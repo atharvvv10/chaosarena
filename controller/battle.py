@@ -99,12 +99,14 @@ class BattleRunner:
         settle_seconds: float = 45.0,
         startup_settle_seconds: float = 90.0,
         log_path: Path | str = ATTACK_LOG,
+        command_timeout: float | None = None,
     ) -> None:
         self.poll_interval = poll_interval
         self.defender_wait = defender_wait
         self.settle_seconds = settle_seconds
         self.startup_settle_seconds = startup_settle_seconds
         self.log_path = Path(log_path)
+        self.command_timeout = command_timeout
 
     def run(
         self,
@@ -112,7 +114,14 @@ class BattleRunner:
         target: str = "payment-service",
         duration: int = 30,
         version: str = "candidate",
+        remediate: bool = True,
     ) -> BattleResult:
+        """Run one battle.
+
+        `remediate=False` keeps detection polling but never diagnoses or acts.
+        It is provided for controlled observe-only experiments; the default
+        preserves the production Defender path.
+        """
         if attack not in KNOWN_ATTACKS:
             raise ControllerError(
                 f"unknown attack {attack!r}; choose from {sorted(KNOWN_ATTACKS)}"
@@ -121,12 +130,14 @@ class BattleRunner:
             raise ControllerError("duration must be positive")
 
         # 1. Clean starting state.
-        status = run_cli("attacker.cli", "status")
+        status = run_cli("attacker.cli", "status", timeout=self.command_timeout)
         if status.get("chaos_objects"):
-            run_cli("attacker.cli", "cleanup")
+            run_cli("attacker.cli", "cleanup", timeout=self.command_timeout)
 
         # 2. What does normal look like to the Defender?
-        baseline = run_cli("defender.cli", "detect")
+        baseline = run_cli(
+            "defender.cli", "detect", timeout=self.command_timeout
+        )
         threshold = float(baseline.get("threshold", 0.0))
 
         # 2b. Wait for a genuinely normal starting point. A previous battle can
@@ -139,7 +150,9 @@ class BattleRunner:
             and time.monotonic() < deadline
         ):
             time.sleep(self.poll_interval)
-            current = run_cli("defender.cli", "detect")
+            current = run_cli(
+                "defender.cli", "detect", timeout=self.command_timeout
+            )
 
         # 3. Launch the attack in the background and watch with the Defender.
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -175,21 +188,37 @@ class BattleRunner:
                 elapsed = time.monotonic() - started
                 if elapsed > duration + 10:
                     break
-                current = run_cli("defender.cli", "detect")
+                current = run_cli(
+                    "defender.cli", "detect", timeout=self.command_timeout
+                )
                 if current.get("anomaly"):
                     detected = True
                     detection_seconds = round(elapsed, 1)
-                    defender_output = run_cli(
-                        "defender.cli",
-                        "run",
-                        "--act",
-                        "--wait",
-                        str(int(self.defender_wait)),
-                    )
+                    if remediate:
+                        defender_output = run_cli(
+                            "defender.cli",
+                            "run",
+                            "--act",
+                            "--wait",
+                            str(int(self.defender_wait)),
+                            timeout=self.command_timeout,
+                        )
+                    else:
+                        defender_output = {
+                            "anomaly": True,
+                            "observation_only": True,
+                            "score": current.get("score"),
+                            "threshold": current.get("threshold"),
+                        }
                     break
                 time.sleep(self.poll_interval)
 
-            process.wait()
+            try:
+                process.wait(timeout=self.command_timeout)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+                attack_error = "attacker process timed out"
             elapsed = time.monotonic() - started
 
         try:
@@ -204,9 +233,11 @@ class BattleRunner:
         # 4. Did everything return to normal and was the fault removed?
         # A 30 s Prometheus window still holds attack data right after cleanup,
         # so allow a bounded settle period before declaring failure.
-        status = run_cli("attacker.cli", "status")
+        status = run_cli(
+            "attacker.cli", "status", timeout=self.command_timeout
+        )
         chaos_remaining = len(status.get("chaos_objects", []))
-        final = run_cli("defender.cli", "detect")
+        final = run_cli("defender.cli", "detect", timeout=self.command_timeout)
         deadline = time.monotonic() + self.settle_seconds
         final_score = _finite_float(final.get("score"))
         while (
@@ -215,7 +246,9 @@ class BattleRunner:
             and time.monotonic() < deadline
         ):
             time.sleep(self.poll_interval)
-            final = run_cli("defender.cli", "detect")
+            final = run_cli(
+                "defender.cli", "detect", timeout=self.command_timeout
+            )
             final_score = _finite_float(final.get("score"))
         recovered = recovery_confirmed(final, threshold)
         recovery_seconds: float | None = None

@@ -105,6 +105,7 @@ gate, where a false alarm blocks a good build.
 - The **100/A** is not a fast-recovery claim. The score checks whether the fault was detected, whether it recovered, cleanup, the final anomaly score and attacker errors; it does not penalise a slow recovery. `recovery_seconds` is reported separately and includes up to one 30-second Prometheus scrape/window of observation lag. The control recovered sooner on the same clock.
 - The learned attacker's best action comes from a seeded simulator backed by only a few real battles. Treat it as a demo policy, not a production-trained agent.
 - The detector benchmark reuses the same 40 normal samples as the baseline and adds 160 synthetic faults. Treat its F1 numbers as a demo, not production evidence.
+- The v1.1 repeated-trial study is separate from the v1.0 demo evidence. Its live trials, held-out normal samples, negative findings and exact commands are in [EXPERIMENTAL_VALIDATION.md](docs/EXPERIMENTAL_VALIDATION.md).
 
 ## Try it in the dashboard
 

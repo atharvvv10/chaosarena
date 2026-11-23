@@ -88,7 +88,7 @@ def test_earlier_verification_cannot_override_abnormal_final_measurement(
             self.polls += 1
             return None if self.polls == 1 else 0
 
-        def wait(self) -> int:
+        def wait(self, timeout: float | None = None) -> int:
             return 0
 
     def fake_popen(command: list[str], **kwargs: object) -> FakeProcess:
@@ -225,3 +225,154 @@ def test_frontend_distinguishes_api_from_lab_readiness():
     assert "<span>Lab</span>" in app
     assert "API ONLINE · LAB NOT READY" in app
     assert "API connected · lab ready" in app
+
+
+def test_observe_only_battle_polls_without_diagnosing_or_acting(monkeypatch, tmp_path):
+    detections = iter(
+        [
+            {"score": 0.3, "threshold": 0.7, "anomaly": False},
+            {"score": 0.9, "threshold": 0.7, "anomaly": True},
+            {"score": 0.3, "threshold": 0.7, "anomaly": False},
+        ]
+    )
+    run_calls: list[tuple[str, ...]] = []
+
+    def fake_run_cli(module: str, *args: str, **kwargs: object) -> dict:
+        if module == "attacker.cli" and args[0] == "status":
+            return {"chaos_objects": []}
+        if module == "defender.cli" and args[0] == "detect":
+            return next(detections)
+        if module == "defender.cli" and args[0] == "run":
+            run_calls.append(args)
+            raise AssertionError("observe-only trial must not run remediation")
+        raise AssertionError(f"unexpected CLI call: {module} {args}")
+
+    class FakeProcess:
+        def __init__(self) -> None:
+            self.polls = 0
+
+        def poll(self) -> int | None:
+            self.polls += 1
+            return None if self.polls == 1 else 0
+
+        def wait(self, timeout: float | None = None) -> int:
+            return 0
+
+    def fake_popen(command: list[str], **kwargs: object) -> FakeProcess:
+        handle = kwargs["stdout"]
+        handle.write(json.dumps({"ok": True, "cleanup_ok": True}) + "\n")
+        return FakeProcess()
+
+    monkeypatch.setattr(battle_module, "run_cli", fake_run_cli)
+    monkeypatch.setattr(battle_module.subprocess, "Popen", fake_popen)
+
+    runner = BattleRunner(
+        poll_interval=0.01,
+        settle_seconds=0,
+        startup_settle_seconds=0,
+        log_path=tmp_path / "observe_only.json",
+    )
+    result = runner.run(remediate=False)
+
+    assert run_calls == []
+    assert result.detected is True
+    assert result.diagnosis is None
+    assert result.action_taken is None
+    assert result.recovered is True
+
+
+def test_experimental_summary_reports_trials_and_holdout(tmp_path):
+    from scripts import experimental_validation as validation
+
+    trials_file = tmp_path / "trials.jsonl"
+    trials_file.write_text(
+        "\n".join(
+            json.dumps(record)
+            for record in [
+                {
+                    "trial": 1,
+                    "configuration": "defender-enabled",
+                    "status": "completed",
+                    "detected": True,
+                    "detection_seconds": 12.0,
+                    "recovered": True,
+                    "recovery_seconds": 60.0,
+                    "defender_action_occurred": True,
+                    "gate_verdict": "PROMOTE",
+                    "final_score": 0.4,
+                },
+                {
+                    "trial": 1,
+                    "configuration": "observe-only",
+                    "status": "completed",
+                    "detected": True,
+                    "detection_seconds": 14.0,
+                    "recovered": True,
+                    "recovery_seconds": 70.0,
+                    "defender_action_occurred": False,
+                    "gate_verdict": "PROMOTE",
+                    "final_score": 0.5,
+                },
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    holdout_file = tmp_path / "holdout.jsonl"
+    holdout_file.write_text(
+        "\n".join(
+            json.dumps({"valid": True, "anomaly": anomaly, "score": score})
+            for anomaly, score in [
+                (False, 0.2),
+                (False, 0.3),
+                (False, 0.4),
+                (True, 0.9),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    payload = validation.write_summary(
+        trials_file, holdout_file, tmp_path / "summary.json", None, None
+    )
+
+    assert payload["configurations"]["defender-enabled"]["detection_rate"] == 1.0
+    assert payload["configurations"]["observe-only"]["recovery_seconds"]["median"] == 70
+    assert payload["paired_recovery_delta_seconds"]["median"] == 10
+    assert payload["holdout_normal"]["false_positives"] == 1
+    assert payload["holdout_normal"]["false_positive_rate"] == 0.25
+
+
+def test_experimental_validation_report_has_required_sections_without_placeholders():
+    report = (ROOT / "docs" / "EXPERIMENTAL_VALIDATION.md").read_text(
+        encoding="utf-8"
+    )
+    for heading in [
+        "Experimental questions and hypotheses",
+        "Environment and methodology",
+        "Trial-level results and summary statistics",
+        "Defender-enabled versus observe-only comparison",
+        "Detector evaluation results",
+        "Unexpected findings and limitations",
+        "Reproduction instructions",
+    ]:
+        assert heading in report
+    assert "[RESULTS PENDING" not in report
+    assert "HOLDOUT RESULTS PENDING" not in report
+
+
+def test_frozen_evidence_snapshot_can_be_restored(monkeypatch, tmp_path):
+    from scripts import experimental_validation as validation
+
+    action_log = tmp_path / "defender_actions.jsonl"
+    action_log.write_text("original\n", encoding="utf-8")
+    monkeypatch.setattr(validation, "BACKUP_DIR", tmp_path / "frozen_backup")
+    monkeypatch.setattr(validation, "MUTABLE_FROZEN_FILES", [action_log])
+
+    validation.snapshot_frozen()
+    action_log.write_text("original\nnew-action\n", encoding="utf-8")
+    validation.restore_frozen()
+
+    assert action_log.read_text(encoding="utf-8") == "original\n"
+    assert not validation.BACKUP_DIR.exists()
