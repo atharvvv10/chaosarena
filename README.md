@@ -4,9 +4,9 @@
 
 **A resilience-gated CI/CD lab that treats a release like a fight.** A tabular Q-learning attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and requests a repair; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute, hosted database or API key. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
 
-![ChaosArena demo — run a battle, watch the gate and read the learned policy](docs/screenshots/demo.gif)
+![ChaosArena dashboard walkthrough — committed battle evidence, release gate and learned policy](docs/screenshots/demo.gif)
 
-[Watch the full demo (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
+[Watch the dashboard walkthrough (MP4)](docs/screenshots/demo.mp4) · [Dashboard screenshot](docs/screenshots/dashboard.png) · [Grafana screenshot](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
 ## Evaluate ChaosArena
 
@@ -28,7 +28,7 @@ Start the existing FastAPI backend and React frontend using the documented setup
 
 Follow [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) to run a controlled battle in the isolated Kind environment. [DEMO_AUDIT.md](docs/DEMO_AUDIT.md) records the last real run and its environmental limitations.
 
-The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture of the current UI, including the no-Defender recovery-control and bad-release panels.
+The GIF and MP4 are a current-UI walkthrough of the committed 100/A battle evidence, the bad-release/rollback panel and the offline benchmark panels; no new live battle was recorded for the latest correctness fixes. The dashboard PNG is a fresh full-page capture at 1440×4981. The Grafana PNG remains the real capture from the audited live Kind run and was not regenerated because no lab is running here.
 
 ## Results at a glance
 

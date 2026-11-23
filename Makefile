@@ -8,7 +8,7 @@ TARGET ?= order-service
 DURATION ?= 30
 THRESHOLD ?= 70
 
-.PHONY: help verify technical-demo demo-media benchmarks cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
+.PHONY: help verify technical-demo demo-media demo-media-offline benchmarks cluster deploy dashboard metrics logs status smoke baseline train defend detect defender-guard attack battle gate gate-api ui-install ui-build ui-dev rl-guard rl-train rl-policy rl-real rl-real-dry report report-groq ci-check ci-selftest ci-guard dev-up dev-down clean chaos-install chaos-list chaos-status chaos-clean
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -19,8 +19,11 @@ verify: ## Phase 9: run every cluster-free check in one command
 technical-demo: ## Short evidence-based technical demo (no cluster needed)
 	$(PYTHON) scripts/technical_demo.py
 
-demo-media: ## Optional: recapture screenshots, demo GIF and video (Playwright + Edge)
+demo-media: ## Optional: recapture live battle, Grafana, screenshots, GIF and video (needs lab)
 	$(PYTHON) scripts/capture_demo.py
+
+demo-media-offline: ## Refresh dashboard PNG/GIF/MP4 from committed evidence (no cluster)
+	$(PYTHON) scripts/capture_demo.py --offline
 
 benchmarks: ## Regenerate committed offline RL and detector benchmark evidence
 	$(PYTHON) -m rl.cli benchmark

@@ -100,13 +100,16 @@ benchmarks, not live battles.
 ```powershell
 .\.venv\Scripts\python.exe -m pip install playwright Pillow imageio-ffmpeg
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
-make demo-media
+make demo-media          # live battle + Grafana; needs the Kind lab and port-forward
+make demo-media-offline  # committed-evidence dashboard walkthrough; no lab needed
 ```
 
-This regenerates `docs/screenshots/dashboard.png`, `grafana.png`, `demo.gif` and
-`demo.mp4` using the already-running local services and Microsoft Edge. It runs a
-real battle, so check cleanup with `attacker.cli status` afterwards. It is not
-part of `make verify`.
+`make demo-media` regenerates all four assets with the already-running local
+services and Microsoft Edge. It runs a real battle and captures live Grafana, so
+check cleanup with `attacker.cli status` afterwards. `make demo-media-offline`
+refreshes `dashboard.png`, `demo.gif` and `demo.mp4` from the evidence already in
+the running UI; it never runs a battle and leaves `grafana.png` untouched. Both
+need the gate API and dashboard running, and neither is part of `make verify`.
 
 ## Common failures
 

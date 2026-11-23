@@ -2,14 +2,18 @@
 
 Optional developer utility. Not part of CI and not needed to run the project.
 Requires: pip install playwright Pillow imageio-ffmpeg, plus Microsoft Edge.
-Everything used here is free and local; no account or paid service is involved.
+
+By default this records a live battle and the live Grafana dashboard, so it
+needs the Kind lab and Prometheus port-forward. ``--offline`` refreshes the
+dashboard PNG, GIF and MP4 from the committed evidence in the running UI
+instead; it never runs a battle and never fabricates metrics.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import subprocess
-import time
 from pathlib import Path
 
 from PIL import Image
@@ -119,66 +123,144 @@ def capture_grafana(browser) -> Path:
     return out
 
 
+def reset_capture_dirs() -> None:
+    """Never mix frames or raw recordings from an earlier capture."""
+    shutil.rmtree(FRAMES, ignore_errors=True)
+    shutil.rmtree(VIDEO_TMP, ignore_errors=True)
+    FRAMES.mkdir(exist_ok=True)
+    VIDEO_TMP.mkdir(exist_ok=True)
+
+
+def finish_recording(page) -> None:
+    """Write the GIF and MP4 from this run's frames and raw video."""
+    video = page.video
+    page.context.close()
+    webm = Path(video.path()) if video else None
+
+    gif = build_gif()
+    print(f"GIF: {gif} ({gif.stat().st_size // 1024} KiB)", flush=True)
+    if webm and webm.exists():
+        mp4 = convert_video(webm)
+        if mp4:
+            print(f"VIDEO: {mp4} ({mp4.stat().st_size // 1024} KiB)", flush=True)
+        shutil.rmtree(VIDEO_TMP, ignore_errors=True)
+
+
+def capture_current_ui(browser) -> None:
+    """Refresh the dashboard assets from committed evidence; no live battle."""
+    context = browser.new_context(
+        viewport={"width": 1440, "height": 900},
+        record_video_dir=str(VIDEO_TMP),
+        record_video_size={"width": 1440, "height": 900},
+    )
+    page = context.new_page()
+    page.goto(BASE, wait_until="networkidle", timeout=60000)
+    page.wait_for_selector("text=Release gate", timeout=30000)
+    page.wait_for_function(
+        "() => { const m = document.querySelector('.topright .mode')?.textContent || ''; "
+        "return m && !m.includes('CHECKING'); }",
+        timeout=30000,
+    )
+    status = page.locator(".topright .mode").inner_text()
+    print(f"  dashboard status: {status}", flush=True)
+    if "API ONLINE" not in status:
+        raise RuntimeError(f"refusing to capture an offline dashboard: {status}")
+    page.wait_for_timeout(1200)
+
+    frame(page, "01_current_overview")
+    page.screenshot(path=str(SHOTS / "dashboard.png"), full_page=True)
+
+    page.locator("#battle").scroll_into_view_if_needed()
+    page.wait_for_timeout(900)
+    frame(page, "02_current_battle")
+
+    page.locator("#evidence").scroll_into_view_if_needed()
+    page.wait_for_timeout(900)
+    frame(page, "03_current_evidence")
+
+    page.locator(".rl-panel").scroll_into_view_if_needed()
+    page.wait_for_timeout(900)
+    frame(page, "04_current_rl")
+
+    page.locator("#history").scroll_into_view_if_needed()
+    page.wait_for_timeout(900)
+    frame(page, "05_current_history")
+
+    page.locator(".report").scroll_into_view_if_needed()
+    page.wait_for_timeout(900)
+    frame(page, "06_current_report")
+
+    finish_recording(page)
+
+
+def capture_live_demo(browser) -> None:
+    """Record a real battle and the live Grafana dashboard (needs the lab)."""
+    context = browser.new_context(
+        viewport={"width": 1440, "height": 900},
+        record_video_dir=str(VIDEO_TMP),
+        record_video_size={"width": 1440, "height": 900},
+    )
+    page = context.new_page()
+    page.goto(BASE, wait_until="networkidle", timeout=60000)
+    page.wait_for_selector("text=Release gate", timeout=30000)
+    page.wait_for_timeout(3000)
+
+    frame(page, "01_dashboard")
+    page.screenshot(path=str(SHOTS / "dashboard.png"), full_page=True)
+
+    fill_battle_form(page)
+    frame(page, "02_form_filled")
+    page.get_by_role("button", name="Run battle").click()
+    frame(page, "03_battling")
+
+    for index in range(8):
+        page.wait_for_timeout(7000)
+        frame(page, f"04_battle_{index + 1}")
+
+    wait_for_battle(page)
+    page.wait_for_timeout(1500)
+    frame(page, "05_result")
+
+    page.locator("#evidence").scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+    frame(page, "06_evidence")
+    page.locator(".rl-panel").scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+    frame(page, "07_rl_panel")
+    page.locator("#history").scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+    frame(page, "08_history")
+    page.locator(".report").scroll_into_view_if_needed()
+    page.wait_for_timeout(1200)
+    frame(page, "09_report")
+
+    finish_recording(page)
+
+    grafana = capture_grafana(browser)
+    print(f"GRAFANA: {grafana} ({grafana.stat().st_size // 1024} KiB)", flush=True)
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="refresh dashboard PNG/GIF/MP4 from committed evidence (no battle, no Grafana)",
+    )
+    args = parser.parse_args()
+    reset_capture_dirs()
+
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel="msedge", headless=True)
-        context = browser.new_context(
-            viewport={"width": 1440, "height": 900},
-            record_video_dir=str(VIDEO_TMP),
-            record_video_size={"width": 1440, "height": 900},
-        )
-        page = context.new_page()
-        page.goto(BASE, wait_until="networkidle", timeout=60000)
-        page.wait_for_selector("text=Release gate", timeout=30000)
-        page.wait_for_timeout(3000)
-
-        frame(page, "01_dashboard")
-        page.screenshot(path=str(SHOTS / "dashboard.png"), full_page=True)
-
-        fill_battle_form(page)
-        frame(page, "02_form_filled")
-        page.get_by_role("button", name="Run battle").click()
-        frame(page, "03_battling")
-
-        for index in range(8):
-            page.wait_for_timeout(7000)
-            frame(page, f"04_battle_{index + 1}")
-
-        wait_for_battle(page)
-        page.wait_for_timeout(1500)
-        frame(page, "05_result")
-
-        page.locator("#evidence").scroll_into_view_if_needed()
-        page.wait_for_timeout(1200)
-        frame(page, "06_evidence")
-        page.locator("#rl").scroll_into_view_if_needed()
-        page.wait_for_timeout(1200)
-        frame(page, "07_rl_panel")
-        page.locator("#history").scroll_into_view_if_needed()
-        page.wait_for_timeout(1200)
-        frame(page, "08_history")
-        page.locator(".report").scroll_into_view_if_needed()
-        page.wait_for_timeout(1200)
-        frame(page, "09_report")
-
-        video = page.video
-        context.close()
-        webm = Path(video.path()) if video else None
-
-        gif = build_gif()
-        print(f"GIF: {gif} ({gif.stat().st_size // 1024} KiB)", flush=True)
-        if webm and webm.exists():
-            mp4 = convert_video(webm)
-            if mp4:
-                print(f"VIDEO: {mp4} ({mp4.stat().st_size // 1024} KiB)", flush=True)
-            shutil.rmtree(VIDEO_TMP, ignore_errors=True)
-
-        grafana = capture_grafana(browser)
-        print(f"GRAFANA: {grafana} ({grafana.stat().st_size // 1024} KiB)", flush=True)
+        if args.offline:
+            capture_current_ui(browser)
+            print("OFFLINE CAPTURE COMPLETE", flush=True)
+        else:
+            capture_live_demo(browser)
+            print("LIVE CAPTURE COMPLETE", flush=True)
         browser.close()
 
     shutil.rmtree(FRAMES, ignore_errors=True)
-    print("CAPTURE COMPLETE", flush=True)
 
 
 if __name__ == "__main__":

@@ -34,13 +34,13 @@ features. Everything here is local and free.
 | `rl/benchmark.py`, `defender/benchmark.py` | Reproducible learned-vs-random and detector-comparison benchmarks. |
 | `ml/rl_benchmark.json`, `ml/defender_benchmark.json` | Committed benchmark evidence. |
 | `tests/test_phase3.py`, `test_phase4.py`, `test_phase8.py`, `test_phase9.py` | Guards for timing, benchmarks and claim accuracy. |
-| `docs/screenshots/dashboard.png` | Real full-page dashboard capture. |
-| `docs/screenshots/grafana.png` | Real Grafana `ChaosArena - ShopApp Live` capture. |
-| `docs/screenshots/demo.gif` | Short animated loop of a live battle and its result. |
-| `docs/screenshots/demo.mp4` | Full recorded demo (video). |
-| `scripts/capture_demo.py` | Optional regenerate script; not part of CI. |
+| `docs/screenshots/dashboard.png` | Fresh full-page dashboard capture from the current UI. |
+| `docs/screenshots/grafana.png` | Real Grafana `ChaosArena - ShopApp Live` capture from the audited live Kind run. |
+| `docs/screenshots/demo.gif` | Current dashboard walkthrough of committed evidence and gate result (≈10 s). |
+| `docs/screenshots/demo.mp4` | Current dashboard walkthrough video (≈15 s). |
+| `scripts/capture_demo.py` | Optional regenerate script with live and `--offline` modes; not part of CI. |
 | `tests/test_phase9.py` | Guards for media assets and claim accuracy. |
-| `Makefile` | `demo-media` target. |
+| `Makefile` | `demo-media` and `demo-media-offline` targets. |
 | `.gitignore` | Ignore temporary capture frames/video. |
 
 ## Exact commands used
@@ -53,7 +53,8 @@ features. Everything here is local and free.
 # Free media tooling
 .\.venv\Scripts\python.exe -m pip install playwright Pillow imageio-ffmpeg
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
-.\.venv\Scripts\python.exe scripts\capture_demo.py
+.\.venv\Scripts\python.exe scripts\capture_demo.py --offline  # current UI, committed evidence
+.\.venv\Scripts\python.exe scripts\capture_demo.py            # live battle + Grafana; needs lab
 
 # Secret audit over every commit
 $commits = git rev-list --all
@@ -87,20 +88,23 @@ nothing is mutated.
   `payment-service`, **detected in 13.3 s**, diagnosed
   `latency_spike` on `order-service`, restart requested, **recovered in 76.2 s**, **100/A/PROMOTE** at
   threshold 70, cleanup ok, 0 objects left.
-- The demo video itself records a dashboard battle that also detected the fault
-  (at 7.3 s) and scored **100/A/PROMOTE** with 0 objects left. The earlier
-  10-second `network-partition` run scored **70/C/PROMOTE** with `detected:
-  false` because it healed inside the 30-second Prometheus window; that honest
-  explanation is now in README, not hidden.
+- The current GIF/MP4 show the committed headline battle result in the dashboard
+  (13.3 s detection, **100/A/PROMOTE**, 0 objects left) without running a new
+  live battle. The earlier 10-second `network-partition` run scored
+  **70/C/PROMOTE** with `detected: false` because it healed inside the
+  30-second Prometheus window; that honest explanation is now in README, not
+  hidden.
 - Offline learned-vs-random benchmark: learned damage **30.0** vs random **16.9**
   (resilience 70.0 vs 83.1) → **1.77×** more damage. Evidence:
   `ml/rl_benchmark.json`.
 - Offline detector comparison: rule-based 3-sigma 100% recall / 1 false alarm;
   plain Isolation Forest 0% recall; shipped Defender 76.2% recall / **0** false
   alarms. Evidence: `ml/defender_benchmark.json`.
-- Demo video duration: **1 min 22 s** (`demo.mp4`), GIF ≈ 26 s, dashboard PNG
-  captured full-page at 1440×3372, Grafana PNG at 1600×1000.
-- `attacker.cli status` after capture: `chaos_objects: []`, all pods Running.
+- Current media: `demo.mp4` ≈ 15 s, `demo.gif` ≈ 10 s (6 frames), dashboard PNG
+  1440×4981. `grafana.png` remains the 1600×1000 capture from the audited live
+  Kind run on 2026-11-20.
+- The last live capture ended with `chaos_objects: []` and all pods Running; the
+  current offline assets did not run a battle or alter that evidence.
 - Test suite and cluster-free verification pass; details in the final summary.
 
 ## Claim corrections
