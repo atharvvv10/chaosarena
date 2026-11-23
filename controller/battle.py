@@ -6,6 +6,7 @@ command line interfaces. It cannot reach around their allowlists.
 from __future__ import annotations
 
 import json
+import math
 import subprocess
 import sys
 import time
@@ -60,15 +61,32 @@ def run_cli(module: str, *args: str, timeout: float | None = None) -> dict:
         ) from exc
 
 
+def _finite_float(value: object) -> float | None:
+    """Parse a measurement value, rejecting booleans and non-finite numbers."""
+    if isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if math.isfinite(number) else None
+
+
 def recovery_confirmed(final: dict, threshold: float) -> bool:
-    """Confirm recovery from the final measurement, not an earlier check.
+    """Confirm recovery from a valid final measurement, not an earlier check.
 
     A verification run during remediation is supporting evidence, but the
-    post-cleanup anomaly score is authoritative. A normal earlier sample cannot
-    override a final score that is still abnormal.
+    post-cleanup anomaly score is authoritative. Missing, malformed, non-finite
+    or wrongly typed measurements cannot prove recovery.
     """
-    final_score = float(final.get("score", 0.0))
-    return final_score <= threshold and not bool(final.get("anomaly"))
+    if not isinstance(final, dict):
+        return False
+    final_score = _finite_float(final.get("score"))
+    effective_threshold = _finite_float(threshold)
+    anomaly = final.get("anomaly")
+    if final_score is None or effective_threshold is None or not isinstance(anomaly, bool):
+        return False
+    return final_score <= effective_threshold and not anomaly
 
 
 class BattleRunner:
@@ -190,10 +208,15 @@ class BattleRunner:
         chaos_remaining = len(status.get("chaos_objects", []))
         final = run_cli("defender.cli", "detect")
         deadline = time.monotonic() + self.settle_seconds
-        while float(final.get("score", 0.0)) > threshold and time.monotonic() < deadline:
+        final_score = _finite_float(final.get("score"))
+        while (
+            final_score is not None
+            and final_score > threshold
+            and time.monotonic() < deadline
+        ):
             time.sleep(self.poll_interval)
             final = run_cli("defender.cli", "detect")
-        final_score = float(final.get("score", 0.0))
+            final_score = _finite_float(final.get("score"))
         recovered = recovery_confirmed(final, threshold)
         recovery_seconds: float | None = None
         if recovered:

@@ -61,7 +61,8 @@ a real battle does not.
 recorded and returns the new report in the same response. The dashboard uses that
 response directly, so a new evaluation cannot leave an older report on screen.
 `controller.cli evaluate` uses the same reporter helper, so CLI and dashboard runs
-cannot disagree about which battle the report describes. The report is offline and
+cannot disagree about which battle the report describes. `GET /report/latest` reads
+the same `REPORT_FILE` constant used for generation. The report is offline and
 deterministic by default; no LLM network call is made.
 
 ## Why this is honest

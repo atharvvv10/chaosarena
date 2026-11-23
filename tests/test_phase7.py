@@ -56,7 +56,7 @@ def test_report_endpoint_returns_markdown(monkeypatch):
             return self.value
 
     client = TestClient(api.app)
-    monkeypatch.setattr(api, "Path", FakePath)
+    monkeypatch.setattr(api, "REPORT_FILE", FakePath("ml/incident_report.md"))
     response = client.get("/report/latest")
     assert response.status_code == 200
     assert response.json()["file"] == "ml/incident_report.md"

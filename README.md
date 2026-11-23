@@ -34,7 +34,7 @@ The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **128 passing**: 9 phase suites plus 6 final regression checks (`make verify`) |
+| Automated tests | **130 passing**: 9 phase suites plus 8 final regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |

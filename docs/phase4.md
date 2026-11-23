@@ -76,7 +76,7 @@ cd D:\Projects\1\chaosarena
 
 ## Results actually measured on this laptop
 
-- **128 tests pass** across all nine phases plus the final regression suite.
+- **130 tests pass** across all nine phases plus the final regression suite.
 - First Phase 4 `network-latency` battle: detected, diagnosed `latency_spike`
   on `order-service`, requested a restart for it, but the final Prometheus sample
   was still inside the 30-second attack window → score **65**, verdict **BLOCK**.

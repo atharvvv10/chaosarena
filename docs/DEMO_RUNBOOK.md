@@ -38,7 +38,7 @@ This path needs **no live attack** and reproduces the published dashboard and
 results exactly.
 
 ```powershell
-# 1. Cluster-free verification: 128 tests, six guards, gate fixtures, React build
+# 1. Cluster-free verification: 130 tests, six guards, gate fixtures, React build
 .\.venv\Scripts\python.exe scripts\verify_all.py
 
 # 2. Start the gate API

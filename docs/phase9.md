@@ -49,7 +49,7 @@ Then the existing dev servers were used:
 
 ## Verified results
 
-- **128 tests pass** across all nine phase suites, the final evidence/benchmark checks and six post-audit regressions.
+- **130 tests pass** across all nine phase suites, the final evidence/benchmark checks and eight post-audit regressions.
 - `make verify` completes all cluster-free steps successfully.
 - React build: 17 modules, ≈227 kB JS / 71 kB gzip; no vulnerabilities.
 - Browser check: API online, headline battle shows `100 / grade A`, RL panel shows

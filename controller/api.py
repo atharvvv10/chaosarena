@@ -144,10 +144,9 @@ def history(limit: int = 10) -> dict:
 @app.get("/report/latest")
 def latest_report() -> dict:
     """Return the offline incident report for the dashboard panel."""
-    path = Path("ml/incident_report.md")
-    if not path.exists():
-        return {"file": str(path), "text": None}
-    return {"file": str(path), "text": path.read_text(encoding="utf-8")}
+    if not REPORT_FILE.exists():
+        return {"file": str(REPORT_FILE), "text": None}
+    return {"file": str(REPORT_FILE), "text": REPORT_FILE.read_text(encoding="utf-8")}
 
 
 @app.get("/rl/policy")

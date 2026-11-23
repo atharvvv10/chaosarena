@@ -38,6 +38,26 @@ def test_recovery_requires_normal_final_measurement():
     assert recovery_confirmed({"score": 0.56, "anomaly": True}, 0.74) is False
 
 
+def test_missing_or_invalid_final_measurements_never_confirm_recovery():
+    valid = {"score": 0.56, "anomaly": False}
+    invalid = [
+        {},
+        {"score": 0.56},
+        {"anomaly": False},
+        {"score": "not-a-number", "anomaly": False},
+        {"score": float("nan"), "anomaly": False},
+        {"score": float("inf"), "anomaly": False},
+        {"score": True, "anomaly": False},
+        {"score": 0.56, "anomaly": "false"},
+        {"score": 0.56, "anomaly": None},
+        None,
+    ]
+
+    assert recovery_confirmed(valid, 0.74) is True
+    for final in invalid:
+        assert recovery_confirmed(final, 0.74) is False
+
+
 def test_earlier_verification_cannot_override_abnormal_final_measurement(
     monkeypatch, tmp_path
 ):
@@ -119,6 +139,25 @@ def test_new_evaluation_refreshes_the_incident_report(monkeypatch, tmp_path):
     assert "pod-kill" in text
     assert "v9.9.9" in text
     assert response.json()["report"]["text"] == text
+
+
+def test_latest_report_uses_the_shared_report_file_constant(monkeypatch, tmp_path):
+    report_path = tmp_path / "incident_report.md"
+    report_path.write_text("# Current incident\n", encoding="utf-8")
+    monkeypatch.setattr(api, "REPORT_FILE", report_path)
+
+    client = TestClient(api.app)
+    present = client.get("/report/latest")
+    assert present.status_code == 200
+    assert present.json() == {
+        "file": str(report_path),
+        "text": "# Current incident\n",
+    }
+
+    monkeypatch.setattr(api, "REPORT_FILE", tmp_path / "missing.md")
+    absent = client.get("/report/latest")
+    assert absent.status_code == 200
+    assert absent.json() == {"file": str(tmp_path / "missing.md"), "text": None}
 
 
 def test_cli_evaluation_also_refreshes_the_report(monkeypatch, tmp_path):
