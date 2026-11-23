@@ -8,14 +8,15 @@ It uses plain CSS and free open-source packages only — no UI kit, no cloud, no
 Terminal 1 — start the gate API:
 
 ```powershell
-cd D:\Projects\1\chaosarena
+# From the repository root
 .\.venv\Scripts\python.exe -m uvicorn controller.api:app --host 127.0.0.1 --port 8080
 ```
 
 Terminal 2 — start the UI:
 
 ```powershell
-cd D:\Projects\1\chaosarena\dashboard
+# From the repository root
+cd dashboard
 npm install
 npm run dev
 ```

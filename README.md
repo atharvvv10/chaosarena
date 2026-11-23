@@ -106,6 +106,7 @@ gate, where a false alarm blocks a good build.
 - Diagnosis is symptomatic: the headline fault hit `payment-service`, but `order-service` was restarted.
 - The Defender did **not** improve recovery in the headline network-latency control: **76.2 s** with a requested restart versus **50.8 s** without one. [Control run](docs/RESULTS.md#no-defender-control-run).
 - In v1.1 all observe-only trials also recovered. The tight ~124 s cluster in the enabled group may reflect a **measurement floor**, and that run did not record which pod was stressed or whether the restart replaced it.
+- The release gate is not a hard must-detect gate. In experimental trial 07, the detector missed the fault, yet the release received PROMOTE because the score met the configured threshold.
 - **100/A** is not a speed claim; `recovery_seconds` includes observation lag and the gate does not penalise slow recovery.
 - The 30 holdout windows came from one steady load session, so the **9.5%** false-positive upper bound is optimistic.
 

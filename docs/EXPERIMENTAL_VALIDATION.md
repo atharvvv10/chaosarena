@@ -342,8 +342,11 @@ benchmark.
 
 ### 7.1 Prerequisites
 
+Run these commands from the repository root:
+
 ```powershell
-$env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
+$repo = (Get-Location).Path
+$env:PATH = "$repo\tools\bin;C:\Program Files\Docker\Docker\resources\bin;" + $env:PATH
 docker info --format '{{.ServerVersion}}'
 kubectl -n monitoring port-forward svc/prometheus 9090:9090
 .\.venv\Scripts\python.exe -m attacker.cli ready
