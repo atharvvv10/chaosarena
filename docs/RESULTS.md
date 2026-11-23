@@ -198,9 +198,9 @@ comparison is like-for-like. These are offline benchmarks, not live battles.
   reward speed. `recovery_seconds` includes up to one 30-second Prometheus
   observation window.
 - The v1.1 repeated-trial study is published separately in
-  [EXPERIMENTAL_VALIDATION.md](EXPERIMENTAL_VALIDATION.md). It is additive live
-  evidence for one controlled fault and does not replace the single-run v1.0
-  figures above.
+  [EXPERIMENTAL_VALIDATION.md](EXPERIMENTAL_VALIDATION.md). It adds 10 paired
+  trials and 0/30 held-out false alarms, with a non-conclusive primary sign
+  test. It does not replace the single-run v1.0 figures above.
 
 ## GitHub Actions
 

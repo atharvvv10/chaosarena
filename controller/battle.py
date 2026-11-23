@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any, Callable
 
 from .score import BattleResult
 
@@ -115,12 +116,19 @@ class BattleRunner:
         duration: int = 30,
         version: str = "candidate",
         remediate: bool = True,
+        observe_after_detection: bool = False,
+        on_detection: Callable[[float], dict[str, Any] | None] | None = None,
     ) -> BattleResult:
         """Run one battle.
 
         `remediate=False` keeps detection polling but never diagnoses or acts.
         It is provided for controlled observe-only experiments; the default
         preserves the production Defender path.
+
+        `observe_after_detection=True` continues read-only detection polls until
+        the attacker finishes, so validation runs can measure how long the
+        anomaly stayed active. `on_detection` is an optional read-only hook that
+        records fault-target evidence at the moment of first detection.
         """
         if attack not in KNOWN_ATTACKS:
             raise ControllerError(
@@ -184,6 +192,9 @@ class BattleRunner:
             )
 
             started = time.monotonic()
+            anomaly_observations: list[dict[str, Any]] = []
+            detection_evidence: dict[str, Any] | None = None
+            detection_elapsed: float | None = None
             while process.poll() is None:
                 elapsed = time.monotonic() - started
                 if elapsed > duration + 10:
@@ -191,9 +202,22 @@ class BattleRunner:
                 current = run_cli(
                     "defender.cli", "detect", timeout=self.command_timeout
                 )
-                if current.get("anomaly"):
+                anomaly = bool(current.get("anomaly"))
+                score = _finite_float(current.get("score"))
+                if detected or anomaly:
+                    anomaly_observations.append(
+                        {
+                            "elapsed_seconds": round(elapsed, 3),
+                            "anomaly": anomaly,
+                            "score": score,
+                        }
+                    )
+                if anomaly and not detected:
                     detected = True
                     detection_seconds = round(elapsed, 1)
+                    detection_elapsed = elapsed
+                    if on_detection is not None:
+                        detection_evidence = on_detection(elapsed) or None
                     if remediate:
                         defender_output = run_cli(
                             "defender.cli",
@@ -210,7 +234,8 @@ class BattleRunner:
                             "score": current.get("score"),
                             "threshold": current.get("threshold"),
                         }
-                    break
+                    if not observe_after_detection:
+                        break
                 time.sleep(self.poll_interval)
 
             try:
@@ -219,7 +244,33 @@ class BattleRunner:
                 process.kill()
                 process.wait()
                 attack_error = "attacker process timed out"
-            elapsed = time.monotonic() - started
+
+            anomaly_times = [
+                item["elapsed_seconds"]
+                for item in anomaly_observations
+                if item["anomaly"]
+            ]
+            anomaly_active_seconds: float | None = None
+            if len(anomaly_times) >= 2:
+                anomaly_active_seconds = round(
+                    max(anomaly_times) - min(anomaly_times), 3
+                )
+            elif anomaly_times:
+                anomaly_active_seconds = 0.0
+            first_normal_after_detection_seconds: float | None = None
+            effective_threshold = _finite_float(threshold)
+            if detected and detection_elapsed is not None and effective_threshold is not None:
+                first_normal_after_detection_seconds = next(
+                    (
+                        item["elapsed_seconds"]
+                        for item in anomaly_observations
+                        if item["elapsed_seconds"] > detection_elapsed
+                        and not item["anomaly"]
+                        and item["score"] is not None
+                        and item["score"] <= effective_threshold
+                    ),
+                    None,
+                )
 
         try:
             attack_output = json.loads(self.log_path.read_text(encoding="utf-8").strip())
@@ -271,4 +322,12 @@ class BattleRunner:
             diagnosis=defender_output.get("diagnosis"),
             action_taken=defender_output.get("action_taken"),
             attack_error=attack_error,
+            detection_evidence=detection_evidence,
+            anomaly_observations=anomaly_observations if observe_after_detection else None,
+            anomaly_active_seconds=(
+                anomaly_active_seconds if observe_after_detection else None
+            ),
+            first_normal_after_detection_seconds=(
+                first_normal_after_detection_seconds if observe_after_detection else None
+            ),
         )

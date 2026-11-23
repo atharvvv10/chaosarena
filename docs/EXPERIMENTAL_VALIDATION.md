@@ -10,7 +10,8 @@ Machine-readable records are committed under `ml/experimental_validation/`:
 
 - `trials.jsonl` — every live trial, including errors and inconclusive runs.
 - `holdout_normal.jsonl` — independent normal-operation samples.
-- `summary.json` — recomputable statistics and frozen-evidence hashes.
+- `summary.json` — recomputable statistics, both sign tests, holdout caveats and
+  frozen-evidence hashes.
 
 ## 1. Experimental questions and hypotheses
 
@@ -77,10 +78,16 @@ change the policy to obtain better verdicts.
   timeout `240 s`.
 - Before every trial the harness calls `attacker.cli cleanup` if needed and
   waits for a below-threshold detector sample. The existing `BattleRunner`
-  implements this; v1.1 only adds a `remediate=False` path, defaulting to the
+  implements this; v1.1 added a `remediate=False` path, defaulting to the
   original behaviour.
 - Every trial is appended as soon as it terminates. Failures, timeouts and
   `inconclusive_no_detection` results are retained, not discarded.
+- The 20 recorded trials used the first harness version. After review, the
+  harness now also continues read-only polling after detection, records the
+  anomaly span and first normal sample during the attack, and snapshots the
+  selected stress pod and its UID. Those fields are therefore `null`/absent for
+  the recorded trials below and are available only for future runs; they have
+  **not** been back-filled.
 
 ### 2.3 Measurement definitions
 
@@ -88,7 +95,9 @@ change the policy to obtain better verdicts.
 | --- | --- |
 | Detection | First anomaly observation after attacker launch, on the shared 3 s poll clock. |
 | Recovery | Final post-cleanup Prometheus sample has a finite score, valid boolean anomaly, `score <= threshold` and `anomaly == false`. |
-| Recovery time | Elapsed time from attacker launch to that authoritative final sample. Includes up to one 30 s Prometheus window of observation lag. |
+| Recovery time | Elapsed time from attacker launch to that authoritative final sample, taken **after the attacker process ends**. Includes up to one 30 s Prometheus window of observation lag. This is a lower bound on true healing time and cannot see recovery earlier than attack duration. |
+| Anomaly span (future runs) | Elapsed time from first to last anomalous poll during the attack. A lower bound from the 3 s poll grid; not captured in the 20 recorded trials. |
+| First normal after detection (future runs) | First sub-threshold, non-anomalous poll after the first detection. For enabled trials this is after the restart; not captured in the 20 recorded trials. |
 | Automatic recovery | Recovery in observe-only trials, where no Defender action occurred. |
 | Defender-attributable recovery | Only supportable if enabled trials differ materially from observe-only trials *and* the mechanism is consistent with the action taken. Recovery after Chaos Mesh expiry alone is not attributable to the Defender. |
 | Gate outcome | Existing `score_battle()` + `evaluate_gate()` applied to the trial facts. |
@@ -195,22 +204,39 @@ in the median.
     stdev **11.68 s**, IQR **15.9 s**.
   - The two negative pairs are trial 06 (−0.3 s) and trial 07 (−10.1 s, the
     no-detection trial with no Defender action).
+- **Measurement floor:** the primary `recovery_seconds` value is taken only
+  after the 120 s attacker process ends. Enabled trials cluster at 124.0–124.3 s
+  (IQR 0.2 s), essentially attack end plus the final sample; observe-only trials
+  wait for the 30 s metric window to clear and sit near 143 s. The 19 s median
+  gap therefore mixes a possible real effect with this measurement asymmetry.
+  The updated harness now records the anomaly span and the first normal sample
+  during the attack, but those fields are absent from the 20 recorded trials, so
+  the earlier healing time cannot be quantified retroactively.
+- **Primary exact sign test (all 10 pairs):** 8 positive, 2 negative, 0 ties;
+  two-sided **p = 0.109375**. This is not conclusive at the 0.05 level.
+- **Exploratory post-hoc subgroup (9 pairs where the Defender acted):** 8
+  positive, 1 negative, 0 ties; two-sided **p = 0.039062**. This conditions on
+  an outcome that occurs after randomisation and is reported only beside the
+  primary test, never as the headline result.
 - When the Defender acted, it always diagnosed `latency_spike` and issued
   `restart@order-service`. Recovery then clustered near 124 s, consistent with
   replacing the stressed pod. This is **mechanistically compatible** with a
-  Defender-attributable timing benefit for this specific fault.
+  Defender-attributable timing benefit for this specific fault, but the
+  measurement floor above prevents a clean timing claim.
 
 ### Verdict
 
 This experiment provides **suggestive but not conclusive** evidence that the
 Defender reduced recovery time for `cpu-stress@order-service` when it detected
-and restarted the affected deployment. It does **not** show that the Defender
-was necessary for recovery: observe-only recovered in every trial. It does not
-show improved detection (one enabled trial missed the fault), and it does not
-generalise to network faults, bad releases, multi-node clusters or production
-traffic. The causal mechanism was not directly verified because the harness did
-not record which pod received the stressor or whether the restart replaced that
-exact pod.
+and restarted the affected deployment. The primary sign test is p = 0.109375;
+the smaller post-hoc acted subgroup reaches p = 0.039062 but is exploratory. It
+does **not** show that the Defender was necessary for recovery: observe-only
+recovered in every trial. It does not show improved detection (one enabled trial
+missed the fault), and it does not generalise to network faults, bad releases,
+multi-node clusters or production traffic. The causal mechanism was not directly
+verified because the recorded trials did not capture which pod received the
+stressor or whether the restart replaced that exact pod; the harness now does
+so for future runs.
 
 ## 5. Detector evaluation results
 
@@ -242,10 +268,17 @@ Both are unchanged from the v1.0 evidence set.
 | Threshold | 0.7397 |
 
 Interpreting this honestly: the frozen detector produced **no false alarms** on
-30 independent normal-operation windows. That is a real held-out check, unlike
-the v1.0 offline benchmark's in-sample "0 false positives". It is still a small
-sample: the exact one-sided 95% upper bound is about **9.5%**, so these data do
-not support a production-grade claim such as "FPR below 1%".
+30 held-out normal-operation windows. That is a real check on data unused for
+training or thresholding, unlike the v1.0 offline benchmark's in-sample "0 false
+positives". It is still a small sample: the exact one-sided 95% upper bound is
+about **9.5%**, so these data do not support a production-grade claim such as
+"FPR below 1%".
+
+**Correlation caveat:** all 30 windows came from one steady load session, 35 s
+apart. Neighbouring windows share traffic conditions and the detector's Markov
+smoothing, so they are not 30 fully independent draws. The binomial bound above
+assumes independence and is therefore optimistic; the true uncertainty is wider
+than 9.5%. A stronger holdout would use multiple sessions and load levels.
 
 ### Detection sensitivity
 
@@ -277,22 +310,31 @@ benchmark.
 
 ### Limitations
 
-- `cpu-stress` uses `mode: one`. The harness did not record which pod received
-  the stressor or whether the restart replaced that exact pod, so the proposed
-  mechanism remains plausible rather than directly verified.
+- `cpu-stress` uses `mode: one`. The recorded trials did not capture which pod
+  received the stressor or whether the restart replaced that exact pod, so the
+  proposed mechanism remains plausible rather than directly verified. The
+  harness now records the selected pod, its UID and the before/after UID change
+  for future runs.
+- **The primary recovery metric has a floor.** It is read after the 120 s
+  attacker process ends, so the tight 124 s enabled cluster cannot show earlier
+  healing. The new during-attack anomaly-span metrics are not available for the
+  recorded trials.
 - All observe-only trials recovered automatically. Defender value here is at
   most a timing difference, not necessity.
-- Recovery time is measured from the 30-second Prometheus window; it includes
-  observation lag and is not the physical time to heal.
+- Recovery time includes the 30 s Prometheus observation window and is not the
+  physical time to heal.
 - The sample is 10 trials per configuration on one single-node Kind cluster,
   one workload, one fault and one detector version. It is not a production or
-  multi-node result, and no significance claim is made.
+  multi-node result. The primary sign test (8/10, p = 0.109375) is consistent
+  with "not conclusive"; the acted-subgroup p = 0.039062 is post-hoc and should
+  not be used as the headline.
 - The holdout tests false positives only. Real labelled per-sample fault vectors
   were not collected, so detector sensitivity is reported only as trial-level
   detection under a known injected fault.
-- With 30 holdout windows, even zero false positives yields a wide one-sided
-  95% upper bound; this is a small-sample sanity check, not a production FPR
-  guarantee.
+- The 30 holdout windows are correlated samples from one load session. Even zero
+  false positives yields an optimistic one-sided 95% upper bound of 9.5%; this
+  is a small-sample sanity check, not a production FPR guarantee. Collecting
+  across sessions/load levels is future work.
 - No lab reconfiguration was performed after measurement began, and no v1.0
   evidence file was changed.
 

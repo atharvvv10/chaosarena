@@ -116,6 +116,11 @@ inconclusive runs, and restores `ml/defender_actions.jsonl` after remediation
 trials. If it is interrupted, run
 `python scripts/experimental_validation.py restore-frozen` before retrying.
 
+The current harness also records per-poll anomaly observations, the selected
+stress pod and its before/after UID. Those fields are absent from the published
+20-trial run and only apply to new runs; `make experimental-summary` reports
+their availability.
+
 ## Media capture (optional)
 
 ```powershell

@@ -281,6 +281,73 @@ def test_observe_only_battle_polls_without_diagnosing_or_acting(monkeypatch, tmp
     assert result.recovered is True
 
 
+def test_optional_post_detection_observation_records_anomaly_span(monkeypatch, tmp_path):
+    normal = {"score": 0.3, "threshold": 0.7, "anomaly": False}
+    detections = iter(
+        [
+            normal,
+            {"score": 0.9, "threshold": 0.7, "anomaly": True},
+            {"score": 0.9, "threshold": 0.7, "anomaly": True},
+            normal,
+        ]
+    )
+    hook_calls: list[float] = []
+
+    def fake_run_cli(module: str, *args: str, **kwargs: object) -> dict:
+        if module == "attacker.cli" and args[0] == "status":
+            return {"chaos_objects": []}
+        if module == "defender.cli" and args[0] == "detect":
+            return next(detections, normal)
+        if module == "defender.cli" and args[0] == "run":
+            return {
+                "diagnosis": {"category": "latency_spike"},
+                "action_taken": {"action": "restart", "service": "order-service"},
+            }
+        raise AssertionError(f"unexpected CLI call: {module} {args}")
+
+    class FakeProcess:
+        def __init__(self) -> None:
+            self.polls = 0
+
+        def poll(self) -> int | None:
+            self.polls += 1
+            return None if self.polls <= 4 else 0
+
+        def wait(self, timeout: float | None = None) -> int:
+            return 0
+
+    def fake_popen(command: list[str], **kwargs: object) -> FakeProcess:
+        handle = kwargs["stdout"]
+        handle.write(json.dumps({"ok": True, "cleanup_ok": True}) + "\n")
+        return FakeProcess()
+
+    def fake_hook(elapsed: float) -> dict:
+        hook_calls.append(elapsed)
+        return {"stressed_pod": "order-service-abc123"}
+
+    monkeypatch.setattr(battle_module, "run_cli", fake_run_cli)
+    monkeypatch.setattr(battle_module.subprocess, "Popen", fake_popen)
+
+    runner = BattleRunner(
+        poll_interval=0.05,
+        settle_seconds=0,
+        startup_settle_seconds=0,
+        log_path=tmp_path / "observed.json",
+    )
+    result = runner.run(
+        observe_after_detection=True,
+        on_detection=fake_hook,
+    )
+
+    assert len(hook_calls) == 1
+    assert result.detection_evidence == {"stressed_pod": "order-service-abc123"}
+    assert result.anomaly_observations is not None
+    assert len(result.anomaly_observations) == 4
+    assert result.anomaly_active_seconds is not None
+    assert result.anomaly_active_seconds > 0
+    assert result.first_normal_after_detection_seconds is not None
+
+
 def test_experimental_summary_reports_trials_and_holdout(tmp_path):
     from scripts import experimental_validation as validation
 
@@ -342,6 +409,17 @@ def test_experimental_summary_reports_trials_and_holdout(tmp_path):
     assert payload["paired_recovery_delta_seconds"]["median"] == 10
     assert payload["holdout_normal"]["false_positives"] == 1
     assert payload["holdout_normal"]["false_positive_rate"] == 0.25
+    sign = payload["paired_recovery_delta_seconds"]
+    assert sign["sign_test_all_pairs"]["two_sided_p"] == 1.0
+    assert sign["sign_test_acted_subgroup_post_hoc"]["n"] == 1
+
+
+def test_exact_sign_test_matches_binomial_tail():
+    from scripts import experimental_validation as validation
+
+    assert validation._sign_test(8, 2)["two_sided_p"] == 0.109375
+    assert validation._sign_test(8, 1)["two_sided_p"] == 0.039062
+    assert validation._sign_test(5, 5)["two_sided_p"] == 1.0
 
 
 def test_experimental_validation_report_has_required_sections_without_placeholders():

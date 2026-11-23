@@ -23,6 +23,11 @@ class BattleResult:
     diagnosis: dict | None = None
     action_taken: dict | None = None
     attack_error: str | None = None
+    # Optional v1.1 validation evidence. Production runs leave these unset.
+    detection_evidence: dict | None = None
+    anomaly_observations: list[dict] | None = None
+    anomaly_active_seconds: float | None = None
+    first_normal_after_detection_seconds: float | None = None
 
     def as_dict(self) -> dict:
         return {
@@ -41,6 +46,10 @@ class BattleResult:
             "diagnosis": self.diagnosis,
             "action_taken": self.action_taken,
             "attack_error": self.attack_error,
+            "detection_evidence": self.detection_evidence,
+            "anomaly_observations": self.anomaly_observations,
+            "anomaly_active_seconds": self.anomaly_active_seconds,
+            "first_normal_after_detection_seconds": self.first_normal_after_detection_seconds,
         }
 
 

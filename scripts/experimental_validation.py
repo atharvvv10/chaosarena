@@ -29,6 +29,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from attacker import kubectl as k8s  # noqa: E402
+from attacker.allowlist import LABEL_SELECTOR  # noqa: E402
+from attacker.specs import NAMESPACE  # noqa: E402
 from controller.battle import BattleRunner  # noqa: E402
 from controller.gate import DEFAULT_THRESHOLD, evaluate_gate  # noqa: E402
 from controller.score import score_battle  # noqa: E402
@@ -233,6 +236,121 @@ def _finite(value: object) -> float | None:
     return number if math.isfinite(number) else None
 
 
+def _target_pod_uids(service: str, timeout: float | None) -> dict[str, str]:
+    """Read-only snapshot of the target deployment's pod names and UIDs."""
+    result = k8s.run(
+        [
+            "get",
+            "pods",
+            "-n",
+            NAMESPACE,
+            "-l",
+            f"app={service}",
+            "-o",
+            "json",
+        ],
+        check=False,
+        timeout=timeout,
+    )
+    if result.returncode != 0:
+        return {}
+    try:
+        items = json.loads(result.stdout).get("items", [])
+    except (json.JSONDecodeError, AttributeError):
+        return {}
+    return {
+        item["metadata"]["name"]: item["metadata"]["uid"]
+        for item in items
+        if item.get("metadata", {}).get("name")
+        and item.get("metadata", {}).get("uid")
+    }
+
+
+def _stressed_pod_evidence(service: str, timeout: float | None) -> dict[str, Any]:
+    """Identify the pod Chaos Mesh selected for a `mode: one` fault."""
+    pod_uids = _target_pod_uids(service, timeout)
+    for full_name in k8s.active_names(NAMESPACE, LABEL_SELECTOR):
+        result = k8s.run(
+            ["get", full_name, "-n", NAMESPACE, "-o", "json"],
+            check=False,
+            timeout=timeout,
+        )
+        if result.returncode != 0:
+            continue
+        try:
+            status = json.loads(result.stdout).get("status") or {}
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        records = (status.get("experiment") or {}).get("containerRecords") or []
+        markers = [
+            str(record[key])
+            for record in records
+            for key in ("selectorKey", "id")
+            if record.get(key)
+        ]
+        for pod, uid in pod_uids.items():
+            if any(pod in marker for marker in markers):
+                return {
+                    "stressed_pod": pod,
+                    "stressed_pod_uid": uid,
+                    "discovery": "chaos-status",
+                    "target_pod_uids": pod_uids,
+                }
+    return {
+        "stressed_pod": None,
+        "stressed_pod_uid": None,
+        "discovery": "unavailable",
+        "target_pod_uids": pod_uids,
+    }
+
+
+def _finalize_fault_evidence(
+    evidence: dict[str, Any] | None,
+    before_uids: dict[str, str],
+    after_uids: dict[str, str],
+) -> dict[str, Any]:
+    combined = dict(evidence or {})
+    combined["pod_uids_before"] = before_uids
+    combined["pod_uids_after"] = after_uids
+    pod = combined.get("stressed_pod")
+    if not pod:
+        combined["restart_replaced_stressed_pod"] = None
+        return combined
+    uid_before = before_uids.get(pod)
+    uid_after = after_uids.get(pod)
+    combined["stressed_pod_uid_before"] = uid_before
+    combined["stressed_pod_uid_after"] = uid_after
+    combined["restart_replaced_stressed_pod"] = (
+        None
+        if uid_before is None
+        else (uid_after is None or uid_after != uid_before)
+    )
+    return combined
+
+
+def _sign_test(positive: int, negative: int) -> dict[str, Any]:
+    """Exact two-sided binomial sign test; ties are excluded from n."""
+    total = positive + negative
+    if total == 0:
+        return {
+            "positive": positive,
+            "negative": negative,
+            "ties_excluded": 0,
+            "n": 0,
+            "two_sided_p": None,
+        }
+    extreme = min(positive, negative)
+    tail = sum(math.comb(total, count) for count in range(extreme + 1))
+    p_value = min(1.0, 2 * tail / (2**total))
+    return {
+        "positive": positive,
+        "negative": negative,
+        "ties_excluded": 0,
+        "n": total,
+        "two_sided_p": round(p_value, 6),
+    }
+
+
 def run_trials(args: argparse.Namespace) -> int:
     trials_file = Path(args.trials)
     if args.fresh and trials_file.exists():
@@ -270,6 +388,7 @@ def run_trials(args: argparse.Namespace) -> int:
 
                 version = f"v1.1-{mode}-{trial:02d}"
                 log_path = DEFAULT_DIR / "attacker_logs" / f"{version}.json"
+                pod_uids_before = _target_pod_uids(args.target, args.command_timeout)
                 record: dict[str, Any] = {
                     "trial": trial,
                     "order_in_pair": order_index + 1,
@@ -304,6 +423,15 @@ def run_trials(args: argparse.Namespace) -> int:
                         duration=args.duration,
                         version=version,
                         remediate=(mode == "defender-enabled"),
+                        observe_after_detection=True,
+                        on_detection=lambda _elapsed: _stressed_pod_evidence(
+                            args.target, args.command_timeout
+                        ),
+                    )
+                    fault_evidence = _finalize_fault_evidence(
+                        battle.detection_evidence,
+                        pod_uids_before,
+                        _target_pod_uids(args.target, args.command_timeout),
                     )
                     scored = score_battle(battle)
                     decision = evaluate_gate(
@@ -330,6 +458,12 @@ def run_trials(args: argparse.Namespace) -> int:
                             "diagnosis": battle.diagnosis,
                             "action_taken": battle.action_taken,
                             "defender_action_occurred": battle.action_taken is not None,
+                            "fault_target": fault_evidence,
+                            "anomaly_observations": battle.anomaly_observations,
+                            "anomaly_active_seconds": battle.anomaly_active_seconds,
+                            "first_normal_after_detection_seconds": (
+                                battle.first_normal_after_detection_seconds
+                            ),
                             "score": scored.score,
                             "grade": scored.grade,
                             "deductions": scored.deductions,
@@ -530,14 +664,31 @@ def write_summary(
     by_trial: dict[int, dict[str, dict]] = {}
     for record in trials:
         by_trial.setdefault(int(record["trial"]), {})[record["configuration"]] = record
-    paired_deltas: list[float] = []
+    paired: list[dict[str, Any]] = []
     for trial, modes in by_trial.items():
-        enabled = modes.get("defender-enabled", {}).get("recovery_seconds")
-        observed = modes.get("observe-only", {}).get("recovery_seconds")
-        enabled_value = _finite(enabled)
-        observed_value = _finite(observed)
+        enabled_record = modes.get("defender-enabled", {})
+        observed_record = modes.get("observe-only", {})
+        enabled_value = _finite(enabled_record.get("recovery_seconds"))
+        observed_value = _finite(observed_record.get("recovery_seconds"))
         if enabled_value is not None and observed_value is not None:
-            paired_deltas.append(round(observed_value - enabled_value, 2))
+            paired.append(
+                {
+                    "trial": trial,
+                    "delta": round(observed_value - enabled_value, 2),
+                    "defender_action_occurred": enabled_record.get(
+                        "defender_action_occurred"
+                    )
+                    is True,
+                    "enabled_record": enabled_record,
+                }
+            )
+    paired_deltas = [item["delta"] for item in paired]
+    acted = [item for item in paired if item["defender_action_occurred"]]
+    positive = sum(1 for value in paired_deltas if value > 0)
+    negative = sum(1 for value in paired_deltas if value < 0)
+    ties = sum(1 for value in paired_deltas if value == 0)
+    acted_positive = sum(1 for item in acted if item["delta"] > 0)
+    acted_negative = sum(1 for item in acted if item["delta"] < 0)
 
     valid_holdout = [record for record in holdout if record.get("valid") is True]
     false_positives = sum(1 for record in valid_holdout if record.get("anomaly") is True)
@@ -556,8 +707,43 @@ def write_summary(
         "paired_recovery_delta_seconds": {
             "definition": "observe-only recovery minus defender-enabled recovery; positive means Defender-enabled recovered sooner",
             **_stats(paired_deltas),
-            "positive_pairs": sum(1 for value in paired_deltas if value > 0),
-            "negative_pairs": sum(1 for value in paired_deltas if value < 0),
+            "positive_pairs": positive,
+            "negative_pairs": negative,
+            "tie_pairs": ties,
+            "sign_test_all_pairs": {
+                "label": "primary (all paired trials)",
+                **_sign_test(positive, negative),
+            },
+            "sign_test_acted_subgroup_post_hoc": {
+                "label": "exploratory post-hoc (pairs where the Defender acted)",
+                "definition": "conditioning on action after the fact biases this subgroup; report only beside the primary test",
+                **_sign_test(acted_positive, acted_negative),
+            },
+        },
+        "attack_window_observations": {
+            "definition": "secondary metrics during the attack; unavailable in the first v1.1 run, enabled in the harness for future runs",
+            "trials_with_poll_series": sum(
+                1
+                for item in paired
+                if item["enabled_record"].get("anomaly_observations")
+            ),
+            "anomaly_active_seconds": _stats(
+                [
+                    item["enabled_record"]["anomaly_active_seconds"]
+                    for item in paired
+                    if item["enabled_record"].get("anomaly_active_seconds") is not None
+                ]
+            ),
+            "first_normal_after_detection_seconds": _stats(
+                [
+                    item["enabled_record"]["first_normal_after_detection_seconds"]
+                    for item in paired
+                    if item["enabled_record"].get(
+                        "first_normal_after_detection_seconds"
+                    )
+                    is not None
+                ]
+            ),
         },
         "holdout_normal": {
             "collected": len(holdout),
@@ -567,6 +753,7 @@ def write_summary(
             "one_sided_95_upper_bound": (
                 round(upper_bound, 6) if upper_bound is not None else None
             ),
+            "independence_caveat": "The 30 windows came from one steady load session 35 s apart; they are correlated. The binomial bound assumes independence and is optimistic.",
             "score": _stats([record.get("score") for record in valid_holdout]),
             "model_sha256": sha256_file(ROOT / DEFAULT_MODEL),
             "baseline_sha256": sha256_file(ROOT / DEFAULT_BASELINE),

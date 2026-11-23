@@ -34,13 +34,14 @@ The GIF and MP4 are a current-UI walkthrough of the committed 100/A battle evide
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **130 passing**: 9 phase suites plus 8 final regression checks (`make verify`) |
+| Automated tests | **136 passing**: 9 phase suites plus 14 final regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
 | Gate vs bad release | A deliberately bad payment config (`PAYMENT_FAILURE_RATE=1.0`) scored **65/D, BLOCK**; rollback to `0.01` scored **100/A, PROMOTE** on the same battle |
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
+| v1.1 validation | **10 paired live trials, 0/30 false alarms on held-out data**; primary sign test p = 0.109 (not conclusive) — [report](docs/EXPERIMENTAL_VALIDATION.md) |
 | CI | Free `ubuntu-latest` Actions, latest push green, no cluster, no secrets |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
 
@@ -91,21 +92,22 @@ gate, where a false alarm blocks a good build.
 
 ## Honest scope — read this before an interview
 
-- The early **Phase 4 score 65 / BLOCK** was a *measurement timing* issue: the final Prometheus sample was still inside the attack window. A bounded settle period fixed the measurement; it was **not** a bad release being caught. Do not confuse that old 65 with the live bad-release **65/D/BLOCK** below — they are two different runs.
-- GitHub Actions does **not** run a live battle. It re-scores **saved** passing and failing JSON fixtures on a cluster-free runner. The real battles were run locally and their evidence is committed.
-- The attacker is **tabular Q-learning** (a JSON Q-table with epsilon-greedy exploration), **not PPO** or a deep RL model.
-- The Defender baseline is **40 samples**. That is enough for a deterministic local demo with steady synthetic load; production would need days of traffic across peak/off-peak cycles, drift detection and held-out incidents. See [BUILD_NOTES.md](docs/BUILD_NOTES.md).
-- An earlier demo used a **10-second `network-partition`** and scored **70/C/PROMOTE** because the fault healed inside the 30-second Prometheus window and was never flagged. The headline battle instead uses a sustained **30-second `network-latency`** fault that the Defender clearly detects; a repair was requested, but a no-Defender control run recovered without it. Both runs are real; see [PORTFOLIO_POLISH.md](docs/PORTFOLIO_POLISH.md).
-- The learned-vs-random and detector-comparison tables are **offline, seeded benchmarks**, not live cluster battles. Their exact commands and data are linked above.
-- The diagnoser identifies the symptomatic service, not always the origin. In the headline battle the fault targeted `payment-service`, but `order-service` showed the strongest latency signal and was restarted.
-- A no-Defender control run of the same fault recovered in **50.8 s** with no repair action, versus **76.2 s** in the gated run. Two single runs are not a statistical study, but they do not show that the restart caused recovery. See [RESULTS.md](docs/RESULTS.md#no-defender-control-run).
-- The headline battle waits for a normal baseline before launching, so its detection time uses the same clock as the control. A `0.0 s` value means the detector was already anomalous at launch, not that detection was instantaneous. Earlier it came from starting a battle while a previous run was still inside Prometheus's 30-second window; in the 2026-11-20 audit it came from a stale baseline after a host restart. That audit artifact is kept separately from the committed headline evidence; see [DEMO_AUDIT.md](docs/DEMO_AUDIT.md).
-- The live gate caught a deliberately bad payment release: **65/D/BLOCK** while `PAYMENT_FAILURE_RATE=1.0`, then **100/A/PROMOTE** after rolling back to `0.01`. This is one pair of local runs, not a statistical guarantee; it shows the gate rejected a release that could not pass the resilience check. The rollback was performed by the experiment script, **not** the Defender. In the bad-release run the Defender requested a restart of `order-service` while labelling the failure `latency_spike`, despite `order-service_error_rate z=+99.2` and `payment-service_error_rate z=+93.6`; the gate, not the Defender, identified the release as bad.
-- For the network-latency fault, recovery was **not attributable to the Defender**: a no-Defender control recovered on its own. A restart may not fix Chaos Mesh latency because chaos can reattach to the new pod.
-- The **100/A** is not a fast-recovery claim. The score checks whether the fault was detected, whether it recovered, cleanup, the final anomaly score and attacker errors; it does not penalise a slow recovery. `recovery_seconds` is reported separately and includes up to one 30-second Prometheus scrape/window of observation lag. The control recovered sooner on the same clock.
-- The learned attacker's best action comes from a seeded simulator backed by only a few real battles. Treat it as a demo policy, not a production-trained agent.
-- The detector benchmark reuses the same 40 normal samples as the baseline and adds 160 synthetic faults. Treat its F1 numbers as a demo, not production evidence.
-- The v1.1 repeated-trial study is separate from the v1.0 demo evidence. Its live trials, held-out normal samples, negative findings and exact commands are in [EXPERIMENTAL_VALIDATION.md](docs/EXPERIMENTAL_VALIDATION.md).
+### Proven by committed evidence
+
+- The headline battle scored **100/A/PROMOTE**; the bad-release pair scored **65/D/BLOCK**, then **100/A/PROMOTE** after the experiment script rolled the config back. [Full results](docs/RESULTS.md).
+- CI re-scores **saved** fixtures on a free cluster-free runner and is green. It does **not** run a live battle; the real battles were local and their evidence is committed.
+- Offline seeded benchmarks show the attacker beats random and the Defender beats a plain Isolation Forest. They are benchmarks, not live battles.
+- v1.1 adds **10 paired live trials** and **0/30 held-out false alarms**. The primary sign test is not conclusive. [Full study](docs/EXPERIMENTAL_VALIDATION.md).
+- The early Phase 4 **65/BLOCK** was a *measurement timing* issue, not a caught bad release. [Details](docs/RESULTS.md).
+
+### Not proven / do not overclaim
+
+- The attacker is **tabular Q-learning, not PPO**. The baseline is 40 samples and the detector benchmark is in-sample and synthetic. [Build notes](docs/BUILD_NOTES.md).
+- Diagnosis is symptomatic: the headline fault hit `payment-service`, but `order-service` was restarted.
+- The Defender did **not** improve recovery in the headline network-latency control: **76.2 s** with a requested restart versus **50.8 s** without one. [Control run](docs/RESULTS.md#no-defender-control-run).
+- In v1.1 all observe-only trials also recovered. The 124 s enabled cluster may reflect a **measurement floor**, and that run did not record which pod was stressed or whether the restart replaced it.
+- **100/A** is not a speed claim; `recovery_seconds` includes observation lag and the gate does not penalise slow recovery.
+- The 30 holdout windows came from one steady load session, so the **9.5%** false-positive upper bound is optimistic.
 
 ## Try it in the dashboard
 
