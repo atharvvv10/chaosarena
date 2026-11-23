@@ -1116,6 +1116,8 @@ table.compact-table { min-width: 0; }
   .nav a { padding: 8px; font-size: 12px; gap: 5px; }
   .nav .n { display: none; }
   .topbar { padding: 0 16px; }
+  .topright .address { display: none; }
+  .topright .mode { font-size: 11px; }
   .container { padding: 28px 16px 48px; }
   .intro aside { display: none; }
   .intro h1 { font-size: 30px; }

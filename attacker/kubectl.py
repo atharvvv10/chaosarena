@@ -35,15 +35,22 @@ def run(
     args: list[str],
     stdin: str | None = None,
     check: bool = True,
+    timeout: float | None = None,
 ) -> subprocess.CompletedProcess[str]:
     command = [kubectl_path(), *args]
-    result = subprocess.run(
-        command,
-        input=stdin,
-        text=True,
-        capture_output=True,
-        cwd=REPO_ROOT,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            input=stdin,
+            text=True,
+            capture_output=True,
+            cwd=REPO_ROOT,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise KubectlError(
+            f"{' '.join(command)} timed out after {timeout}s"
+        ) from exc
     if check and result.returncode != 0:
         raise KubectlError(
             f"{' '.join(command)} failed ({result.returncode}):\n"

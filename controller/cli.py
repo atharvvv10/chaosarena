@@ -10,6 +10,7 @@ from .battle import KNOWN_ATTACKS, BattleRunner
 from .evidence import record_battle
 from .gate import DEFAULT_THRESHOLD, evaluate_gate, last_decision, record_decision
 from .score import BattleResult, score_battle
+from reporter.report import write_report
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -65,6 +66,7 @@ def main(argv: list[str] | None = None) -> int:
             "decision": decision.as_dict(),
         }
         record_battle(payload)
+        write_report(payload)
         print(json.dumps(payload, indent=2))
         return 0 if decision.promote else 1
 

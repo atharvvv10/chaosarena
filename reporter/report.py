@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from .incident import Incident
-from .llm import LLMClient, default_client
+from .llm import LLMClient, TemplateLLM, default_client
 from .prompt import build_prompt
 from .sections import REQUIRED_SECTIONS
 
@@ -71,3 +72,15 @@ class IncidentReporter:
             text=text,
             backend=getattr(self.client, "name", type(self.client).__name__),
         )
+
+
+DEFAULT_REPORT_FILE = Path("ml/incident_report.md")
+
+
+def write_report(payload: dict, path: Path | str = DEFAULT_REPORT_FILE) -> IncidentReport:
+    """Regenerate the offline report for one recorded battle bundle."""
+    report = IncidentReporter(TemplateLLM()).report(Incident.from_bundle(payload))
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(report.text, encoding="utf-8")
+    return report

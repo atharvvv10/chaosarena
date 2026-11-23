@@ -13,6 +13,7 @@ async function request(path, options = {}) {
 }
 
 export const getHealth = () => request('/health')
+export const getLabStatus = () => request('/lab/status')
 export const getLastGate = () => request('/gate/last')
 export const getHistory = (limit = 10) => request(`/gate/history?limit=${limit}`)
 export const getReport = () => request('/report/latest')

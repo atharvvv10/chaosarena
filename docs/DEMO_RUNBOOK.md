@@ -38,7 +38,7 @@ This path needs **no live attack** and reproduces the published dashboard and
 results exactly.
 
 ```powershell
-# 1. Cluster-free verification: 122 tests, six guards, gate fixtures, React build
+# 1. Cluster-free verification: 128 tests, six guards, gate fixtures, React build
 .\.venv\Scripts\python.exe scripts\verify_all.py
 
 # 2. Start the gate API
@@ -52,7 +52,7 @@ npm run dev
 
 Open `http://127.0.0.1:5173`. Expected observations:
 
-- **Refresh** → `API online`.
+- **Refresh** → `API ONLINE · LAB NOT READY` when no Kind/Prometheus is running, or `API ONLINE · LAB READY` when the live lab is up. The committed evidence panels still render in either state.
 - **Release gate** → `100`, grade `A`, `PROMOTE`, threshold `70`.
 - **Battle Timeline** → `network-latency`, detection `13.3 s`, recovery `76.2 s`,
   `restart · order-service · requested`, cleanup OK, 0 objects left.
@@ -243,6 +243,7 @@ against `0.7397`, followed by a recalibrated threshold `0.7539` and normal score
 | `chaos_objects` not empty after a run | Run `attacker.cli cleanup`, then recheck `attacker.cli status`. |
 | CLI exits 1 | A BLOCK decision is encoded as exit 1. Read the decision JSON. |
 | `Cannot reach the gate API` | Start `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080`. |
+| `API ONLINE · LAB NOT READY` | The API is reachable but `GET /lab/status` found no Kubernetes namespace or no Prometheus. Start Kind/deploy and the port-forward; committed evidence still works. |
 | CORS error in dashboard | Use `127.0.0.1:5173` or `4173`, both allowlisted. |
 | History does not match | Check `GET /gate/history`; it reads the newest lines of `ml/gate_decisions.jsonl` and reverses them. |
 | Published numbers differ after a live run | Expected. Restore committed evidence with `git checkout --`, or publish a new evidence set with updated docs. |

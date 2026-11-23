@@ -34,7 +34,7 @@ The GIF and MP4 record the detected 100/A battle; the PNG is a full-page capture
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **122 passing** across all 9 phases (`make verify`) |
+| Automated tests | **128 passing**: 9 phase suites plus 6 final regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, guaranteed cleanup — **0 objects left** |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
@@ -113,14 +113,14 @@ http://127.0.0.1:5173     dashboard
 http://127.0.0.1:8080     gate API
 ```
 
-1. Click **Refresh** — expect `API online`.
+1. Click **Refresh** — the header distinguishes `API ONLINE · LAB READY` from `API ONLINE · LAB NOT READY`. The API can be reachable while Kind or Prometheus is unavailable; a live battle needs the lab ready.
 2. In **Run a battle**, use: attack `network-latency`, target `payment-service`, duration `30`, settle `45`, threshold `70`, version `release-candidate`.
 3. Click **Run battle** and wait about a minute. Do not click twice.
 4. Read the **Release gate** card for score/grade/verdict and **Why**. A new row appears in **Decision history**.
 5. Check **RL attacker** for the learned policy. In **Incident report**, use **Copy** or **Download**.
 6. Use the sticky nav to open **Evidence**: the timeline is the recorded real battle; **Learned vs random** and **Detector comparison** are clearly labelled offline benchmarks. In **History**, search or filter PROMOTE/BLOCK rows.
 
-If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the dashboard is closed, run `cd dashboard && npm run dev`.
+If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the API is online but the lab is not ready, start Kind, deploy the lab and open the Prometheus port-forward described below; the dashboard can still read committed evidence. If the dashboard is closed, run `cd dashboard && npm run dev`.
 
 For a technical evaluator, [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) gives the exact
 committed-state and live-battle commands, and [DEMO_AUDIT.md](docs/DEMO_AUDIT.md)

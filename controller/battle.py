@@ -32,14 +32,20 @@ class ControllerError(RuntimeError):
     """Raised when a battle step cannot be completed."""
 
 
-def run_cli(module: str, *args: str) -> dict:
+def run_cli(module: str, *args: str, timeout: float | None = None) -> dict:
     """Run `python -m <module> ...` and parse its JSON output."""
-    result = subprocess.run(
-        [sys.executable, "-m", module, *args],
-        cwd=REPO_ROOT,
-        text=True,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", module, *args],
+            cwd=REPO_ROOT,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise ControllerError(
+            f"{module} {' '.join(args)} timed out after {timeout}s"
+        ) from exc
     output = result.stdout.strip()
     if not output:
         raise ControllerError(
@@ -52,6 +58,17 @@ def run_cli(module: str, *args: str) -> dict:
         raise ControllerError(
             f"{module} {' '.join(args)} produced invalid JSON: {output[:300]}"
         ) from exc
+
+
+def recovery_confirmed(final: dict, threshold: float) -> bool:
+    """Confirm recovery from the final measurement, not an earlier check.
+
+    A verification run during remediation is supporting evidence, but the
+    post-cleanup anomaly score is authoritative. A normal earlier sample cannot
+    override a final score that is still abnormal.
+    """
+    final_score = float(final.get("score", 0.0))
+    return final_score <= threshold and not bool(final.get("anomaly"))
 
 
 class BattleRunner:
@@ -176,12 +193,12 @@ class BattleRunner:
         while float(final.get("score", 0.0)) > threshold and time.monotonic() < deadline:
             time.sleep(self.poll_interval)
             final = run_cli("defender.cli", "detect")
+        final_score = float(final.get("score", 0.0))
+        recovered = recovery_confirmed(final, threshold)
         recovery_seconds: float | None = None
-        if float(final.get("score", 0.0)) <= threshold:
+        if recovered:
             recovery_seconds = round(time.monotonic() - started, 1)
 
-        verification = defender_output.get("verification", {})
-        recovered = bool(verification.get("recovered")) or not bool(final.get("anomaly"))
 
         return BattleResult(
             attack=attack,
@@ -191,7 +208,7 @@ class BattleRunner:
             detection_seconds=detection_seconds,
             recovery_seconds=recovery_seconds,
             recovered=recovered,
-            final_score=float(final.get("score", 0.0)),
+            final_score=final_score,
             defender_threshold=threshold,
             cleanup_ok=bool(attack_output.get("cleanup_ok")),
             chaos_objects_remaining=chaos_remaining,

@@ -10,6 +10,7 @@ import json
 import math
 import os
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -23,6 +24,16 @@ DEFAULT_BASELINE = Path("ml/baseline.csv")
 
 def prometheus_url() -> str:
     return os.environ.get("PROMETHEUS_URL", DEFAULT_PROMETHEUS_URL).rstrip("/")
+
+
+def prometheus_ready(timeout: float = 8.0) -> bool:
+    """Return True when the configured Prometheus endpoint answers its ready probe."""
+    request = urllib.request.Request(f"{prometheus_url()}/-/ready")
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return response.status == 200
+    except (urllib.error.URLError, TimeoutError, OSError):
+        return False
 
 
 def query(query_text: str) -> list[dict[str, Any]]:

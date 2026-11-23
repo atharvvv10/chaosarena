@@ -8,7 +8,14 @@ from pathlib import Path
 
 from . import actions
 from .actions import ALLOWED_NAMESPACE, ALLOWED_SERVICES, MAX_REPLICAS
-from .collect import DEFAULT_BASELINE, collect_baseline, load_baseline, sample_once
+from .collect import (
+    DEFAULT_BASELINE,
+    collect_baseline,
+    load_baseline,
+    prometheus_ready,
+    prometheus_url,
+    sample_once,
+)
 from .diagnose import diagnose
 from .features import FEATURE_NAMES, vector_from
 from .model import DEFAULT_MODEL, Detector, baseline_stats
@@ -24,6 +31,8 @@ def _parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("guard", help="print the defender's hard action allowlist")
+
+    sub.add_parser("ready", help="check Prometheus reachability")
 
     baseline = sub.add_parser("baseline", help="collect normal traffic into CSV")
     baseline.add_argument("--samples", type=int, default=40)
@@ -91,6 +100,11 @@ def main(argv: list[str] | None = None) -> int:
             "feature_count": len(FEATURE_NAMES),
         }, indent=2))
         return 0
+
+    if args.command == "ready":
+        ready = prometheus_ready()
+        print(json.dumps({"ready": ready, "url": prometheus_url()}, indent=2))
+        return 0 if ready else 1
 
     if args.command == "baseline":
         path = collect_baseline(args.samples, args.interval, args.out, args.window)

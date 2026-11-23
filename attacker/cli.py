@@ -36,6 +36,8 @@ def _parser() -> argparse.ArgumentParser:
     sub.add_parser("cleanup", help="force-delete all chaosarena-labelled chaos objects")
     sub.add_parser("status", help="show active chaos objects and pod phases")
 
+    sub.add_parser("ready", help="check Kubernetes reachability for the test namespace")
+
     sub.add_parser("guard", help="print the hard allowlist")
     return parser
 
@@ -51,6 +53,16 @@ def main(argv: list[str] | None = None) -> int:
                 f"{name:18} {spec.kind:14} target={spec.default_target:16} "
                 f"duration={spec.default_duration}s  {spec.description}"
             )
+        return 0
+
+    if args.command == "ready":
+        try:
+            k8s.run(["get", "namespace", namespace], check=True, timeout=8)
+        except k8s.KubectlError as exc:
+            detail = " ".join(str(exc).split())[:300]
+            print(json.dumps({"ready": False, "namespace": namespace, "detail": detail}, indent=2))
+            return 0
+        print(json.dumps({"ready": True, "namespace": namespace}, indent=2))
         return 0
 
     if args.command == "guard":

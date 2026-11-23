@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from .battle import BattleRunner
+from .battle import BattleRunner, ControllerError, run_cli
 from .evidence import record_battle
 from .gate import (
     DEFAULT_THRESHOLD,
@@ -18,10 +18,12 @@ from .gate import (
     record_decision,
 )
 from .score import score_battle
+from reporter.report import write_report
 
 app = FastAPI(title="ChaosArena Gate", version="1.0.0")
 RL_TABLE = Path("ml/rl_q_table.json")
 LAST_BATTLE_FILE = Path("ml/last_battle.json")
+REPORT_FILE = Path("ml/incident_report.md")
 RL_BENCHMARK_FILE = Path("ml/rl_benchmark.json")
 DEFENDER_BENCHMARK_FILE = Path("ml/defender_benchmark.json")
 NO_DEFENDER_FILE = Path("ml/no_defender_baseline.json")
@@ -64,6 +66,34 @@ def _read_evidence(path: Path) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
+def _refresh_report(payload: dict) -> dict:
+    """Regenerate the incident report from the battle that was just evaluated."""
+    report = write_report(payload, REPORT_FILE)
+    return {"file": str(REPORT_FILE), "backend": report.backend, "text": report.text}
+
+
+def _lab_probe(module: str) -> dict:
+    """Probe lab readiness only through the published CLI boundary."""
+    try:
+        payload = run_cli(module, "ready", timeout=10)
+    except ControllerError as exc:
+        return {"ready": False, "detail": str(exc)}
+    detail = payload.get("detail") or payload.get("namespace") or payload.get("url") or "reachable"
+    return {"ready": bool(payload.get("ready")), "detail": str(detail)}
+
+
+@app.get("/lab/status")
+def lab_status() -> dict:
+    """Report API-independent Kubernetes and Prometheus readiness."""
+    kubernetes = _lab_probe("attacker.cli")
+    prometheus = _lab_probe("defender.cli")
+    return {
+        "ready": kubernetes["ready"] and prometheus["ready"],
+        "kubernetes": kubernetes,
+        "prometheus": prometheus,
+    }
+
+
 @app.get("/evidence")
 def evidence() -> dict:
     """Bundled local evidence used by the dashboard's battle and benchmark panels."""
@@ -94,7 +124,9 @@ def evaluate(request: EvaluateRequest) -> dict:
         "decision": decision.as_dict(),
     }
     record_battle(payload)
-    return payload
+    response = dict(payload)
+    response["report"] = _refresh_report(payload)
+    return response
 
 
 @app.get("/gate/last")

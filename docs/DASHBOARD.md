@@ -47,6 +47,23 @@ Missing or malformed files produce `null` for that field instead of breaking the
 The UI labels the learned-vs-random and detector panels as **offline** and **not a live
 battle**; the timeline, recovery control and bad-release panels are real local runs.
 
+## Status semantics
+
+`GET /health` only says the gate API process is reachable. `GET /lab/status` separately
+probes the attacker's `ready` CLI (Kubernetes namespace access) and the defender's
+`ready` CLI (Prometheus `/-ready`). The header shows both: an online API can still have
+a `LAB NOT READY` state. Committed evidence and the technical demo work without a lab;
+a real battle does not.
+
+## Report refresh
+
+`POST /gate/evaluate` regenerates `ml/incident_report.md` from the battle it just
+recorded and returns the new report in the same response. The dashboard uses that
+response directly, so a new evaluation cannot leave an older report on screen.
+`controller.cli evaluate` uses the same reporter helper, so CLI and dashboard runs
+cannot disagree about which battle the report describes. The report is offline and
+deterministic by default; no LLM network call is made.
+
 ## Why this is honest
 
 The dashboard does not claim that the benchmarks were produced by live chaos runs. The
