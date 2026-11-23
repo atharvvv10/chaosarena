@@ -31,7 +31,7 @@ Open http://127.0.0.1:5173
 - A form to run a real battle through `POST /gate/evaluate`
 - The learned RL attacker policy from `GET /rl/policy` (read-only Q table)
 - A small score trend and mini-bars drawn with plain CSS — no chart library
-- Sticky section nav, an always-visible key-results strip and a result toast
+- Sidebar navigation, an always-visible key-results strip and a result toast
 - A real battle timeline from `GET /evidence` with measured detection/recovery times
 - Learned-vs-random and detector comparison panels, labelled offline — not live battles
 - Search and PROMOTE/BLOCK filters in decision history
