@@ -95,7 +95,7 @@ gate, where a false alarm blocks a good build.
 ### Proven by committed evidence
 
 - The headline battle scored **100/A/PROMOTE**; the bad-release pair scored **65/D/BLOCK**, then **100/A/PROMOTE** after the experiment script rolled the config back. [Full results](docs/RESULTS.md).
-- CI re-scores **saved** fixtures on a free cluster-free runner and is green. It does **not** run a live battle; the real battles were local and their evidence is committed.
+- CI re-scores **saved** fixtures on a free, cluster-free runner and is green. It does **not** run a live battle; the real battles were local and their evidence is committed.
 - Offline seeded benchmarks show the attacker beats random and the Defender beats a plain Isolation Forest. They are benchmarks, not live battles.
 - v1.1 adds **10 paired live trials** and **0/30 held-out false alarms**. The primary sign test is not conclusive. [Full study](docs/EXPERIMENTAL_VALIDATION.md).
 - The early Phase 4 **65/BLOCK** was a *measurement timing* issue, not a caught bad release. [Details](docs/RESULTS.md).
@@ -105,7 +105,7 @@ gate, where a false alarm blocks a good build.
 - The attacker is **tabular Q-learning, not PPO**. The baseline is 40 samples and the detector benchmark is in-sample and synthetic. [Build notes](docs/BUILD_NOTES.md).
 - Diagnosis is symptomatic: the headline fault hit `payment-service`, but `order-service` was restarted.
 - The Defender did **not** improve recovery in the headline network-latency control: **76.2 s** with a requested restart versus **50.8 s** without one. [Control run](docs/RESULTS.md#no-defender-control-run).
-- In v1.1 all observe-only trials also recovered. The 124 s enabled cluster may reflect a **measurement floor**, and that run did not record which pod was stressed or whether the restart replaced it.
+- In v1.1 all observe-only trials also recovered. The tight ~124 s cluster in the enabled group may reflect a **measurement floor**, and that run did not record which pod was stressed or whether the restart replaced it.
 - **100/A** is not a speed claim; `recovery_seconds` includes observation lag and the gate does not penalise slow recovery.
 - The 30 holdout windows came from one steady load session, so the **9.5%** false-positive upper bound is optimistic.
 
