@@ -103,6 +103,10 @@ def test_frontend_has_ai_reasoning_panel():
     for feature in ["ai-grid", "ai-panel", "ai-rationale"]:
         assert feature in app and feature in css
     assert "No API keys are displayed" in app
+    assert "Refreshes while the page is open" in app
+    assert "const SECTION_IDS=['overview','battle','evidence','aireasoning','history']" in app
+    assert "SECTION_IDS[i]" in app
+    assert "setInterval(()=>{if(!document.hidden)refresh(true)},15000)" in app
 
 
 def test_committed_live_battle_evidence_is_green_and_key_free():
