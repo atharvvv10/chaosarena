@@ -53,6 +53,9 @@ python -m scripts.deep_validation --episodes 30 --samples 30
 python -m attacker.strategist --backend groq --observation '{"score":65}'
 python -m defender.analyst --backend gemini --facts '{"top_features":["payment-service_p95_latency"]}'
 python -m reporter.cli --evidence ml/last_battle.json report --backend groq --out ml/deep/incident_report_groq.md
+
+# Real Kind/Chaos Mesh battle with advisory roles (requires the lab + keys)
+python -m scripts.live_deep_battle --attack pod-kill --target order-service --duration 30 --settle 60
 ```
 
 ## Safety
@@ -85,6 +88,23 @@ Single real run with three fresh role keys:
 Latencies are one observation each, not a benchmark. The JSON records only
 `key_set` flags, latencies, cache hits and results — never key values.
 
+## Live lab battle (committed at `ml/deep/live/`)
+
+A real Kind/Chaos Mesh battle was rerun for v1.2 on a fresh baseline isolated
+under `ml/deep/live/`:
+
+- Fault: `pod-kill@order-service` for 30 s.
+- Detected in `15.8 s`, recovered in `53.1 s`, score `100/A/PROMOTE`.
+- Cleanup ok, 0 chaos objects remaining.
+- Groq proposed the attack idea, Gemini explained the defence both before and
+  after the battle, and Groq wrote the report from the recorded facts.
+- The dashboard exposes these through `GET /ai/reasoning` in an **AI Reasoning**
+  panel. Only role names, latencies, rationales and results are returned.
+
+Full record, including the first `network-latency` false negative and why the
+baseline was isolated: [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
+
 **Caveats:** the simulator profiles are teaching priors from earlier real runs;
-the holdout windows are seeded perturbations, not live traffic. No Kubernetes
-experiment was rerun and no v1.1 data was modified.
+the holdout windows are seeded perturbations, not live traffic. The live lab
+result is one battle, not a statistical study. No v1.1 evidence, scoring, raw
+trial data, UI capture or media was modified.

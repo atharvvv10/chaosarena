@@ -1,0 +1,11 @@
+{
+  "name": "pod-kill",
+  "manifest": "chaosarena-pod-kill-8cc9cc05",
+  "target": "order-service",
+  "namespace": "shop-test",
+  "started_at": "2026-11-24T12:22:10+00:00",
+  "ended_at": "2026-11-24T12:22:41+00:00",
+  "cleanup_ok": true,
+  "error": null,
+  "ok": true
+}

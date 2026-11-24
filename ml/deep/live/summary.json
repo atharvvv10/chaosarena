@@ -1,0 +1,89 @@
+{
+  "advisories": {
+    "calls": [
+      {
+        "latency_ms": 1066.1,
+        "ok": true,
+        "result": {
+          "allowed": true,
+          "attack": "pod-kill",
+          "cached": false,
+          "duration": 30,
+          "rationale": "Simulate a sudden pod termination to test the system's resilience and auto\u2011scaling behavior under abrupt resource loss.",
+          "source": "groq",
+          "target": "order-service"
+        },
+        "role": "attacker_strategist"
+      },
+      {
+        "latency_ms": 6973.2,
+        "ok": true,
+        "result": {
+          "cached": false,
+          "category": "chaos-engineering",
+          "confidence": 1.0,
+          "rationale": "The recorded facts indicate a controlled chaos-engineering attack of type 'pod-kill' targeting 'order-service' (version 'v1.2-deep-aiml') during the 'preflight' stage with a duration of 30 seconds.",
+          "recommended_action": "Monitor the 'order-service' recovery metrics during the 30-second post-kill window to ensure resilience validation completes successfully.",
+          "source": "gemini"
+        },
+        "role": "defender_analyst"
+      },
+      {
+        "latency_ms": 27.4,
+        "ok": true,
+        "result": [
+          {
+            "action": "pod-kill@order-service",
+            "q": 4.881329
+          },
+          {
+            "action": "network-partition@payment-service",
+            "q": 4.878916
+          },
+          {
+            "action": "network-loss@order-service",
+            "q": 4.728947
+          }
+        ],
+        "role": "dqn_attacker"
+      }
+    ],
+    "note": "Advisory only; the CLI allowlist and classical detector own the real loop."
+  },
+  "attack": "pod-kill",
+  "battle_file": "ml\\deep\\live\\last_battle.json",
+  "chaos_objects_remaining": 0,
+  "cleanup_ok": true,
+  "decision_file": "ml\\deep\\live\\gate_decisions.jsonl",
+  "defender": {
+    "baseline": "ml\\deep\\live\\baseline.csv",
+    "isolated": true,
+    "model": "ml\\deep\\live\\defender_model.joblib"
+  },
+  "defender_analysis": {
+    "latency_ms": 1468.9,
+    "ok": true,
+    "result": {
+      "cached": false,
+      "category": "resilience_failure",
+      "confidence": 1.0,
+      "rationale": "The chaos experiment 'pod-kill' targeted 'order-service' on version 'v1.2-deep-aiml' and was detected in 15.8 seconds with successful cleanup. However, the final_score of 0.766 fell below the required threshold of 0.8328, despite the overall verdict being PROMOTE.",
+      "recommended_action": "Investigate the root cause of the score drop below the threshold during pod termination before final deployment promotion.",
+      "source": "gemini"
+    },
+    "role": "defender_post_analysis"
+  },
+  "detected": true,
+  "detection_seconds": 15.8,
+  "out": "ml\\deep\\live",
+  "recovery_seconds": 53.1,
+  "report": {
+    "backend": "groq",
+    "chars": 1302,
+    "saved_to": "ml\\deep\\live\\incident_report.md"
+  },
+  "score": 100,
+  "target": "order-service",
+  "verdict": "PROMOTE",
+  "version": "v1.2-deep-aiml"
+}

@@ -101,6 +101,8 @@ class BattleRunner:
         startup_settle_seconds: float = 90.0,
         log_path: Path | str = ATTACK_LOG,
         command_timeout: float | None = None,
+        defender_model: Path | str | None = None,
+        defender_data: Path | str | None = None,
     ) -> None:
         self.poll_interval = poll_interval
         self.defender_wait = defender_wait
@@ -108,6 +110,17 @@ class BattleRunner:
         self.startup_settle_seconds = startup_settle_seconds
         self.log_path = Path(log_path)
         self.command_timeout = command_timeout
+        self.defender_model = defender_model
+        self.defender_data = defender_data
+
+    def _defender_args(self, command: str) -> list[str]:
+        """Return CLI args for a Defender command, honouring isolated artifacts."""
+        args = [command]
+        if self.defender_model is not None:
+            args.extend(["--model", str(self.defender_model)])
+        if command in {"diagnose", "run"} and self.defender_data is not None:
+            args.extend(["--data", str(self.defender_data)])
+        return args
 
     def run(
         self,
@@ -144,7 +157,7 @@ class BattleRunner:
 
         # 2. What does normal look like to the Defender?
         baseline = run_cli(
-            "defender.cli", "detect", timeout=self.command_timeout
+            "defender.cli", *self._defender_args("detect"), timeout=self.command_timeout
         )
         threshold = float(baseline.get("threshold", 0.0))
 
@@ -159,7 +172,7 @@ class BattleRunner:
         ):
             time.sleep(self.poll_interval)
             current = run_cli(
-                "defender.cli", "detect", timeout=self.command_timeout
+                "defender.cli", *self._defender_args("detect"), timeout=self.command_timeout
             )
 
         # 3. Launch the attack in the background and watch with the Defender.
@@ -200,7 +213,7 @@ class BattleRunner:
                 if elapsed > duration + 10:
                     break
                 current = run_cli(
-                    "defender.cli", "detect", timeout=self.command_timeout
+                    "defender.cli", *self._defender_args("detect"), timeout=self.command_timeout
                 )
                 anomaly = bool(current.get("anomaly"))
                 score = _finite_float(current.get("score"))
@@ -221,7 +234,7 @@ class BattleRunner:
                     if remediate:
                         defender_output = run_cli(
                             "defender.cli",
-                            "run",
+                            *self._defender_args("run"),
                             "--act",
                             "--wait",
                             str(int(self.defender_wait)),
@@ -288,7 +301,7 @@ class BattleRunner:
             "attacker.cli", "status", timeout=self.command_timeout
         )
         chaos_remaining = len(status.get("chaos_objects", []))
-        final = run_cli("defender.cli", "detect", timeout=self.command_timeout)
+        final = run_cli("defender.cli", *self._defender_args("detect"), timeout=self.command_timeout)
         deadline = time.monotonic() + self.settle_seconds
         final_score = _finite_float(final.get("score"))
         while (
@@ -298,7 +311,7 @@ class BattleRunner:
         ):
             time.sleep(self.poll_interval)
             final = run_cli(
-                "defender.cli", "detect", timeout=self.command_timeout
+                "defender.cli", *self._defender_args("detect"), timeout=self.command_timeout
             )
             final_score = _finite_float(final.get("score"))
         recovered = recovery_confirmed(final, threshold)

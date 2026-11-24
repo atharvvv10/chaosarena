@@ -18,8 +18,9 @@ cluster battle.
 | 7 | Local React dashboard | 7 tests; `npm run build` clean; browser battle detected and scored 100 PROMOTE, cleanup ok, 0 objects |
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 17 tests; one `make verify`, real dashboard screenshots/GIF/video plus live Grafana capture, evidence/baseline/experiment checks, recruiter README and claim/benchmark guards |
+| v1.2 | Deep AIML + role-scoped LLM reasoning + AI Reasoning dashboard panel | DQN/neural validation, three-role live LLM check, isolated live lab battle (15.8 s detection, 100/A/PROMOTE), AI panel endpoint/UI tests; 33 additional tests |
 
-**Total: 130 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Eight later regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour and the matching frontend assertions.
+**Total: 164 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Eight later regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour and the matching frontend assertions. The v1.2 additions cover DQN, neural detection, env loading, mixed-provider clients, deep validation, live evidence, the AI reasoning endpoint and the dashboard panel. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md) for the isolated live battle; no v1.1 result above was changed.
 
 ## Headline gated battle
 

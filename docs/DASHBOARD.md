@@ -6,8 +6,8 @@ charts, no API keys and no external UI kits.
 
 ## Interface upgrade
 
-- **Sticky section navigation** — Overview, Battle, Evidence and History jump to the
-  matching card and highlight the section currently in view.
+- **Sticky section navigation** — Overview, Battle, Evidence, AI Reasoning and History
+  jump to the matching card and highlight the section currently in view.
 - **Key-results strip** — resilience score, detection time, recovery time and cleanup
   status are always visible without scrolling.
 - **Release gate card** — score ring, verdict, reasons and the evaluated facts from the
@@ -29,6 +29,9 @@ charts, no API keys and no external UI kits.
 - **History tools** — search by version, attack, target or verdict, plus one-click
   PROMOTE/BLOCK filters.
 - **Report actions** — copy the incident report to the clipboard or download it as Markdown.
+- **AI Reasoning** — shows the Groq attack idea, Gemini defence reading, local DQN ranking
+  and report backend from the isolated v1.2 live run. It reads `GET /ai/reasoning` and
+  never displays key values.
 - **Result toast** — confirms each battle's verdict and score without needing to scroll.
 
 ## New evidence API
@@ -46,6 +49,22 @@ charts, no API keys and no external UI kits.
 Missing or malformed files produce `null` for that field instead of breaking the page.
 The UI labels the learned-vs-random and detector panels as **offline** and **not a live
 battle**; the timeline, recovery control and bad-release panels are real local runs.
+
+## AI reasoning API
+
+`GET /ai/reasoning` reads the isolated v1.2 evidence in `ml/deep/live/` and returns
+allowlisted fields only:
+
+| Field | Source | Label in the UI |
+| --- | --- | --- |
+| `attacker` | `advisories.json` | Groq's suggested fault + rationale |
+| `defender_preflight` | `advisories.json` | Gemini's pre-battle note |
+| `dqn` | `advisories.json` | Local DQN ranking |
+| `defender_post` | `defender_analysis.json` | Gemini's reading of the real battle |
+| `report` / `battle` | `summary.json` | Report backend and recorded verdict |
+
+It returns `available: false` when those files are missing. No keys, endpoints,
+headers or client configuration are exposed. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
 
 ## Status semantics
 
