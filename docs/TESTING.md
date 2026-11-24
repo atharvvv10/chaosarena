@@ -128,14 +128,18 @@ their availability.
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
 make demo-media          # live battle + Grafana; needs the Kind lab and port-forward
 make demo-media-offline  # committed-evidence dashboard walkthrough; no lab needed
+make demo-media-v12      # NEW v1.2 AI Reasoning assets; never overwrites v1.1 media
 ```
 
-`make demo-media` regenerates all four assets with the already-running local
-services and Microsoft Edge. It runs a real battle and captures live Grafana, so
-check cleanup with `attacker.cli status` afterwards. `make demo-media-offline`
-refreshes `dashboard.png`, `demo.gif` and `demo.mp4` from the evidence already in
-the running UI; it never runs a battle and leaves `grafana.png` untouched. Both
-need the gate API and dashboard running, and neither is part of `make verify`.
+`make demo-media` regenerates all four original assets with the already-running
+local services and Microsoft Edge. It runs a real battle and captures live
+Grafana, so check cleanup with `attacker.cli status` afterwards.
+`make demo-media-offline` refreshes `dashboard.png`, `demo.gif` and `demo.mp4`
+from the evidence already in the running UI; it never runs a battle and leaves
+`grafana.png` untouched. `make demo-media-v12` writes only `v12_dashboard.png`,
+`v12_ai_reasoning.png`, `v12_demo.gif` and `v12_demo.mp4`, so the four v1.1
+assets stay byte-identical. All three need the gate API and dashboard running,
+and none is part of `make verify`.
 
 ## Common failures
 

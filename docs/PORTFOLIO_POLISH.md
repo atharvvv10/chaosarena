@@ -34,14 +34,20 @@ features. Everything here is local and free.
 | `rl/benchmark.py`, `defender/benchmark.py` | Reproducible learned-vs-random and detector-comparison benchmarks. |
 | `ml/rl_benchmark.json`, `ml/defender_benchmark.json` | Committed benchmark evidence. |
 | `tests/test_phase3.py`, `test_phase4.py`, `test_phase8.py`, `test_phase9.py` | Guards for timing, benchmarks and claim accuracy. |
-| `docs/screenshots/dashboard.png` | Fresh full-page dashboard capture from the current UI. |
+| `docs/screenshots/dashboard.png` | Frozen v1.1 full-page dashboard capture (1440×4981). |
 | `docs/screenshots/grafana.png` | Real Grafana `ChaosArena - ShopApp Live` capture from the audited live Kind run. |
-| `docs/screenshots/demo.gif` | Current dashboard walkthrough of committed evidence and gate result (≈10 s). |
-| `docs/screenshots/demo.mp4` | Current dashboard walkthrough video (≈15 s). |
-| `scripts/capture_demo.py` | Optional regenerate script with live and `--offline` modes; not part of CI. |
-| `tests/test_phase9.py` | Guards for media assets and claim accuracy. |
-| `Makefile` | `demo-media` and `demo-media-offline` targets. |
-| `.gitignore` | Ignore temporary capture frames/video. |
+| `docs/screenshots/demo.gif` | Frozen v1.1 dashboard walkthrough (6 frames, ≈10 s). |
+| `docs/screenshots/demo.mp4` | Frozen v1.1 dashboard walkthrough video (≈15 s). |
+| `docs/screenshots/v12_dashboard.png` | New v1.2 full-page UI capture (1440×5545), includes the AI Reasoning section. |
+| `docs/screenshots/v12_ai_reasoning.png` | New v1.2 focused AI panel capture (1156×525). |
+| `docs/screenshots/v12_demo.gif` | New v1.2 walkthrough (6 frames, 9 s), offline evidence only. |
+| `docs/screenshots/v12_demo.mp4` | New v1.2 walkthrough video (13.56 s), offline evidence only. |
+| `scripts/capture_demo.py` | Optional v1.1 regenerate script with live and `--offline` modes; not part of CI. |
+| `scripts/capture_v12_media.py` | Optional v1.2 regenerate script; writes only `v12_*` files; not part of CI. |
+| `tests/test_phase9.py` | Guards for v1.1 media assets and claim accuracy. |
+| `tests/test_ai_panel.py` | Guards for fresh v1.2 media and byte-identical v1.1 assets. |
+| `Makefile` | `demo-media`, `demo-media-offline` and `demo-media-v12` targets. |
+| `.gitignore` | Ignore temporary v1.1 and v1.2 capture frames/video. |
 
 ## Exact commands used
 
@@ -53,8 +59,9 @@ features. Everything here is local and free.
 # Free media tooling
 .\.venv\Scripts\python.exe -m pip install playwright Pillow imageio-ffmpeg
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
-.\.venv\Scripts\python.exe scripts\capture_demo.py --offline  # current UI, committed evidence
-.\.venv\Scripts\python.exe scripts\capture_demo.py            # live battle + Grafana; needs lab
+.\.venv\Scripts\python.exe scripts\capture_demo.py --offline  # v1.1 UI, committed evidence
+.\.venv\Scripts\python.exe scripts\capture_demo.py            # v1.1 live battle + Grafana; needs lab
+.\.venv\Scripts\python.exe scripts\capture_v12_media.py       # NEW v12_* assets; v1.1 untouched
 
 # Secret audit over every commit
 $commits = git rev-list --all
@@ -100,9 +107,13 @@ nothing is mutated.
 - Offline detector comparison: rule-based 3-sigma 100% recall / 1 false alarm;
   plain Isolation Forest 0% recall; shipped Defender 76.2% recall / **0** false
   alarms. Evidence: `ml/defender_benchmark.json`.
-- Current media: `demo.mp4` ≈ 15 s, `demo.gif` ≈ 10 s (6 frames), dashboard PNG
-  1440×4981. `grafana.png` remains the 1600×1000 capture from the audited live
-  Kind run on 2026-11-20.
+- Frozen v1.1 media: `demo.mp4` ≈ 15 s, `demo.gif` ≈ 10 s (6 frames), dashboard
+  PNG 1440×4981. `grafana.png` remains the 1600×1000 capture from the audited
+  live Kind run on 2026-11-20.
+- Fresh v1.2 media: `v12_demo.mp4` 13.56 s, `v12_demo.gif` 9 s (6 frames),
+  `v12_dashboard.png` 1440×5545 and `v12_ai_reasoning.png` 1156×525. These are
+  offline UI captures from committed evidence; they do not run a new battle or
+  call an LLM. SHA-256 guards keep the four v1.1 assets byte-identical.
 - The last live capture ended with `chaos_objects: []` and all pods Running; the
   current offline assets did not run a battle or alter that evidence.
 - Test suite and cluster-free verification pass; details in the final summary.
@@ -160,7 +171,8 @@ keeping the free/local constraint and every existing claim exact:
   only the timeline is described as the real recorded battle.
 - v1.2 adds `GET /ai/reasoning` and an **AI Reasoning** panel for the isolated live
   Groq/Gemini/DQN advisory record. Only role names, latencies and rationales are
-  returned; no key values are exposed. See `docs/V12_LIVE_VALIDATION.md`.
+  returned; no key values are exposed. The fresh `v12_*` media shows this panel while
+  the four v1.1 assets stay byte-identical. See `docs/V12_LIVE_VALIDATION.md`.
 - Details and verification commands: `docs/DASHBOARD.md`.
 
 ## Cost check

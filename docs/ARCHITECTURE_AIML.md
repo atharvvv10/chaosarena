@@ -100,6 +100,8 @@ under `ml/deep/live/`:
   after the battle, and Groq wrote the report from the recorded facts.
 - The dashboard exposes these through `GET /ai/reasoning` in an **AI Reasoning**
   panel. Only role names, latencies, rationales and results are returned.
+- Fresh `v12_*` screenshots/GIF/MP4 show that panel; the v1.1 media files are
+  preserved byte-identical.
 
 Full record, including the first `network-latency` false negative and why the
 baseline was isolated: [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
@@ -107,4 +109,5 @@ baseline was isolated: [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
 **Caveats:** the simulator profiles are teaching priors from earlier real runs;
 the holdout windows are seeded perturbations, not live traffic. The live lab
 result is one battle, not a statistical study. No v1.1 evidence, scoring, raw
-trial data, UI capture or media was modified.
+trial data, UI capture or media was modified; new `v12_*` media was added beside
+the frozen originals.
