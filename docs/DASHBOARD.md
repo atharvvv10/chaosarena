@@ -7,7 +7,8 @@ charts, no API keys and no external UI kits.
 ## Interface upgrade
 
 - **Sticky section navigation** — Overview, Battle, Evidence, AI Reasoning and History
-  jump to the matching card and highlight the section currently in view.
+  jump to the matching card and highlight the section currently in view. The AI button
+  targets the exact `aireasoning` section id, so it works from the workspace sidebar.
 - **Key-results strip** — resilience score, detection time, recovery time and cleanup
   status are always visible without scrolling.
 - **Release gate card** — score ring, verdict, reasons and the evaluated facts from the
@@ -31,7 +32,8 @@ charts, no API keys and no external UI kits.
 - **Report actions** — copy the incident report to the clipboard or download it as Markdown.
 - **AI Reasoning** — shows the Groq attack idea, Gemini defence reading, local DQN ranking
   and report backend from the isolated v1.2 live run. It reads `GET /ai/reasoning` and
-  never displays key values.
+  never displays key values. The dashboard refreshes saved evidence every 15 s while the
+  page is open, so starting the gate API later updates the panel without a reload.
 - **Result toast** — confirms each battle's verdict and score without needing to scroll.
 
 ## New evidence API
