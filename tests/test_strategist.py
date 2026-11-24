@@ -54,6 +54,18 @@ def test_groq_strategist_parses_and_caches(monkeypatch):
     assert fake.calls == 1
 
 
+def test_groq_strategist_accepts_duration_strings():
+    fake = FakeLLM(json.dumps({
+        "attack": "pod-kill",
+        "target": "order-service",
+        "duration": "60s",
+        "rationale": "valid but human-formatted duration",
+    }))
+    proposal = GroqStrategist(client=fake, max_retries=1).propose({"score": 50})
+    assert proposal.source == "groq"
+    assert proposal.duration == 60
+
+
 def test_groq_strategist_falls_back_on_bad_proposal():
     strategist = GroqStrategist(client=FakeLLM("not json"), max_retries=1)
     proposal = strategist.propose({"score": 50})

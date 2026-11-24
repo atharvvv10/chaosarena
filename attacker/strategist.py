@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
@@ -105,6 +106,26 @@ def _extract_json(text: str) -> dict[str, Any]:
     return payload
 
 
+def _parse_duration(value: Any) -> int:
+    """Accept 60, 60.0, '60' or '60s' from real LLM responses."""
+    if isinstance(value, bool):
+        raise StrategistError("duration must be an integer")
+    if isinstance(value, int):
+        duration = value
+    elif isinstance(value, float) and value.is_integer():
+        duration = int(value)
+    elif isinstance(value, str):
+        match = re.search(r"\d+", value.strip())
+        if not match:
+            raise StrategistError("duration must be an integer")
+        duration = int(match.group())
+    else:
+        raise StrategistError("duration must be an integer")
+    if not 1 <= duration <= 300:
+        raise StrategistError("duration must be between 1 and 300 seconds")
+    return duration
+
+
 def _validate(payload: dict[str, Any], source: str) -> StrategyProposal:
     attack = str(payload.get("attack", "")).strip()
     target = str(payload.get("target", "")).strip()
@@ -114,12 +135,7 @@ def _validate(payload: dict[str, Any], source: str) -> StrategyProposal:
         raise StrategistError(f"target {target!r} is outside the hard allowlist")
     if (attack, target) not in ALLOWED_PAIRS:
         raise StrategistError(f"pair {attack}@{target} is not an approved action")
-    try:
-        duration = int(payload.get("duration", 20))
-    except (TypeError, ValueError) as exc:
-        raise StrategistError("duration must be an integer") from exc
-    if not 1 <= duration <= 300:
-        raise StrategistError("duration must be between 1 and 300 seconds")
+    duration = _parse_duration(payload.get("duration", 20))
     return StrategyProposal(
         attack=attack,
         target=target,

@@ -74,6 +74,17 @@ python -m reporter.cli --evidence ml/last_battle.json report --backend groq --ou
   the Isolation Forest detected `0/30` with `0/30` false alarms on the same
   synthetic holdout.
 
+## Live LLM check (committed at `ml/deep/llm_live_check.json`)
+
+Single real run with three fresh role keys:
+
+- Attacker Groq: `675.6 ms`, allowlisted `pod-kill@order-service`, `60s`; cached replay `0.0 ms`.
+- Defender Gemini: `7,471.4 ms`, category `Performance / Availability Degradation`, confidence `0.72`.
+- Report Groq: `1,406.1 ms`, `1,305` chars.
+
+Latencies are one observation each, not a benchmark. The JSON records only
+`key_set` flags, latencies, cache hits and results — never key values.
+
 **Caveats:** the simulator profiles are teaching priors from earlier real runs;
 the holdout windows are seeded perturbations, not live traffic. No Kubernetes
 experiment was rerun and no v1.1 data was modified.
