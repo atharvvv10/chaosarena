@@ -1,8 +1,7 @@
 # v1.2 live lab validation
 
-This record covers the **v1.2 deep AIML** additive upgrade on the
-`v1.2-deep-aiml` branch. It does not replace any v1.1 evidence, score, raw
-trial data, UI capture or the `v1.1` tag.
+This record covers the released **v1.2 deep AIML** additive upgrade. It does not
+replace any v1.1 evidence, score, raw trial data, UI capture or the `v1.1` tag.
 
 ## What was actually run
 
@@ -98,7 +97,10 @@ python -m scripts.live_deep_battle `
 This requires the documented Kind lab and Prometheus port-forward. CI runs the
 cluster-free tests only and needs no keys.
 
-**Caveat:** this is one live battle, not a statistical study. The v1.2 GIF/MP4
-and PNGs are offline captures of the current UI made from committed evidence;
-they do not show a new live battle. The original v1.1 `demo.gif`, `demo.mp4`,
+**Caveat:** this is one live battle, not a statistical study. The first
+`network-latency` attempt failed: the v1.2 detector missed it and Gemini flagged
+the false negative. The recorded `pod-kill` fault self-heals, so the `53.1 s`
+recovery does **not** prove the Defender caused recovery. The v1.2 GIF/MP4 and
+PNGs are offline captures of the current UI made from committed evidence; they
+do not show a new live battle. The original v1.1 `demo.gif`, `demo.mp4`,
 `dashboard.png` and `grafana.png` remain byte-identical and were not overwritten.

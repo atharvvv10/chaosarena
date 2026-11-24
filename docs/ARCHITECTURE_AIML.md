@@ -1,7 +1,6 @@
 # ChaosArena v1.2 — Deep AIML architecture
 
-> Work in progress on branch `v1.2-deep-aiml`. The tagged `v1.1` release and its
-> evidence are unchanged.
+> Released under tag `v1.2`. The tagged `v1.1` release and its evidence are unchanged.
 
 ## The three AI layers
 
@@ -70,12 +69,27 @@ python -m scripts.live_deep_battle --attack pod-kill --target order-service --du
 
 ## Validation result (committed at `ml/deep/validation.json`)
 
-- DQN attacker: `30/30` seeded episodes better than tabular Q-learning,
-  exact sign test `p ≈ 2e-09`. The noisy simulator makes repeated attacks easier
-  to detect, which the vector-state DQN learns to avoid.
-- LSTM defender: `30/30` seeded spike detections with `3/30` false alarms;
-  the Isolation Forest detected `0/30` with `0/30` false alarms on the same
-  synthetic holdout.
+- DQN attacker: `30/30` seeded simulator episodes better than tabular
+  Q-learning. This is a simulator outcome, not an independent statistical trial:
+  the simulator reward makes repeated attacks easier to detect, which the
+  vector-state DQN can exploit while the tabular state cannot. No p-value is
+  claimed.
+- Detector comparison on the same seeded holdout (30 normal and 30 anomalous
+  windows built from the committed baseline):
+
+  | Detector | Detections / 30 | False alarms / 30 |
+  | --- | ---: | ---: |
+  | LSTM autoencoder | **30** | **3** |
+  | Shipped Defender (forest + capped deviation) | 0 | **0** |
+  | Rule-based (3-sigma) | **30** | 7 |
+  | Isolation Forest only | 0 | **0** |
+
+  The LSTM is exploratory and is **not** in the live control loop. It detects
+  every seeded spike but raises three false alarms; the shipped Defender keeps
+  zero false alarms, which matters more for a release gate. This holdout is
+  different from the 40-sample + 160-injection benchmark in
+  [RESULTS.md](RESULTS.md), where the shipped Defender reaches 76.2% recall at
+  zero false positives.
 
 ## Live LLM check (committed at `ml/deep/llm_live_check.json`)
 

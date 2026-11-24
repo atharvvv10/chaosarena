@@ -5,13 +5,12 @@
       "mean_reward": 0.26964
     },
     "episodes": 30,
-    "note": "Both policies see the same seeded RNG stream per episode, but choose different actions, so the pairing is approximate rather than exact.",
+    "note": "Both policies see the same seeded RNG stream per episode, but choose different actions, so the pairing is approximate rather than exact. This is a seeded simulator outcome, not an independent statistical trial: the simulator reward makes repeated attacks easier to detect, which the vector-state DQN can exploit while the tabular state cannot.",
     "seed": 9000,
-    "sign_test_deep_better": {
-      "n": 30,
-      "negative": 0,
-      "positive": 30,
-      "two_sided_p": 2e-09
+    "seeded_simulator_wins": {
+      "deep_better": 30,
+      "episodes": 30,
+      "tabular_better": 0
     },
     "tabular": {
       "mean_final_score": 75.559,
@@ -23,11 +22,18 @@
     "v1.1 raw trials and statistics remain immutable."
   ],
   "defender": {
-    "isolation_forest": {
+    "defender_shipped": {
       "detections": 0,
       "false_alarms": 0,
       "mean_anomaly_score": 0.611808,
       "mean_normal_score": 0.551783,
+      "threshold": 0.733207
+    },
+    "isolation_forest": {
+      "detections": 0,
+      "false_alarms": 0,
+      "mean_anomaly_score": 0.531461,
+      "mean_normal_score": 0.529588,
       "threshold": 0.733207
     },
     "neural": {
@@ -37,7 +43,14 @@
       "mean_normal_score": 0.75082,
       "threshold": 1.976758
     },
-    "note": "Holdout samples are seeded perturbations of the committed baseline; they are synthetic and are not v1.1 experimental evidence.",
+    "note": "Holdout samples are seeded perturbations of the committed baseline; they are synthetic and are not v1.1 experimental evidence. All four detectors score the same 30 normal and 30 anomalous windows.",
+    "rule_based_3sigma": {
+      "detections": 30,
+      "false_alarms": 7,
+      "mean_anomaly_score": 8.085202,
+      "mean_normal_score": 2.279248,
+      "threshold": 3.0
+    },
     "samples_per_class": 30,
     "seed": 4242
   },
