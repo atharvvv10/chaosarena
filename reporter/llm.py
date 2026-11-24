@@ -204,11 +204,18 @@ class GroqLLM(OpenAICompatibleLLM):
         api_key: str | None = None,
         url: str | None = None,
         timeout: int = 120,
+        key_env: str = "GROQ_API_KEY",
     ) -> None:
-        key = api_key if api_key is not None else os.environ.get("GROQ_API_KEY")
+        # Each role can own a distinct key so one role's traffic cannot exhaust
+        # another role's quota. GROQ_API_KEY remains the shared fallback.
+        key = (
+            api_key
+            if api_key is not None
+            else os.environ.get(key_env) or os.environ.get("GROQ_API_KEY")
+        )
         if not key:
             raise LLMError(
-                "GROQ_API_KEY is not set; create a free key at https://console.groq.com/keys"
+                f"{key_env} is not set; create a free key at https://console.groq.com/keys"
             )
         super().__init__(
             url=url or os.environ.get("GROQ_API_URL", GROQ_URL),

@@ -7,8 +7,9 @@ import sys
 from pathlib import Path
 
 from .incident import load_latest
-from .llm import GROQ_MODEL, GROQ_URL, GroqLLM, OpenAICompatibleLLM, TemplateLLM, default_client
+from .llm import GROQ_MODEL, GROQ_URL
 from .prompt import build_prompt
+from .role_clients import client_for, key_env
 from .report import IncidentReporter
 from .sections import REQUIRED_SECTIONS
 
@@ -38,13 +39,8 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _client(backend: str | None = None):
-    if backend == "template":
-        return TemplateLLM()
-    if backend == "openai":
-        return OpenAICompatibleLLM()
-    if backend == "groq":
-        return GroqLLM()
-    return default_client()
+    """Build the report role's client (its own Groq key, shared key fallback)."""
+    return client_for("report", backend=backend)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,7 +55,10 @@ def main(argv: list[str] | None = None) -> int:
             "free_llm_backend": "groq",
             "groq_endpoint": GROQ_URL,
             "groq_model": GROQ_MODEL,
-            "groq_key_required": "GROQ_API_KEY (free from console.groq.com/keys)",
+            "groq_key_required": (
+                f"{key_env('report')} (free from console.groq.com/keys; "
+                "GROQ_API_KEY is the shared fallback)"
+            ),
             "paid_backend": "openai (never used by this project)",
             "rules": ["facts only", "no invented numbers", "validated sections"],
         }, indent=2))

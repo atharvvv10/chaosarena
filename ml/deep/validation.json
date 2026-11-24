@@ -1,0 +1,45 @@
+{
+  "attacker": {
+    "deep": {
+      "mean_final_score": 71.726,
+      "mean_reward": 0.26964
+    },
+    "episodes": 30,
+    "note": "Both policies see the same seeded RNG stream per episode, but choose different actions, so the pairing is approximate rather than exact.",
+    "seed": 9000,
+    "sign_test_deep_better": {
+      "n": 30,
+      "negative": 0,
+      "positive": 30,
+      "two_sided_p": 2e-09
+    },
+    "tabular": {
+      "mean_final_score": 75.559,
+      "mean_reward": 0.229779
+    }
+  },
+  "caveats": [
+    "Synthetic holdout data; no live Kubernetes trials were run.",
+    "v1.1 raw trials and statistics remain immutable."
+  ],
+  "defender": {
+    "isolation_forest": {
+      "detections": 0,
+      "false_alarms": 0,
+      "mean_anomaly_score": 0.611808,
+      "mean_normal_score": 0.551783,
+      "threshold": 0.733207
+    },
+    "neural": {
+      "detections": 30,
+      "false_alarms": 3,
+      "mean_anomaly_score": 4.381333,
+      "mean_normal_score": 0.75082,
+      "threshold": 1.976758
+    },
+    "note": "Holdout samples are seeded perturbations of the committed baseline; they are synthetic and are not v1.1 experimental evidence.",
+    "samples_per_class": 30,
+    "seed": 4242
+  },
+  "version": "v1.2-deep-aiml"
+}
