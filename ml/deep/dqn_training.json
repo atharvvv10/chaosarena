@@ -1,0 +1,20 @@
+{
+  "architecture": "MLP 10-64-64-7 with replay and target network",
+  "episodes": 200,
+  "evaluation": {
+    "action_counts": {
+      "network-partition@payment-service": 378,
+      "pod-kill@order-service": 222
+    },
+    "episodes": 50,
+    "mean_reward": 0.267892,
+    "mean_score": 70.844
+  },
+  "final_epsilon": 0.366955,
+  "mean_replay_loss": 0.006019,
+  "mean_train_reward": 0.197665,
+  "replay_steps": 2369,
+  "seed": 42,
+  "simulator": "seeded DeepSimArena derived from recorded attack profiles",
+  "steps_per_episode": 12
+}

@@ -809,6 +809,26 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .policy-state { margin-top: 16px; }
 .policy-state .metric-row:first-of-type { border-top: 1px solid var(--line); }
 
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.ai-panel { min-width: 0; }
+.ai-rationale {
+  margin: 12px 0 8px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--blue, var(--green));
+  background: var(--raised);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.ai-source { color: var(--dim); font-size: 11px; }
+@media (max-width: 1100px) {
+  .ai-grid { grid-template-columns: 1fr; }
+}
+
 .evcard {
   padding: 20px;
   min-height: 200px;

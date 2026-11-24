@@ -37,8 +37,12 @@ Open http://127.0.0.1:5173
 - Learned-vs-random and detector comparison panels, labelled offline — not live battles
 - Search and PROMOTE/BLOCK filters in decision history
 - Copy/download actions for the incident report
+- An **AI Reasoning** section from `GET /ai/reasoning`: Groq's attack idea, Gemini's
+  defence reading, the local DQN ranking and the report backend from the isolated
+  v1.2 live run. No API keys are shown.
 
-Full UI/evidence notes: `docs/DASHBOARD.md` in the repository root.
+Full UI/evidence notes: `docs/DASHBOARD.md` and `docs/V12_LIVE_VALIDATION.md` in
+the repository root.
 
 Set `VITE_API_URL` if the API runs somewhere other than `http://127.0.0.1:8080`.
 

@@ -6,6 +6,7 @@ anything, touch shop-prod, or change replica counts beyond MAX_REPLICAS.
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -24,7 +25,9 @@ ALLOWED_SERVICES: frozenset[str] = frozenset(
 )
 MIN_REPLICAS = 1
 MAX_REPLICAS = 4
-ACTION_LOG = Path("ml/defender_actions.jsonl")
+ACTION_LOG = Path(
+    os.environ.get("CHAOSARENA_ACTION_LOG", "ml/defender_actions.jsonl")
+)
 
 
 class ActionRejected(ValueError):

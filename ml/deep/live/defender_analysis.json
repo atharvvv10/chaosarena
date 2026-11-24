@@ -1,0 +1,13 @@
+{
+  "latency_ms": 1468.9,
+  "ok": true,
+  "result": {
+    "cached": false,
+    "category": "resilience_failure",
+    "confidence": 1.0,
+    "rationale": "The chaos experiment 'pod-kill' targeted 'order-service' on version 'v1.2-deep-aiml' and was detected in 15.8 seconds with successful cleanup. However, the final_score of 0.766 fell below the required threshold of 0.8328, despite the overall verdict being PROMOTE.",
+    "recommended_action": "Investigate the root cause of the score drop below the threshold during pod termination before final deployment promotion.",
+    "source": "gemini"
+  },
+  "role": "defender_post_analysis"
+}

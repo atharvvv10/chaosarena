@@ -1,0 +1,51 @@
+{
+  "calls": [
+    {
+      "latency_ms": 1066.1,
+      "ok": true,
+      "result": {
+        "allowed": true,
+        "attack": "pod-kill",
+        "cached": false,
+        "duration": 30,
+        "rationale": "Simulate a sudden pod termination to test the system's resilience and auto\u2011scaling behavior under abrupt resource loss.",
+        "source": "groq",
+        "target": "order-service"
+      },
+      "role": "attacker_strategist"
+    },
+    {
+      "latency_ms": 6973.2,
+      "ok": true,
+      "result": {
+        "cached": false,
+        "category": "chaos-engineering",
+        "confidence": 1.0,
+        "rationale": "The recorded facts indicate a controlled chaos-engineering attack of type 'pod-kill' targeting 'order-service' (version 'v1.2-deep-aiml') during the 'preflight' stage with a duration of 30 seconds.",
+        "recommended_action": "Monitor the 'order-service' recovery metrics during the 30-second post-kill window to ensure resilience validation completes successfully.",
+        "source": "gemini"
+      },
+      "role": "defender_analyst"
+    },
+    {
+      "latency_ms": 27.4,
+      "ok": true,
+      "result": [
+        {
+          "action": "pod-kill@order-service",
+          "q": 4.881329
+        },
+        {
+          "action": "network-partition@payment-service",
+          "q": 4.878916
+        },
+        {
+          "action": "network-loss@order-service",
+          "q": 4.728947
+        }
+      ],
+      "role": "dqn_attacker"
+    }
+  ],
+  "note": "Advisory only; the CLI allowlist and classical detector own the real loop."
+}

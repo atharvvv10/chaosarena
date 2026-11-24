@@ -2,7 +2,7 @@
 
 [![ChaosArena Resilience Gate](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml/badge.svg)](https://github.com/atharvvv10/chaosarena/actions/workflows/ci.yml)
 
-**A resilience-gated CI/CD lab that treats a release like a fight.** A tabular Q-learning attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and requests a repair; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute, hosted database or API key. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
+**A resilience-gated CI/CD lab that treats a release like a fight.** A local attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and requests a repair; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute or hosted database. The default path needs **no API key**; v1.2 can optionally use free Groq/Gemini keys for advisory reasoning and report prose. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
 
 ![ChaosArena dashboard walkthrough — committed battle evidence, release gate and learned policy](docs/screenshots/demo.gif)
 
@@ -28,13 +28,25 @@ Start the existing FastAPI backend and React frontend using the documented setup
 
 Follow [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) to run a controlled battle in the isolated Kind environment. [DEMO_AUDIT.md](docs/DEMO_AUDIT.md) records the last real run and its environmental limitations.
 
-The GIF and MP4 are a current-UI walkthrough of the committed 100/A battle evidence, the bad-release/rollback panel and the offline benchmark panels; no new live battle was recorded for the latest correctness fixes. The dashboard PNG is a fresh full-page capture at 1440×4981. The Grafana PNG remains the real capture from the audited live Kind run and was not regenerated because no lab is running here.
+The GIF and MP4 are a walkthrough of the committed 100/A battle evidence, the bad-release/rollback panel and the offline benchmark panels; they predate the v1.2 **AI Reasoning** panel. The dashboard PNG is a full-page capture at 1440×4981. The Grafana PNG remains the real capture from the audited live Kind run. The v1.2 live battle and its AI advisory evidence are documented in [V12_LIVE_VALIDATION.md](docs/V12_LIVE_VALIDATION.md); no v1.1 evidence or media was overwritten.
+
+## What v1.2 adds
+
+v1.2 is an **additive AIML upgrade** on top of the frozen v1.1 evidence:
+
+- **DQN attacker** with replay buffer and target network, alongside the original tabular Q-learning baseline.
+- **LSTM-autoencoder defender** alongside the shipped Isolation Forest.
+- **Role-scoped LLM reasoning**: Groq proposes an allowlisted attack idea and writes the incident report; Gemini explains defender findings. Local RL/detector code and the classical release gate still own the real control loop.
+- **Dashboard AI Reasoning panel** showing recorded source, latency, rationale and recommendation — never API keys.
+- **Offline by default**: no key is needed for tests, CI or the normal template reporter. Only `python -m scripts.llm_live_check` and the optional live-lab runner use free-tier keys from a gitignored `.env`.
+
+Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VALIDATION.md](docs/V12_LIVE_VALIDATION.md).
 
 ## Results at a glance
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **136 passing**: 9 phase suites plus 14 final regression checks (`make verify`) |
+| Automated tests | **164 passing**: phase suites, AIML suites, live-evidence checks and regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, cleanup verified in recorded runs; 0 residual chaos objects |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
@@ -42,7 +54,10 @@ The GIF and MP4 are a current-UI walkthrough of the committed 100/A battle evide
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
 | v1.1 validation | **10 paired live trials, 0/30 false alarms on held-out data**; primary sign test p = 0.109 (not conclusive) — [report](docs/EXPERIMENTAL_VALIDATION.md) |
-| CI | Free `ubuntu-latest` Actions, latest push green, no cluster, no secrets |
+| v1.2 AIML validation | DQN beat tabular in **30/30** seeded episodes (exact sign test p ≈ 2e-09); LSTM detected **30/30** seeded spikes with **3/30** false alarms — [architecture](docs/ARCHITECTURE_AIML.md) |
+| v1.2 live lab battle | `pod-kill@order-service` detected in **15.8 s**, score **100/A/PROMOTE**, cleanup ok, 0 chaos objects left — [evidence](docs/V12_LIVE_VALIDATION.md) |
+| AI reasoning | Groq attack idea + incident report, Gemini defence analysis, visible in the dashboard **AI Reasoning** panel; no key values stored |
+| CI | Free `ubuntu-latest` Actions, latest push green, no cluster, no secrets required |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
 
 ## Learned vs random attacker
@@ -88,7 +103,7 @@ gate, where a false alarm blocks a good build.
 1. **Attacker** — seven Chaos Mesh experiments behind a hard `shop-test` allowlist; `finally` cleanup always runs.
 2. **Defender** — reads only Prometheus signals, uses Isolation Forest plus a capped deviation term, then detect → diagnose → request a repair → verify. It requests the action; it does not repair by itself. It never imports or reads the attacker.
 3. **Controller** — drives both sides through their public CLIs, recomputes the resilience score from observed facts, and records the gate decision and audit trail.
-4. **Dashboard + CI** — a local React UI with a section nav, always-visible key results, a real battle timeline, labelled offline benchmark panels, searchable history and report actions, plus a free GitHub workflow that re-scores saved fixtures on every push. See [DASHBOARD.md](docs/DASHBOARD.md).
+4. **Dashboard + CI** — a local React UI with a section nav, always-visible key results, a real battle timeline, labelled offline benchmark panels, an **AI Reasoning** panel, searchable history and report actions, plus a free GitHub workflow that re-scores saved fixtures on every push. See [DASHBOARD.md](docs/DASHBOARD.md).
 
 ## Honest scope — read this before an interview
 
@@ -98,6 +113,7 @@ gate, where a false alarm blocks a good build.
 - CI re-scores **saved** fixtures on a free, cluster-free runner and is green. It does **not** run a live battle; the real battles were local and their evidence is committed.
 - Offline seeded benchmarks show the attacker beats random and the Defender beats a plain Isolation Forest. They are benchmarks, not live battles.
 - v1.1 adds **10 paired live trials** and **0/30 held-out false alarms**. The primary sign test is not conclusive. [Full study](docs/EXPERIMENTAL_VALIDATION.md).
+- v1.2 AI APIs are **advisory and reporting only**. They never call `kubectl`, create Chaos Mesh objects or decide the gate; the allowlisted CLIs and classical defender own the real loop.
 - The early Phase 4 **65/BLOCK** was a *measurement timing* issue, not a caught bad release. [Details](docs/RESULTS.md).
 
 ### Not proven / do not overclaim
@@ -123,6 +139,7 @@ http://127.0.0.1:8080     gate API
 4. Read the **Release gate** card for score/grade/verdict and **Why**. A new row appears in **Decision history**.
 5. Check **RL attacker** for the learned policy. In **Incident report**, use **Copy** or **Download**.
 6. Use the sidebar navigation to open **Evidence**: the timeline is the recorded real battle; **Learned vs random** and **Detector comparison** are clearly labelled offline benchmarks. In **History**, search or filter PROMOTE/BLOCK rows.
+7. Open **AI Reasoning** to see Groq's recorded attack idea, Gemini's defence reading, the local DQN top idea and the report backend. These are read from `ml/deep/live/`; no API keys are displayed.
 
 If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the API is online but the lab is not ready, start Kind, deploy the lab and open the Prometheus port-forward described below; the dashboard can still read committed evidence. If the dashboard is closed, run `cd dashboard && npm run dev`.
 

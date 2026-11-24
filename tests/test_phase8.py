@@ -68,7 +68,9 @@ def test_no_paid_or_cloud_dependencies_added():
     )
     requirements = (ROOT / "requirements-dev.txt").read_text(encoding="utf-8")
     combined = (sources + "\n" + requirements).lower()
-    for banned in ["torch", "tensorflow", "openai", "groq", "aws", "azure", "gcp", "gym"]:
+    # v1.2 intentionally adds CPU-only PyTorch in requirements-aiml.txt for the
+    # DQN attacker; it is still absent from the core dev requirements.
+    for banned in ["tensorflow", "openai", "groq", "aws", "azure", "gcp", "gym"]:
         assert banned not in combined
 
 

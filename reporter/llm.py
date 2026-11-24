@@ -187,6 +187,13 @@ class OpenAICompatibleLLM:
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "openai/gpt-oss-20b"
 
+GEMINI_URL = (
+    "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+)
+# New projects should use the current Flash-Lite model; override with
+# CHAOSARENA_REPORT_GEMINI_MODEL if Google changes the recommended model.
+GEMINI_MODEL = "gemini-3.5-flash-lite"
+
 
 class GroqLLM(OpenAICompatibleLLM):
     """Groq's free tier through the same OpenAI-compatible interface.
@@ -204,11 +211,18 @@ class GroqLLM(OpenAICompatibleLLM):
         api_key: str | None = None,
         url: str | None = None,
         timeout: int = 120,
+        key_env: str = "GROQ_API_KEY",
     ) -> None:
-        key = api_key if api_key is not None else os.environ.get("GROQ_API_KEY")
+        # Each role can own a distinct key so one role's traffic cannot exhaust
+        # another role's quota. GROQ_API_KEY remains the shared fallback.
+        key = (
+            api_key
+            if api_key is not None
+            else os.environ.get(key_env) or os.environ.get("GROQ_API_KEY")
+        )
         if not key:
             raise LLMError(
-                "GROQ_API_KEY is not set; create a free key at https://console.groq.com/keys"
+                f"{key_env} is not set; create a free key at https://console.groq.com/keys"
             )
         super().__init__(
             url=url or os.environ.get("GROQ_API_URL", GROQ_URL),
@@ -218,6 +232,75 @@ class GroqLLM(OpenAICompatibleLLM):
         )
 
 
+class GeminiLLM:
+    """Google Gemini via the free generateContent REST endpoint.
+
+    Used only for the report role in v1.2: batch prose is not latency-critical.
+    No extra dependency is needed; this uses urllib like the other backends.
+    """
+
+    name = "gemini"
+
+    def __init__(
+        self,
+        model: str | None = None,
+        api_key: str | None = None,
+        url: str | None = None,
+        timeout: int = 120,
+        key_env: str = "GEMINI_API_KEY",
+    ) -> None:
+        key = (
+            api_key
+            if api_key is not None
+            else os.environ.get(key_env) or os.environ.get("GEMINI_API_KEY")
+        )
+        if not key:
+            raise LLMError(
+                f"{key_env} is not set; create a free key at https://aistudio.google.com/apikey"
+            )
+        self.model = model or os.environ.get("GEMINI_MODEL", GEMINI_MODEL)
+        endpoint = url or os.environ.get("GEMINI_URL", GEMINI_URL)
+        self.url = endpoint.format(model=self.model) if "{model}" in endpoint else endpoint
+        self.api_key = key
+        self.timeout = timeout
+
+    def complete(self, prompt: str, facts: dict[str, Any]) -> str:  # noqa: ARG002
+        body = json.dumps({
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        }).encode("utf-8")
+        headers = {
+            "Content-Type": "application/json",
+            "x-goog-api-key": self.api_key,
+            "User-Agent": "chaosarena/1.2",
+        }
+        request = urllib.request.Request(self.url, data=body, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(request, timeout=self.timeout) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+            candidates = payload.get("candidates") or []
+            if not candidates:
+                feedback = payload.get("promptFeedback") or {}
+                raise LLMError(f"Gemini returned no content; feedback: {feedback}")
+            parts = ((candidates[0].get("content") or {}).get("parts") or [])
+            text = "".join(str(part.get("text", "")) for part in parts).strip()
+            if not text:
+                raise LLMError("Gemini returned an empty response")
+            return text
+        except LLMError:
+            raise
+        except urllib.error.HTTPError as exc:
+            detail = ""
+            try:
+                detail = exc.read().decode("utf-8", errors="replace")
+            except Exception:  # pragma: no cover - defensive
+                pass
+            raise LLMError(
+                f"Gemini request failed: {exc}; response: {detail[:500]}"
+            ) from exc
+        except Exception as exc:  # noqa: BLE001 - surface one clear error
+            raise LLMError(f"Gemini request failed: {exc}") from exc
+
+
 def default_client() -> LLMClient:
     """Pick the backend from the environment. Offline is the default."""
     backend = os.environ.get("CHAOSARENA_LLM_BACKEND", "template").lower()
@@ -225,8 +308,11 @@ def default_client() -> LLMClient:
         return OpenAICompatibleLLM()
     if backend == "groq":
         return GroqLLM()
+    if backend == "gemini":
+        return GeminiLLM()
     if backend == "template":
         return TemplateLLM()
     raise LLMError(
-        f"unknown CHAOSARENA_LLM_BACKEND {backend!r}; use template, groq or openai"
+        f"unknown CHAOSARENA_LLM_BACKEND {backend!r}; "
+        "use template, groq, gemini or openai"
     )

@@ -2,7 +2,7 @@ name: ChaosArena Resilience Gate
 
 'on':
   push:
-    branches: [main, master]
+    branches: [main, master, v1.2-deep-aiml]
   pull_request:
   workflow_dispatch:
 
@@ -66,3 +66,39 @@ jobs:
         if: always()
         continue-on-error: true
         run: python -m controller.cli last
+
+  deep-aiml:
+    name: Deep AIML smoke test (CPU)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7.1.0
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            requirements-dev.txt
+            requirements-aiml.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt -r requirements-aiml.txt
+
+      - name: Show LLM role configs (keys hidden)
+        run: python -m scripts.llm_guard
+
+      - name: Run deep AIML tests
+        run: python -m pytest -q tests/test_dqn.py tests/test_neural.py tests/test_strategist.py tests/test_deep_validation.py tests/test_env_loader.py
+
+      - name: Offline LLM role check
+        run: python -m scripts.llm_live_check --out /tmp/chaosarena-llm-live.json
+
+      - name: Smoke train DQN and neural defender
+        run: |
+          python -m rl.train_dqn --episodes 3 --steps 4 --out /tmp/chaosarena-dqn.pt --metrics /tmp/chaosarena-dqn.json
+          python -m defender.neural_cli train --epochs 2 --out /tmp/chaosarena-defender.pt

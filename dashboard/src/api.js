@@ -19,6 +19,7 @@ export const getHistory = (limit = 10) => request(`/gate/history?limit=${limit}`
 export const getReport = () => request('/report/latest')
 export const getRlPolicy = () => request('/rl/policy')
 export const getEvidence = () => request('/evidence')
+export const getAiReasoning = () => request('/ai/reasoning')
 
 export const evaluate = (payload) =>
   request('/gate/evaluate', {

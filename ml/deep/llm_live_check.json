@@ -1,0 +1,101 @@
+{
+  "calls": [
+    {
+      "latency_ms": 675.6,
+      "ok": true,
+      "result": {
+        "allowed": true,
+        "attack": "pod-kill",
+        "cached": false,
+        "duration": 60,
+        "rationale": "Order-service is a core component that orchestrates order placement and triggers downstream services. Killing its pods will create immediate unavailability, forcing retries and potentially cascading failures across the system. A 60\u2011second duration is sufficient to observe the impact while minimizing prolonged disruption.",
+        "source": "groq",
+        "target": "order-service"
+      },
+      "role": "attacker"
+    },
+    {
+      "latency_ms": 0.0,
+      "ok": true,
+      "result": {
+        "allowed": true,
+        "attack": "pod-kill",
+        "cached": true,
+        "duration": 60,
+        "rationale": "Order-service is a core component that orchestrates order placement and triggers downstream services. Killing its pods will create immediate unavailability, forcing retries and potentially cascading failures across the system. A 60\u2011second duration is sufficient to observe the impact while minimizing prolonged disruption.",
+        "source": "groq",
+        "target": "order-service"
+      },
+      "role": "attacker_cached"
+    },
+    {
+      "latency_ms": 7471.4,
+      "ok": true,
+      "result": {
+        "cached": false,
+        "category": "Performance / Availability Degradation",
+        "confidence": 0.72,
+        "rationale": "The anomaly detection system confirmed the anomaly (detected: true) with an anomaly score of 0.72 and a score of 65. The top contributing features are 'payment-service_p95_latency' and 'order-service_error_rate'.",
+        "recommended_action": "Investigate the p95 latency on the payment-service and the error rate on the order-service.",
+        "source": "gemini"
+      },
+      "role": "defender"
+    },
+    {
+      "latency_ms": 1406.1,
+      "ok": true,
+      "result": {
+        "backend": "groq",
+        "chars": 1305,
+        "saved_to": "ml\\deep\\incident_report_groq.md",
+        "sections": null
+      },
+      "role": "report"
+    }
+  ],
+  "key_config": [
+    {
+      "backend": "template",
+      "gemini_key_env": "GEMINI_ATTACKER_KEY",
+      "gemini_key_set": "no",
+      "groq_key_env": "GROQ_ATTACKER_KEY",
+      "groq_key_set": "yes",
+      "key_env": "GROQ_ATTACKER_KEY",
+      "key_set": "yes",
+      "model_env": "CHAOSARENA_ATTACKER_LLM_MODEL",
+      "preferred_backend": "groq",
+      "role": "attacker",
+      "shared_key_set": "no"
+    },
+    {
+      "backend": "template",
+      "gemini_key_env": "GEMINI_DEFENDER_KEY",
+      "gemini_key_set": "yes",
+      "groq_key_env": "GROQ_DEFENDER_KEY",
+      "groq_key_set": "no",
+      "key_env": "GEMINI_DEFENDER_KEY",
+      "key_set": "yes",
+      "model_env": "CHAOSARENA_DEFENDER_LLM_MODEL",
+      "preferred_backend": "gemini",
+      "role": "defender",
+      "shared_key_set": "no"
+    },
+    {
+      "backend": "template",
+      "gemini_key_env": "GEMINI_REPORT_KEY",
+      "gemini_key_set": "no",
+      "groq_key_env": "GROQ_REPORT_KEY",
+      "groq_key_set": "yes",
+      "key_env": "GROQ_REPORT_KEY",
+      "key_set": "yes",
+      "model_env": "CHAOSARENA_REPORT_LLM_MODEL",
+      "preferred_backend": "groq",
+      "role": "report",
+      "shared_key_set": "no"
+    }
+  ],
+  "notes": [
+    "Key values are never recorded; only whether each role key is set."
+  ],
+  "version": "v1.2-deep-aiml"
+}

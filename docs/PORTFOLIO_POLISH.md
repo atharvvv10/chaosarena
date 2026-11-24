@@ -158,6 +158,9 @@ keeping the free/local constraint and every existing claim exact:
   searchable/filterable history, report copy/download buttons and a result toast.
 - Benchmark panels are explicitly labelled **offline** and **not a live battle**;
   only the timeline is described as the real recorded battle.
+- v1.2 adds `GET /ai/reasoning` and an **AI Reasoning** panel for the isolated live
+  Groq/Gemini/DQN advisory record. Only role names, latencies and rationales are
+  returned; no key values are exposed. See `docs/V12_LIVE_VALIDATION.md`.
 - Details and verification commands: `docs/DASHBOARD.md`.
 
 ## Cost check

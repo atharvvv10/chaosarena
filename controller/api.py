@@ -28,6 +28,10 @@ RL_BENCHMARK_FILE = Path("ml/rl_benchmark.json")
 DEFENDER_BENCHMARK_FILE = Path("ml/defender_benchmark.json")
 NO_DEFENDER_FILE = Path("ml/no_defender_baseline.json")
 BAD_RELEASE_FILE = Path("ml/bad_release_experiment.json")
+DEEP_LIVE_DIR = Path("ml/deep/live")
+AI_ADVISORIES_FILE = DEEP_LIVE_DIR / "advisories.json"
+AI_ANALYSIS_FILE = DEEP_LIVE_DIR / "defender_analysis.json"
+DEEP_SUMMARY_FILE = DEEP_LIVE_DIR / "summary.json"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -103,6 +107,78 @@ def evidence() -> dict:
         "defender_benchmark": _read_evidence(DEFENDER_BENCHMARK_FILE),
         "no_defender_baseline": _read_evidence(NO_DEFENDER_FILE),
         "bad_release_experiment": _read_evidence(BAD_RELEASE_FILE),
+    }
+
+
+def _view_llm_call(call: dict | None) -> dict:
+    """Expose only safe advisory fields; never echo client config or keys."""
+    if not isinstance(call, dict) or not call:
+        return {}
+    result = call.get("result")
+    if not isinstance(result, dict):
+        return {
+            "role": call.get("role"),
+            "ok": bool(call.get("ok")),
+            "latency_ms": call.get("latency_ms"),
+            "result": result,
+        }
+    view = {
+        "role": call.get("role"),
+        "ok": bool(call.get("ok")),
+        "latency_ms": call.get("latency_ms"),
+        "source": result.get("source"),
+    }
+    for key in (
+        "attack", "target", "duration", "rationale", "category",
+        "confidence", "recommended_action", "cached", "allowed",
+    ):
+        if key in result:
+            view[key] = result[key]
+    if call.get("last_error"):
+        view["last_error"] = call["last_error"]
+    return view
+
+
+@app.get("/ai/reasoning")
+def ai_reasoning() -> dict:
+    """Read the isolated v1.2 live-battle advisory evidence for the dashboard."""
+    advisories = _read_evidence(AI_ADVISORIES_FILE) or {}
+    analysis = _read_evidence(AI_ANALYSIS_FILE) or {}
+    summary = _read_evidence(DEEP_SUMMARY_FILE) or {}
+    calls = advisories.get("calls")
+    by_role = {
+        call.get("role"): call
+        for call in calls
+        if isinstance(call, dict) and call.get("role")
+    } if isinstance(calls, list) else {}
+
+    report = summary.get("report")
+    report = report if isinstance(report, dict) else {}
+    battle = {
+        "version": summary.get("version"),
+        "attack": summary.get("attack"),
+        "target": summary.get("target"),
+        "verdict": summary.get("verdict"),
+        "score": summary.get("score"),
+        "detected": summary.get("detected"),
+        "detection_seconds": summary.get("detection_seconds"),
+        "recovery_seconds": summary.get("recovery_seconds"),
+    }
+    return {
+        "available": bool(advisories or analysis or summary),
+        "note": advisories.get("note") or (
+            "Advisory only; the CLI allowlist and classical detector own the real loop."
+        ),
+        "battle": battle,
+        "attacker": _view_llm_call(by_role.get("attacker_strategist")),
+        "defender_preflight": _view_llm_call(by_role.get("defender_analyst")),
+        "dqn": _view_llm_call(by_role.get("dqn_attacker")),
+        "defender_post": _view_llm_call(analysis),
+        "report": {
+            "backend": report.get("backend"),
+            "chars": report.get("chars"),
+            "saved_to": report.get("saved_to"),
+        },
     }
 
 
