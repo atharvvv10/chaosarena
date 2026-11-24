@@ -81,6 +81,7 @@ flagged it as such. The recorded final battle uses the DQN's top-ranked idea,
 - Website: **AI Reasoning** section in the dashboard
 - API: `GET /ai/reasoning`
 - Files: `ml/deep/live/advisories.json`, `defender_analysis.json`, `incident_report.md`
+- Fresh media: `v12_demo.gif`, `v12_demo.mp4`, `v12_dashboard.png`, `v12_ai_reasoning.png`
 - Docs: [ARCHITECTURE_AIML.md](ARCHITECTURE_AIML.md)
 
 The API returns allowlisted fields only. No API key values are stored in the
@@ -97,5 +98,7 @@ python -m scripts.live_deep_battle `
 This requires the documented Kind lab and Prometheus port-forward. CI runs the
 cluster-free tests only and needs no keys.
 
-**Caveat:** this is one live battle, not a statistical study. The GIF/MP4 and
-Grafana PNG remain the original v1.1 captures; no media was overwritten.
+**Caveat:** this is one live battle, not a statistical study. The v1.2 GIF/MP4
+and PNGs are offline captures of the current UI made from committed evidence;
+they do not show a new live battle. The original v1.1 `demo.gif`, `demo.mp4`,
+`dashboard.png` and `grafana.png` remain byte-identical and were not overwritten.

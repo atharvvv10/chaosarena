@@ -64,7 +64,9 @@ allowlisted fields only:
 | `report` / `battle` | `summary.json` | Report backend and recorded verdict |
 
 It returns `available: false` when those files are missing. No keys, endpoints,
-headers or client configuration are exposed. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
+headers or client configuration are exposed. The panel appears in the fresh
+`v12_demo.gif`, `v12_demo.mp4`, `v12_dashboard.png` and `v12_ai_reasoning.png`
+captures. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
 
 ## Status semantics
 

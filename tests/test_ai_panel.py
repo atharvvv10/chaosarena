@@ -137,3 +137,36 @@ def test_live_battle_isolates_the_defender_action_log():
     assert "CHAOSARENA_ACTION_LOG" in actions
     assert "CHAOSARENA_ACTION_LOG" in runner
     assert "ml/defender_actions.jsonl" not in runner
+
+
+def test_v12_media_is_fresh_and_v11_media_is_preserved():
+    import hashlib
+
+    shots = ROOT / "docs" / "screenshots"
+    preserved_sha256 = {
+        "dashboard.png": "C910C172E9C04679BD4D260BA3C0DAA24800B1ADA4F57960CD7444447E624377",
+        "demo.gif": "B03FC56C7997C2F425FDC4E82236537E5A10005A435D4B5BD908C61A5A9DC289",
+        "demo.mp4": "25C690653038814EF17D3A9C605130A528E2F4BBB78ED87D2B1155E393F0E73C",
+        "grafana.png": "0A4705C102C950F4DF77BC14FAA4C7A2B37A432A6C6C05588D4DD222EB286502",
+    }
+    for name, expected in preserved_sha256.items():
+        digest = hashlib.sha256((shots / name).read_bytes()).hexdigest().upper()
+        assert digest == expected, f"v1.1 media changed: {name}"
+
+    for name in ("v12_dashboard.png", "v12_ai_reasoning.png", "v12_demo.gif", "v12_demo.mp4"):
+        path = shots / name
+        assert path.exists(), f"missing {path}"
+        assert path.stat().st_size > 10_000, f"asset looks empty: {path}"
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    for token in ("v12_demo.gif", "v12_demo.mp4", "v12_dashboard.png", "v12_ai_reasoning.png"):
+        assert token in readme
+
+    capture = (ROOT / "scripts" / "capture_v12_media.py").read_text(encoding="utf-8")
+    assert 'SHOTS / "v12_dashboard.png"' in capture
+    assert 'SHOTS / "v12_ai_reasoning.png"' in capture
+    assert 'SHOTS / "v12_demo.gif"' in capture
+    assert 'SHOTS / "v12_demo.mp4"' in capture
+    for old in ('SHOTS / "dashboard.png"', 'SHOTS / "demo.gif"', 'SHOTS / "demo.mp4"', 'SHOTS / "grafana.png"'):
+        assert old not in capture
+    assert "demo-media-v12" in (ROOT / "Makefile").read_text(encoding="utf-8")
