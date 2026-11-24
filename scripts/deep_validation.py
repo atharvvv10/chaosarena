@@ -1,49 +1,28 @@
 """Offline validation of the v1.2 AIML upgrade.
 
-Compares the DQN attacker with the tabular Q-learning attacker and the LSTM
-defender with the Isolation Forest. Writes only to ``ml/deep/`` so the frozen
-v1.1 evidence is never modified. No cluster and no API key are needed.
+Compares the DQN attacker with the tabular Q-learning attacker and scores the
+LSTM defender, shipped Defender, 3-sigma rule and Isolation Forest on the same
+seeded holdout. Writes only to ``ml/deep/`` so the frozen v1.1 evidence is never
+modified. No cluster and no API key are needed.
 """
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 
+from defender.benchmark import RULE_Z
 from defender.collect import load_baseline
-from defender.model import Detector
+from defender.model import Detector, baseline_stats
 from defender.neural import NeuralDetector
 from rl.agent import QLearningAgent
 from rl.arena import ACTION_SPACE
 from rl.dqn_agent import DQNAgent
 from rl.deep_arena import DeepSimArena
 from rl.features import encode
-
-
-def exact_sign_test(positive: int, negative: int) -> dict[str, Any]:
-    """Two-sided exact binomial sign test; ties are excluded from n."""
-    total = positive + negative
-    if total == 0:
-        return {"positive": positive, "negative": negative, "n": 0, "two_sided_p": None}
-    successes = min(positive, negative)
-    tail = sum(_comb(total, i) for i in range(successes + 1))
-    p_value = min(1.0, 2 * float(tail) / (2**total))
-    return {
-        "positive": positive,
-        "negative": negative,
-        "n": total,
-        "two_sided_p": round(p_value, 9),
-    }
-
-
-def _comb(n: int, k: int) -> int:
-    result = 1
-    for i in range(1, min(k, n - k) + 1):
-        result = result * (n - i + 1) // i
-    return result
 
 
 def compare_attackers(
@@ -97,10 +76,17 @@ def compare_attackers(
             "mean_reward": round(float(np.mean(tabular_rewards)), 6),
             "mean_final_score": round(float(np.mean(tabular_scores)), 3),
         },
-        "sign_test_deep_better": exact_sign_test(wins, losses),
+        "seeded_simulator_wins": {
+            "deep_better": wins,
+            "tabular_better": losses,
+            "episodes": episodes,
+        },
         "note": (
             "Both policies see the same seeded RNG stream per episode, but choose "
-            "different actions, so the pairing is approximate rather than exact."
+            "different actions, so the pairing is approximate rather than exact. "
+            "This is a seeded simulator outcome, not an independent statistical "
+            "trial: the simulator reward makes repeated attacks easier to detect, "
+            "which the vector-state DQN can exploit while the tabular state cannot."
         ),
     }
 
@@ -113,6 +99,7 @@ def compare_defenders(
     split = max(5, len(rows) // 4)
     train_rows, calibration_rows = rows[:-split], rows[-split:]
     classical = Detector.train(train_rows)
+    mean, std = baseline_stats(train_rows)
     neural = NeuralDetector(seed=seed)
     neural.train(train_rows, epochs=epochs)
     neural.calibrate(calibration_rows, quantile=0.99, margin=0.1)
@@ -125,6 +112,18 @@ def compare_defenders(
     anomaly_scores: list[float] = []
     classical_normal: list[float] = []
     classical_anomaly: list[float] = []
+    forest_normal: list[float] = []
+    forest_anomaly: list[float] = []
+    rule_normal: list[float] = []
+    rule_anomaly: list[float] = []
+
+    def forest_only_score(vector: Sequence[float]) -> float:
+        row = np.asarray(vector, dtype=float).reshape(1, -1)
+        return float(-classical.forest.score_samples(row)[0])
+
+    def rule_score(vector: Sequence[float]) -> float:
+        z = np.abs((np.asarray(vector, dtype=float) - mean) / std)
+        return float(np.max(z))
 
     for anomalous in (False, True):
         for _ in range(samples):
@@ -140,35 +139,58 @@ def compare_defenders(
             for vector in vectors:
                 neural_score = neural.score(vector)
             classical_score = max(classical.score(vector) for vector in vectors)
+            forest_score = max(forest_only_score(vector) for vector in vectors)
+            rule_z = max(rule_score(vector) for vector in vectors)
             if anomalous:
                 anomaly_scores.append(neural_score)
                 classical_anomaly.append(classical_score)
+                forest_anomaly.append(forest_score)
+                rule_anomaly.append(rule_z)
             else:
                 normal_scores.append(neural_score)
                 classical_normal.append(classical_score)
+                forest_normal.append(forest_score)
+                rule_normal.append(rule_z)
 
     neural_threshold = neural.threshold
     classical_threshold = classical.threshold
+    forest_threshold = classical_threshold
+    rule_threshold = RULE_Z
     return {
         "samples_per_class": samples,
         "seed": seed,
         "neural": {
-            "threshold": neural_threshold,
+            "threshold": round(float(neural_threshold), 6),
             "false_alarms": sum(s > neural_threshold for s in normal_scores),
             "detections": sum(s > neural_threshold for s in anomaly_scores),
             "mean_normal_score": round(float(np.mean(normal_scores)), 6),
             "mean_anomaly_score": round(float(np.mean(anomaly_scores)), 6),
         },
-        "isolation_forest": {
+        "defender_shipped": {
             "threshold": round(float(classical_threshold), 6),
             "false_alarms": sum(s > classical_threshold for s in classical_normal),
             "detections": sum(s > classical_threshold for s in classical_anomaly),
             "mean_normal_score": round(float(np.mean(classical_normal)), 6),
             "mean_anomaly_score": round(float(np.mean(classical_anomaly)), 6),
         },
+        "rule_based_3sigma": {
+            "threshold": rule_threshold,
+            "false_alarms": sum(s > rule_threshold for s in rule_normal),
+            "detections": sum(s > rule_threshold for s in rule_anomaly),
+            "mean_normal_score": round(float(np.mean(rule_normal)), 6),
+            "mean_anomaly_score": round(float(np.mean(rule_anomaly)), 6),
+        },
+        "isolation_forest": {
+            "threshold": round(float(forest_threshold), 6),
+            "false_alarms": sum(s > forest_threshold for s in forest_normal),
+            "detections": sum(s > forest_threshold for s in forest_anomaly),
+            "mean_normal_score": round(float(np.mean(forest_normal)), 6),
+            "mean_anomaly_score": round(float(np.mean(forest_anomaly)), 6),
+        },
         "note": (
             "Holdout samples are seeded perturbations of the committed baseline; "
-            "they are synthetic and are not v1.1 experimental evidence."
+            "they are synthetic and are not v1.1 experimental evidence. All four "
+            "detectors score the same 30 normal and 30 anomalous windows."
         ),
     }
 

@@ -88,9 +88,13 @@ nothing is mutated.
 - GitHub repo now has a one-line description and topics: `kubernetes`,
   `chaos-engineering`, `devops`, `machine-learning`, `chaos-mesh`,
   `reinforcement-learning`, `fastapi`, `react`.
-- Secret audit: **clean across all commits**. The only matches are documentation
-  placeholders (`gsk_your_free_key_here`) and test fakes (`free-key`, `unused`,
-  `secret`).
+- Secret audit: **clean across all commits, refs and reflog** (56 commits
+  scanned at audit time). The requested
+  `git log --all -p -S"gsk_"` and `git log --all -p -S"AIza"` checks found only
+  documentation placeholders and test fakes (`free-key`, `unused`, `secret`).
+  Strict scans for Groq `gsk_[A-Za-z0-9]{20,}` and Gemini
+  `AIza[0-9A-Za-z_-]{20,}` found **0 real key values**, so no extra rotation is
+  needed from repository history.
 - Headline real battle (`ml/last_battle.json`): `network-latency` on
   `payment-service`, **detected in 13.3 s**, diagnosed
   `latency_spike` on `order-service`, restart requested, **recovered in 76.2 s**, **100/A/PROMOTE** at

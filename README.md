@@ -55,8 +55,8 @@ Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VA
 | RL attacker | Learned policy does **more damage than random**: **1.77×** (resilience **70.0** vs **83.1**) in the seeded simulator |
 | Detector comparison | Plain Isolation Forest **0% recall**; full Defender **76% recall at 0% false positives** — [details](#detector-comparison) |
 | v1.1 validation | **10 paired live trials, 0/30 false alarms on held-out data**; primary sign test p = 0.109 (not conclusive) — [report](docs/EXPERIMENTAL_VALIDATION.md) |
-| v1.2 AIML validation | DQN beat tabular in **30/30** seeded episodes (exact sign test p ≈ 2e-09); LSTM detected **30/30** seeded spikes with **3/30** false alarms — [architecture](docs/ARCHITECTURE_AIML.md) |
-| v1.2 live lab battle | `pod-kill@order-service` detected in **15.8 s**, score **100/A/PROMOTE**, cleanup ok, 0 chaos objects left — [evidence](docs/V12_LIVE_VALIDATION.md) |
+| v1.2 AIML validation | DQN beat tabular in **30/30 seeded simulator episodes** (no p-value; simulator reward favours it); LSTM detected **30/30** seeded spikes but had **3/30** false alarms versus **0/30** for the shipped Defender — [architecture](docs/ARCHITECTURE_AIML.md) |
+| v1.2 live lab battle | First `network-latency` attempt was a **false negative**; final `pod-kill@order-service` detected in **15.8 s**, score **100/A/PROMOTE**, cleanup ok — [evidence](docs/V12_LIVE_VALIDATION.md) |
 | AI reasoning | Groq attack idea + incident report, Gemini defence analysis, visible in the dashboard **AI Reasoning** panel; no key values stored |
 | CI | Free `ubuntu-latest` Actions, latest push green, no cluster, no secrets required |
 | Cost | **$0** — local Kind, free React/Vite, free Actions tier, offline reporter by default |
@@ -122,6 +122,9 @@ gate, where a false alarm blocks a good build.
 - The attacker is **tabular Q-learning, not PPO**. The baseline is 40 samples and the detector benchmark is in-sample and synthetic. [Build notes](docs/BUILD_NOTES.md).
 - Diagnosis is symptomatic: the headline fault hit `payment-service`, but `order-service` was restarted.
 - The Defender did **not** improve recovery in the headline network-latency control: **76.2 s** with a requested restart versus **50.8 s** without one. [Control run](docs/RESULTS.md#no-defender-control-run).
+- The v1.2 `pod-kill` fault self-heals, so the recorded **53.1 s** recovery does not prove the Defender caused it. The first v1.2 `network-latency` attempt was also a false negative. [Live record](docs/V12_LIVE_VALIDATION.md).
+- After Docker/Kind restarted, the frozen v1.1 detector scored calm traffic as anomalous (`1.1144 > 0.7397`). v1.2 used an isolated baseline; detector drift after an environment restart is **not proven solved**. [Live record](docs/V12_LIVE_VALIDATION.md).
+- The experimental LSTM detected all seeded spikes but raised **3/30** false alarms versus **0/30** for the shipped Defender. It is advisory only, not a validated replacement for the gate detector. [Architecture](docs/ARCHITECTURE_AIML.md).
 - In v1.1 all observe-only trials also recovered. The tight ~124 s cluster in the enabled group may reflect a **measurement floor**, and that run did not record which pod was stressed or whether the restart replaced it.
 - The release gate is not a hard must-detect gate. In experimental trial 07, the detector missed the fault, yet the release received PROMOTE because the score met the configured threshold.
 - **100/A** is not a speed claim; `recovery_seconds` includes observation lag and the gate does not penalise slow recovery.
