@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 from .incident import load_latest
-from .llm import GROQ_MODEL, GROQ_URL
+from .llm import GEMINI_MODEL, GROQ_MODEL, GROQ_URL, GEMINI_URL
 from .prompt import build_prompt
-from .role_clients import client_for, key_env
+from .role_clients import ROLES, client_for, gemini_key_env, groq_key_env, key_env
 from .report import IncidentReporter
 from .sections import REQUIRED_SECTIONS
 
@@ -31,8 +31,8 @@ def _parser() -> argparse.ArgumentParser:
     report = sub.add_parser("report", help="write a Markdown incident report")
     report.add_argument(
         "--backend",
-        choices=["template", "groq", "openai"],
-        help="override the default (groq uses its free tier)",
+        choices=["template", "groq", "gemini", "openai"],
+        help="override the default (groq and gemini use their free tiers)",
     )
     report.add_argument("--out", default="ml/incident_report.md")
     return parser
@@ -52,12 +52,19 @@ def main(argv: list[str] | None = None) -> int:
             "sections": list(REQUIRED_SECTIONS),
             "evidence_file": args.evidence,
             "network_used_by_default": False,
-            "free_llm_backend": "groq",
+            "role_keys": {role: key_env(role) for role in ROLES},
+            "free_llm_backends": ["groq", "gemini"],
             "groq_endpoint": GROQ_URL,
             "groq_model": GROQ_MODEL,
             "groq_key_required": (
-                f"{key_env('report')} (free from console.groq.com/keys; "
+                f"{groq_key_env('report')} (free from console.groq.com/keys; "
                 "GROQ_API_KEY is the shared fallback)"
+            ),
+            "gemini_endpoint": GEMINI_URL.format(model=GEMINI_MODEL),
+            "gemini_model": GEMINI_MODEL,
+            "gemini_key_required": (
+                f"{gemini_key_env('defender')} (free from aistudio.google.com/apikey; "
+                "GEMINI_API_KEY is the shared fallback)"
             ),
             "paid_backend": "openai (never used by this project)",
             "rules": ["facts only", "no invented numbers", "validated sections"],

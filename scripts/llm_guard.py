@@ -10,9 +10,9 @@ def main() -> int:
     print(json.dumps({
         "roles": [role_config(role) for role in ROLES],
         "notes": [
-            "Each role prefers its own GROQ_<ROLE>_KEY.",
-            "GROQ_API_KEY is the shared fallback when a role key is absent.",
-            "Default backend is template (offline) for every role.",
+            "Live map: attacker=GROQ_ATTACKER_KEY, defender=GEMINI_DEFENDER_KEY, report=GROQ_REPORT_KEY.",
+            "GROQ_API_KEY and GEMINI_API_KEY are shared fallbacks per provider.",
+            "Default backend stays template (offline); the live check uses the preferred backend.",
         ],
     }, indent=2))
     return 0

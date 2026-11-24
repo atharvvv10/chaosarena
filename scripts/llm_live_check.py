@@ -1,7 +1,7 @@
 """Exercise all three LLM roles live and record impact without storing keys.
 
 Run after creating a gitignored .env with GROQ_ATTACKER_KEY,
-GROQ_DEFENDER_KEY and GROQ_REPORT_KEY. Missing keys fall back to the offline
+GEMINI_DEFENDER_KEY and GROQ_REPORT_KEY. Missing keys fall back to the offline
 template backend, so this script is always safe to run.
 """
 from __future__ import annotations
@@ -13,11 +13,11 @@ from pathlib import Path
 from typing import Any, Callable
 
 from attacker.strategist import GroqStrategist, TemplateStrategist
-from defender.analyst import GroqAnalyst, TemplateAnalyst
+from defender.analyst import LLMAnalyst, TemplateAnalyst
 from reporter.env_loader import load_env
 from reporter.incident import load_latest
 from reporter.report import IncidentReporter
-from reporter.role_clients import ROLES, client_for, role_config
+from reporter.role_clients import ROLES, client_for, key_env, preferred_backend, role_config
 
 OBSERVATION = {
     "score": 65,
@@ -51,9 +51,11 @@ def _timed(name: str, call: Callable[[], Any]) -> dict[str, Any]:
         }
 
 
-def _groq_or_template(role: str) -> tuple[Any, str]:
+def _role_client_or_template(role: str) -> tuple[Any, str]:
+    """Use the role's planned provider, or fall back offline if it is unconfigured."""
+    backend = preferred_backend(role)
     try:
-        return client_for(role, backend="groq"), "groq"
+        return client_for(role, backend=backend), backend
     except Exception:  # noqa: BLE001 - missing key or config means offline
         return None, "template"
 
@@ -68,24 +70,24 @@ def main(argv: list[str] | None = None) -> int:
     load_env()
     calls: list[dict[str, Any]] = []
 
-    attacker_client, attacker_backend = _groq_or_template("attacker")
+    attacker_client, attacker_backend = _role_client_or_template("attacker")
     strategist = (
         GroqStrategist(client=attacker_client)
-        if attacker_backend == "groq"
+        if attacker_backend != "template"
         else TemplateStrategist()
     )
     calls.append(_timed("attacker", lambda: strategist.propose(OBSERVATION)))
     calls.append(_timed("attacker_cached", lambda: strategist.propose(OBSERVATION)))
 
-    defender_client, defender_backend = _groq_or_template("defender")
+    defender_client, defender_backend = _role_client_or_template("defender")
     analyst = (
-        GroqAnalyst(client=defender_client)
-        if defender_backend == "groq"
+        LLMAnalyst(client=defender_client)
+        if defender_backend != "template"
         else TemplateAnalyst()
     )
     calls.append(_timed("defender", lambda: analyst.analyse(FACTS)))
 
-    report_client, report_backend = _groq_or_template("report")
+    report_client, report_backend = _role_client_or_template("report")
 
     def make_report() -> Any:
         incident = load_latest(args.evidence)
@@ -103,14 +105,17 @@ def main(argv: list[str] | None = None) -> int:
             },
         })()
 
-    if report_backend == "groq":
+    if report_backend != "template":
         calls.append(_timed("report", make_report))
     else:
         calls.append({
             "role": "report",
             "ok": True,
             "latency_ms": 0.0,
-            "result": {"backend": "template", "skipped": "no GROQ_REPORT_KEY"},
+            "result": {
+                "backend": "template",
+                "skipped": f"no {key_env('report')}",
+            },
         })
 
     payload = {

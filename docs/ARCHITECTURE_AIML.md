@@ -9,23 +9,27 @@
 |---|---|---|---|
 | Attacker | **DQN** — MLP 10→64→64→7, replay buffer, target network | `rl/dqn_agent.py`, `rl/deep_arena.py`, `rl/features.py` | `ml/deep/dqn.pt` |
 | Defender | **LSTM autoencoder** over 18-feature windows, reconstruction error | `defender/neural.py`, `defender/neural_cli.py` | `ml/deep/defender_lstm.pt` |
-| Reasoning | Three role-scoped LLM clients (Groq by default, offline template fallback) | `reporter/role_clients.py`, `attacker/strategist.py`, `defender/analyst.py`, `reporter/cli.py` | none |
+| Reasoning | Mixed free-tier LLMs: attacker Groq, defender Gemini, report Groq; offline template fallback | `reporter/role_clients.py`, `attacker/strategist.py`, `defender/analyst.py`, `reporter/cli.py` | none |
 
-## Why three keys
+## Why three keys across two providers
 
-Each reasoning role owns its own Groq key so one role's traffic cannot exhaust
-another's quota:
+Each reasoning role owns its own key so one role's traffic cannot exhaust
+another's quota. The live map is:
 
-```powershell
-$env:GROQ_ATTACKER_KEY = 'gsk_attacker'
-$env:GROQ_DEFENDER_KEY = 'gsk_defender'
-$env:GROQ_REPORT_KEY   = 'gsk_report'
-```
+| Role | Provider | Key variable | Default model |
+|---|---|---|---|
+| Attacker strategist | Groq | `GROQ_ATTACKER_KEY` | `openai/gpt-oss-20b` |
+| Defender analyst | Gemini | `GEMINI_DEFENDER_KEY` | `gemini-3.5-flash-lite` |
+| Report writer | Groq | `GROQ_REPORT_KEY` | `openai/gpt-oss-20b` |
 
-`GROQ_API_KEY` remains a shared fallback. Keys can also live in a gitignored
-`.env` at the repo root (real shell variables take precedence). Backends default
-to the offline `template` client, so CI and tests never need a key. Inspect the
-config without revealing values:
+Copy `.env.example` to a gitignored `.env` and replace the placeholders with
+**freshly rotated** keys. Never paste real keys in chat or commit them. Real
+shell variables take precedence over `.env`.
+
+`GROQ_API_KEY` and `GEMINI_API_KEY` remain shared per-provider fallbacks.
+Backends default to the offline `template` client, so CI and tests never need a
+key. The live check uses each role's preferred backend automatically. Inspect
+the config without revealing values:
 
 ```bash
 python -m scripts.llm_guard
@@ -47,7 +51,7 @@ python -m scripts.deep_validation --episodes 30 --samples 30
 
 # LLM-assisted reasoning (set the matching key first)
 python -m attacker.strategist --backend groq --observation '{"score":65}'
-python -m defender.analyst --backend groq --facts '{"top_features":["payment-service_p95_latency"]}'
+python -m defender.analyst --backend gemini --facts '{"top_features":["payment-service_p95_latency"]}'
 python -m reporter.cli --evidence ml/last_battle.json report --backend groq --out ml/deep/incident_report_groq.md
 ```
 

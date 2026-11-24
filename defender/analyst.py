@@ -1,7 +1,8 @@
 """LLM defender analyst: explains an anomaly and recommends a remediation.
 
-Uses the defender's *own* Groq key so its traffic is isolated from the attacker
-strategist and the report writer. Falls back to a deterministic explanation.
+Uses the defender's *own* Gemini key so its traffic is isolated from the
+attacker strategist and the report writer. Falls back to a deterministic
+explanation on any error or rate limit.
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import Any, Protocol
 
-from reporter.llm import GroqLLM, LLMError
+from reporter.llm import GeminiLLM, GroqLLM, LLMError
 from reporter.role_clients import client_for
 
 
@@ -75,10 +76,10 @@ def _extract_json(text: str) -> dict[str, Any]:
     return payload
 
 
-class GroqAnalyst:
-    """Role-scoped Groq analyst with caching, retries and safe fallback."""
+class LLMAnalyst:
+    """Role-scoped LLM analyst with caching, retries and safe fallback."""
 
-    source = "groq"
+    source = "llm"
 
     def __init__(
         self,
@@ -87,7 +88,8 @@ class GroqAnalyst:
         cache_size: int = 128,
         max_retries: int = 2,
     ) -> None:
-        self.client = client or client_for("defender", backend="groq")
+        self.client = client or client_for("defender", backend="gemini")
+        self.source = getattr(self.client, "name", self.source)
         self.fallback = fallback or TemplateAnalyst()
         self.cache: dict[str, Analysis] = {}
         self.cache_size = cache_size
@@ -130,16 +132,22 @@ class GroqAnalyst:
         return self.fallback.analyse(facts)
 
 
+# Backwards-compatible name used by the v1.2 tests and earlier drafts.
+GroqAnalyst = LLMAnalyst
+
+
 def default_analyst(backend: str | None = None) -> Analyst:
     client = client_for("defender", backend=backend)
-    if isinstance(client, GroqLLM):
-        return GroqAnalyst(client=client)
+    if isinstance(client, (GroqLLM, GeminiLLM)):
+        return LLMAnalyst(client=client)
     return TemplateAnalyst()
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m defender.analyst")
-    parser.add_argument("--backend", choices=["template", "groq", "openai"], default=None)
+    parser.add_argument(
+        "--backend", choices=["template", "gemini", "groq", "openai"], default=None
+    )
     parser.add_argument("--facts", default="{}", help="JSON facts object")
     return parser
 
