@@ -93,7 +93,10 @@ jobs:
         run: python -m scripts.llm_guard
 
       - name: Run deep AIML tests
-        run: python -m pytest -q tests/test_dqn.py tests/test_neural.py tests/test_strategist.py tests/test_deep_validation.py
+        run: python -m pytest -q tests/test_dqn.py tests/test_neural.py tests/test_strategist.py tests/test_deep_validation.py tests/test_env_loader.py
+
+      - name: Offline LLM role check
+        run: python -m scripts.llm_live_check --out /tmp/chaosarena-llm-live.json
 
       - name: Smoke train DQN and neural defender
         run: |

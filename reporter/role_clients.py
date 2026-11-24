@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from typing import Literal
 
+from .env_loader import load_env
 from .llm import (
     GROQ_MODEL,
     LLMClient,
@@ -17,6 +18,9 @@ from .llm import (
     TemplateLLM,
     GroqLLM,
 )
+
+# Local .env is gitignored; real env vars take precedence.
+load_env()
 
 Role = Literal["attacker", "defender", "report"]
 ROLES: tuple[Role, ...] = ("attacker", "defender", "report")

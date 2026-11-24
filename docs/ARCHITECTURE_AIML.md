@@ -22,13 +22,18 @@ $env:GROQ_DEFENDER_KEY = 'gsk_defender'
 $env:GROQ_REPORT_KEY   = 'gsk_report'
 ```
 
-`GROQ_API_KEY` remains a shared fallback. Backends default to the offline
-`template` client, so CI and tests never need a key. Inspect the config without
-revealing values:
+`GROQ_API_KEY` remains a shared fallback. Keys can also live in a gitignored
+`.env` at the repo root (real shell variables take precedence). Backends default
+to the offline `template` client, so CI and tests never need a key. Inspect the
+config without revealing values:
 
 ```bash
 python -m scripts.llm_guard
+python -m scripts.llm_live_check
 ```
+
+`llm_live_check` calls all three roles, records latencies/cache hits to
+`ml/deep/llm_live_check.json`, and **never writes key values**.
 
 ## Commands
 
