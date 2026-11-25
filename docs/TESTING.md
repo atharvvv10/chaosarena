@@ -9,7 +9,7 @@ make verify
 
 This runs `python scripts/verify_all.py`: every pytest suite, all four safety
 guards, the CI gate fixture checks, and the React production build. It needs no
-cluster, no internet and no secret.
+cluster, no internet and no secret. The current suite is **169 tests**.
 
 To run it without `make`:
 
@@ -30,6 +30,7 @@ To run it without `make`:
 | `pytest -q tests/test_phase7.py` | Dashboard API, CORS, free packages, panels |
 | `pytest -q tests/test_phase8.py` | RL safety, Q-learning, sim/real paths |
 | `pytest -q tests/test_phase9.py` | Final docs, RL policy API, polish, no-paid scan |
+| `pytest -q tests/test_ai_panel.py` | AI reasoning endpoint, AI battle checkbox, fresh runtime notes, no-key/no-torch fallback, v1.1 media guards |
 
 ## Cluster-dependent checks (manual)
 

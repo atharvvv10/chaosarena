@@ -47,7 +47,7 @@ Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VA
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **165 passing**: phase suites, AIML suites, live-evidence, media and regression checks (`make verify`) |
+| Automated tests | **169 passing**: phase suites, AIML suites, live-evidence, AI battle/fresh-notes, media and regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, cleanup verified in recorded runs; 0 residual chaos objects |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
