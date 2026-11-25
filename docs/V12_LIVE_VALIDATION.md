@@ -84,7 +84,10 @@ flagged it as such. The recorded final battle uses the DQN's top-ranked idea,
 - Docs: [ARCHITECTURE_AIML.md](ARCHITECTURE_AIML.md)
 
 The API returns allowlisted fields only. No API key values are stored in the
-repository, evidence files, reports, charts or UI.
+repository, evidence files, reports, charts or UI. A dashboard battle with the
+**AI battle** checkbox enabled writes fresh advisory notes to
+`ml/deep/live/runtime/`; `GET /ai/reasoning` prefers those notes while leaving
+this committed validation record untouched.
 
 ## Reproduce
 

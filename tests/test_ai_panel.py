@@ -3,10 +3,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
 from controller import api
+from controller.score import BattleResult
+from reporter.llm import LLMError
 
 ROOT = Path(__file__).resolve().parents[1]
 DASHBOARD = ROOT / "dashboard" / "src"
@@ -15,6 +18,23 @@ KEY_PATTERN = r"gsk_[A-Za-z0-9]+|AQ\.Ab[A-Za-z0-9_.-]+"
 
 def _write(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _battle_result() -> BattleResult:
+    return BattleResult(
+        attack="network-latency",
+        target="payment-service",
+        version="v9.9.9",
+        detected=True,
+        detection_seconds=9.5,
+        recovered=True,
+        final_score=0.56,
+        defender_threshold=0.74,
+        cleanup_ok=True,
+        chaos_objects_remaining=0,
+        diagnosis={"category": "latency_spike", "service": "payment-service"},
+        action_taken={"action": "restart", "service": "payment-service"},
+    )
 
 
 def test_ai_reasoning_endpoint_exposes_safe_role_evidence(tmp_path, monkeypatch):
@@ -56,6 +76,7 @@ def test_ai_reasoning_endpoint_exposes_safe_role_evidence(tmp_path, monkeypatch)
         "detection_seconds": 15.8, "recovery_seconds": 53.1,
         "report": {"backend": "groq", "chars": 1302, "saved_to": "ml/deep/live/incident_report.md"},
     })
+    monkeypatch.setattr(api, "AI_RUNTIME_DIR", tmp_path / "empty-runtime")
     monkeypatch.setattr(api, "AI_ADVISORIES_FILE", advisories)
     monkeypatch.setattr(api, "AI_ANALYSIS_FILE", analysis)
     monkeypatch.setattr(api, "DEEP_SUMMARY_FILE", summary)
@@ -65,6 +86,7 @@ def test_ai_reasoning_endpoint_exposes_safe_role_evidence(tmp_path, monkeypatch)
     assert response.status_code == 200
     payload = response.json()
     assert payload["available"] is True
+    assert payload["source"] == "saved-validation"
     assert payload["attacker"]["source"] == "groq"
     assert payload["attacker"]["attack"] == "pod-kill"
     assert payload["defender_preflight"]["source"] == "gemini"
@@ -78,6 +100,7 @@ def test_ai_reasoning_endpoint_exposes_safe_role_evidence(tmp_path, monkeypatch)
 
 
 def test_ai_reasoning_endpoint_handles_missing_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "AI_RUNTIME_DIR", tmp_path / "empty-runtime")
     monkeypatch.setattr(api, "AI_ADVISORIES_FILE", tmp_path / "missing.json")
     monkeypatch.setattr(api, "AI_ANALYSIS_FILE", tmp_path / "missing2.json")
     monkeypatch.setattr(api, "DEEP_SUMMARY_FILE", tmp_path / "missing3.json")
@@ -90,6 +113,143 @@ def test_ai_reasoning_endpoint_handles_missing_files(tmp_path, monkeypatch):
     assert payload["attacker"] == {}
     assert payload["defender_post"] == {}
     assert payload["battle"]["verdict"] is None
+
+
+def test_ai_reasoning_endpoint_prefers_fresh_runtime_notes(tmp_path, monkeypatch):
+    runtime = tmp_path / "runtime"
+    runtime.mkdir()
+    _write(runtime / "advisories.json", {
+        "note": "Fresh advisory only.",
+        "generated_at": "2026-11-25T10:00:00+00:00",
+        "calls": [
+            {
+                "role": "attacker_strategist", "ok": True, "latency_ms": 11.0,
+                "result": {"source": "groq", "attack": "pod-kill", "target": "order-service"},
+            },
+        ],
+    })
+    _write(runtime / "defender_analysis.json", {
+        "role": "defender_post_analysis", "ok": True, "latency_ms": 22.0,
+        "result": {"source": "gemini", "category": "fresh-finding"},
+    })
+    _write(runtime / "summary.json", {
+        "version": "fresh-candidate", "attack": "pod-kill", "target": "order-service",
+        "verdict": "BLOCK", "score": 65, "generated_at": "2026-11-25T10:00:00+00:00",
+        "report": {"backend": "groq", "chars": 99},
+    })
+    monkeypatch.setattr(api, "AI_RUNTIME_DIR", runtime)
+    monkeypatch.setattr(api, "AI_ADVISORIES_FILE", tmp_path / "missing-advisories.json")
+    monkeypatch.setattr(api, "AI_ANALYSIS_FILE", tmp_path / "missing-analysis.json")
+    monkeypatch.setattr(api, "DEEP_SUMMARY_FILE", tmp_path / "missing-summary.json")
+
+    payload = TestClient(api.app).get("/ai/reasoning").json()
+
+    assert payload["available"] is True
+    assert payload["source"] == "fresh-battle"
+    assert payload["generated_at"] == "2026-11-25T10:00:00+00:00"
+    assert payload["attacker"]["attack"] == "pod-kill"
+    assert payload["defender_post"]["category"] == "fresh-finding"
+
+
+def test_evaluate_generates_fresh_ai_notes_when_enabled(tmp_path, monkeypatch):
+    import scripts.ai_notes as ai_notes
+
+    result = _battle_result()
+    monkeypatch.setattr(api, "REPORT_FILE", tmp_path / "incident_report.md")
+    monkeypatch.setattr(api, "AI_RUNTIME_DIR", tmp_path / "runtime")
+    monkeypatch.setattr(
+        api,
+        "BattleRunner",
+        lambda **kwargs: SimpleNamespace(run=lambda **run_kwargs: result),
+    )
+    monkeypatch.setattr(api, "record_decision", lambda decision: None)
+    monkeypatch.setattr(api, "record_battle", lambda payload: None)
+    calls: list[tuple[dict, Path]] = []
+
+    def fake_notes(payload: dict, out: Path) -> dict:
+        calls.append((payload, out))
+        return {"available": True, "source": "fresh-battle"}
+
+    monkeypatch.setattr(ai_notes, "generate_battle_ai_notes", fake_notes)
+
+    response = TestClient(api.app).post(
+        "/gate/evaluate",
+        json={"attack": "network-latency", "version": "v9.9.9", "ai_enabled": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["ai"]["source"] == "fresh-battle"
+    assert len(calls) == 1
+    assert calls[0][1] == tmp_path / "runtime"
+
+
+def test_generate_battle_ai_notes_works_offline_without_keys(tmp_path, monkeypatch):
+    import scripts.ai_notes as ai_notes
+
+    result = _battle_result()
+    payload = {
+        "battle": result.as_dict(),
+        "score": {"score": 100, "grade": "A", "deductions": []},
+        "decision": {
+            "version": "v9.9.9", "attack": "network-latency",
+            "target": "payment-service", "verdict": "PROMOTE", "score": 100,
+            "reasons": [],
+        },
+    }
+
+    def no_client(*args, **kwargs):  # noqa: ARG001 - simulates missing keys
+        raise LLMError("no key configured")
+
+    monkeypatch.setattr(ai_notes, "client_for", no_client)
+    monkeypatch.setattr(
+        ai_notes,
+        "_dqn_rank",
+        lambda: [{"action": "network-latency@payment-service", "q": 1.0}],
+    )
+
+    info = ai_notes.generate_battle_ai_notes(payload, tmp_path / "runtime")
+
+    assert info["source"] == "fresh-battle"
+    advisories = json.loads((tmp_path / "runtime" / "advisories.json").read_text(encoding="utf-8"))
+    assert [call["role"] for call in advisories["calls"]] == [
+        "attacker_strategist", "defender_analyst", "dqn_attacker"
+    ]
+    assert all(call["ok"] for call in advisories["calls"])
+    assert advisories["calls"][0]["result"]["source"] == "template"
+    assert advisories["calls"][1]["result"]["source"] == "template"
+    summary_text = (tmp_path / "runtime" / "summary.json").read_text(encoding="utf-8")
+    assert '"backend": "template"' in summary_text
+    assert "gsk_" not in summary_text
+    assert "AIza" not in summary_text
+
+
+def test_generate_battle_ai_notes_survives_missing_torch(tmp_path, monkeypatch):
+    import scripts.ai_notes as ai_notes
+
+    result = _battle_result()
+    payload = {
+        "battle": result.as_dict(),
+        "score": {"score": 100, "grade": "A", "deductions": []},
+        "decision": {"verdict": "PROMOTE", "score": 100, "reasons": []},
+    }
+
+    def no_client(*args, **kwargs):  # noqa: ARG001 - simulates missing keys
+        raise LLMError("no key configured")
+
+    def missing_dqn():
+        raise ImportError("No module named 'torch'")
+
+    monkeypatch.setattr(ai_notes, "client_for", no_client)
+    monkeypatch.setattr(ai_notes, "_dqn_rank", missing_dqn)
+
+    info = ai_notes.generate_battle_ai_notes(payload, tmp_path / "runtime")
+
+    assert info["source"] == "fresh-battle"
+    advisories = json.loads((tmp_path / "runtime" / "advisories.json").read_text(encoding="utf-8"))
+    assert advisories["calls"][0]["ok"] is True
+    assert advisories["calls"][1]["ok"] is True
+    assert advisories["calls"][2]["ok"] is False
+    assert "torch" in advisories["calls"][2]["last_error"]
 
 
 def test_frontend_has_ai_reasoning_panel():
@@ -107,6 +267,13 @@ def test_frontend_has_ai_reasoning_panel():
     assert "const SECTION_IDS=['overview','battle','evidence','aireasoning','history']" in app
     assert "SECTION_IDS[i]" in app
     assert "setInterval(()=>{if(!document.hidden)refresh(true)},15000)" in app
+    assert "AI battle" in app
+    assert 'id="aiEnabled"' in app
+    assert "ai_enabled:aiEnabled" in app
+    assert "Fresh AI notes loaded." in app
+    assert "FRESH BATTLE NOTES" in app
+    assert "Defender note" in app
+    assert ".aiflag" in css
 
 
 def test_committed_live_battle_evidence_is_green_and_key_free():
@@ -141,6 +308,7 @@ def test_live_battle_isolates_the_defender_action_log():
     assert "CHAOSARENA_ACTION_LOG" in actions
     assert "CHAOSARENA_ACTION_LOG" in runner
     assert "ml/defender_actions.jsonl" not in runner
+    assert "ml/deep/live/runtime/" in (ROOT / ".gitignore").read_text(encoding="utf-8")
 
 
 def test_v12_media_is_fresh_and_v11_media_is_preserved():

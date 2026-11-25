@@ -558,6 +558,38 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   color: var(--dim);
 }
 
+.aiflag {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line2);
+  border-radius: 6px;
+  background: rgba(12, 17, 22, 0.7);
+  cursor: pointer;
+}
+
+.aiflag input {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: #b4ddc5;
+}
+
+.aiflag span { display: grid; gap: 3px; }
+
+.aiflag strong {
+  font: 12px var(--mono);
+  color: var(--text);
+  letter-spacing: 0.03em;
+}
+
+.aiflag small {
+  font: 11px/1.6 var(--mono);
+  color: var(--dim);
+}
+
 .note { margin-top: 12px; }
 
 .timeline {

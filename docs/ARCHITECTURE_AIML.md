@@ -55,6 +55,10 @@ python -m reporter.cli --evidence ml/last_battle.json report --backend groq --ou
 
 # Real Kind/Chaos Mesh battle with advisory roles (requires the lab + keys)
 python -m scripts.live_deep_battle --attack pod-kill --target order-service --duration 30 --settle 60
+
+# Dashboard equivalent: tick "AI battle" before clicking "Run battle". The gate
+# API runs the same role-scoped advisory step after the real battle and writes
+# fresh notes to ml/deep/live/runtime/ for GET /ai/reasoning.
 ```
 
 ## Safety
@@ -113,7 +117,9 @@ under `ml/deep/live/`:
 - Groq proposed the attack idea, Gemini explained the defence both before and
   after the battle, and Groq wrote the report from the recorded facts.
 - The dashboard exposes these through `GET /ai/reasoning` in an **AI Reasoning**
-  panel. Only role names, latencies, rationales and results are returned.
+  panel. Only role names, latencies, rationales and results are returned. A
+  dashboard battle with **AI battle** enabled writes fresh advisory notes to
+  `ml/deep/live/runtime/`, which that endpoint prefers over the committed run.
 - Fresh `v12_*` screenshots/GIF/MP4 show that panel; the v1.1 media files are
   preserved byte-identical.
 
