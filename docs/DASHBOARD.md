@@ -14,7 +14,9 @@ charts, no API keys and no external UI kits.
 - **Release gate card** — score ring, verdict, reasons and the evaluated facts from the
   latest gate decision.
 - **Battle form** — unchanged safety contract: allowlisted `shop-test` targets only,
-  with the same five inputs and one attacker selector.
+  with the same five battle inputs and one attacker selector. The **AI battle**
+  checkbox is opt-in; when ticked, the server adds fresh advisory notes after the
+  real battle.
 - **Battle timeline** — turns the committed `ml/last_battle.json` record into an ordered
   inject → symptom → repair request → recover → cleanup story with the measured timings.
   The headline starts from a normal baseline, so its detection time is a real
@@ -31,9 +33,11 @@ charts, no API keys and no external UI kits.
   PROMOTE/BLOCK filters.
 - **Report actions** — copy the incident report to the clipboard or download it as Markdown.
 - **AI Reasoning** — shows the Groq attack idea, Gemini defence reading, local DQN ranking
-  and report backend from the isolated v1.2 live run. It reads `GET /ai/reasoning` and
-  never displays key values. The dashboard refreshes saved evidence every 15 s while the
-  page is open, so starting the gate API later updates the panel without a reload.
+  and report backend. It reads `GET /ai/reasoning` and never displays key values. With
+  **AI battle** ticked, the gate API writes fresh notes to `ml/deep/live/runtime/` and
+  the panel switches to them immediately after the battle. With it unticked, the
+  committed v1.2 validation evidence stays on screen. The panel also refreshes every
+  15 s while the page is open, so starting the gate API later updates it without reload.
 - **Result toast** — confirms each battle's verdict and score without needing to scroll.
 
 ## New evidence API

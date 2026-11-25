@@ -138,12 +138,12 @@ http://127.0.0.1:8080     gate API
 ```
 
 1. Click **Refresh** — the header distinguishes `API ONLINE · LAB READY` from `API ONLINE · LAB NOT READY`. The API can be reachable while Kind or Prometheus is unavailable; a live battle needs the lab ready.
-2. In **Run a battle**, use: attack `network-latency`, target `payment-service`, duration `30`, settle `45`, threshold `70`, version `release-candidate`.
+2. In **Run a battle**, use: attack `network-latency`, target `payment-service`, duration `30`, settle `45`, threshold `70`, version `release-candidate`. Tick **AI battle** if you want fresh Groq/Gemini advisory notes after this battle; leave it off for a normal battle.
 3. Click **Run battle** and wait about a minute. Do not click twice.
 4. Read the **Release gate** card for score/grade/verdict and **Why**. A new row appears in **Decision history**.
 5. Check **RL attacker** for the learned policy. In **Incident report**, use **Copy** or **Download**.
 6. Use the sidebar navigation to open **Evidence**: the timeline is the recorded real battle; **Learned vs random** and **Detector comparison** are clearly labelled offline benchmarks. In **History**, search or filter PROMOTE/BLOCK rows.
-7. Open **AI Reasoning** to see Groq's recorded attack idea, Gemini's defence reading, the local DQN top idea and the report backend. These are read from `ml/deep/live/`; no API keys are displayed.
+7. Open **AI Reasoning** to see Groq's attack idea, Gemini's defence reading, the local DQN top idea and the report backend. With **AI battle** ticked, fresh notes appear right after the battle; otherwise the committed v1.2 evidence from `ml/deep/live/` is shown. No API keys are displayed.
 
 If the API is offline, start it with `python -m uvicorn controller.api:app --host 127.0.0.1 --port 8080` from the project venv. If the API is online but the lab is not ready, start Kind, deploy the lab and open the Prometheus port-forward described below; the dashboard can still read committed evidence. If the dashboard is closed, run `cd dashboard && npm run dev`.
 

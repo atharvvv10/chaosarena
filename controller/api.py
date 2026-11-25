@@ -29,6 +29,7 @@ DEFENDER_BENCHMARK_FILE = Path("ml/defender_benchmark.json")
 NO_DEFENDER_FILE = Path("ml/no_defender_baseline.json")
 BAD_RELEASE_FILE = Path("ml/bad_release_experiment.json")
 DEEP_LIVE_DIR = Path("ml/deep/live")
+AI_RUNTIME_DIR = DEEP_LIVE_DIR / "runtime"
 AI_ADVISORIES_FILE = DEEP_LIVE_DIR / "advisories.json"
 AI_ANALYSIS_FILE = DEEP_LIVE_DIR / "defender_analysis.json"
 DEEP_SUMMARY_FILE = DEEP_LIVE_DIR / "summary.json"
@@ -52,6 +53,7 @@ class EvaluateRequest(BaseModel):
     threshold: int = Field(default=DEFAULT_THRESHOLD, ge=0, le=100)
     version: str = "candidate"
     settle: int = Field(default=45, ge=0, le=180)
+    ai_enabled: bool = False
 
 
 @app.get("/health")
@@ -139,12 +141,30 @@ def _view_llm_call(call: dict | None) -> dict:
     return view
 
 
+def _ai_files() -> tuple[dict, dict, dict, str]:
+    """Prefer notes written by the newest AI-assisted dashboard battle."""
+    runtime = (
+        AI_RUNTIME_DIR / "advisories.json",
+        AI_RUNTIME_DIR / "defender_analysis.json",
+        AI_RUNTIME_DIR / "summary.json",
+    )
+    committed = (AI_ADVISORIES_FILE, AI_ANALYSIS_FILE, DEEP_SUMMARY_FILE)
+    for files, source in ((runtime, "fresh-battle"), (committed, "saved-validation")):
+        payloads = tuple(_read_evidence(path) for path in files)
+        if any(payloads):
+            return (
+                payloads[0] or {},
+                payloads[1] or {},
+                payloads[2] or {},
+                source,
+            )
+    return {}, {}, {}, "saved-validation"
+
+
 @app.get("/ai/reasoning")
 def ai_reasoning() -> dict:
-    """Read the isolated v1.2 live-battle advisory evidence for the dashboard."""
-    advisories = _read_evidence(AI_ADVISORIES_FILE) or {}
-    analysis = _read_evidence(AI_ANALYSIS_FILE) or {}
-    summary = _read_evidence(DEEP_SUMMARY_FILE) or {}
+    """Read the newest safe AI advisory evidence for the dashboard."""
+    advisories, analysis, summary, source = _ai_files()
     calls = advisories.get("calls")
     by_role = {
         call.get("role"): call
@@ -166,6 +186,8 @@ def ai_reasoning() -> dict:
     }
     return {
         "available": bool(advisories or analysis or summary),
+        "source": source,
+        "generated_at": summary.get("generated_at"),
         "note": advisories.get("note") or (
             "Advisory only; the CLI allowlist and classical detector own the real loop."
         ),
@@ -202,6 +224,17 @@ def evaluate(request: EvaluateRequest) -> dict:
     record_battle(payload)
     response = dict(payload)
     response["report"] = _refresh_report(payload)
+    if request.ai_enabled:
+        try:
+            from scripts.ai_notes import _safe_error, generate_battle_ai_notes
+
+            response["ai"] = generate_battle_ai_notes(payload, AI_RUNTIME_DIR)
+        except Exception as exc:  # noqa: BLE001 - AI is advisory, the gate stands
+            response["ai"] = {
+                "available": False,
+                "source": "fresh-battle-error",
+                "error": _safe_error(exc),
+            }
     return response
 
 
