@@ -63,7 +63,7 @@ $env:GROQ_API_KEY='gsk_your_free_key_here'
 
 ## Results actually measured on this laptop
 
-- **64 tests pass** (48 earlier + 16 new).
+- **64 tests passed at the Phase 5 snapshot** (48 earlier + 16 new); v1.2 raised the suite to the current total in [RESULTS.md](RESULTS.md).
 - Fresh battle: detected at **14.0 s**, diagnosed `latency_spike` on
   `order-service` (`z=+289.5`), requested a restart for it, score **100**, verdict **PROMOTE**
   for `v1.0.3`.

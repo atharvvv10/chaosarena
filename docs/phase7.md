@@ -58,7 +58,7 @@ Open <http://127.0.0.1:5173>.
 
 ## Verified results
 
-- **84 tests pass** (9 Phase 6 + 7 Phase 7 + earlier 68).
+- **84 tests passed at the Phase 7 snapshot** (9 Phase 6 + 7 Phase 7 + earlier 68); v1.2 raised the suite to the current total in [RESULTS.md](RESULTS.md).
 - `npm run build`: 17 modules, `dist/assets/index-*.js` ≈ 227 kB (71 kB gzip),
   built in 243 ms. No vulnerabilities from `npm install`.
 - Browser check: `API online`; gate card shows `PROMOTE / 100 / grade A`;

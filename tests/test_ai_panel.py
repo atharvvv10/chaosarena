@@ -277,7 +277,7 @@ def test_frontend_has_ai_reasoning_panel():
     assert "ai_enabled:aiEnabled" in app
     assert "Fresh AI notes loaded." in app
     assert "AI notes refresh failed." in app
-    assert "const notesOk=updates[2].status==='fulfilled'&&updates[2].value?.available" in app
+    assert "const notesFresh=updates[2].status==='fulfilled'&&updates[2].value?.source==='fresh-battle'&&updates[2].value?.available" in app
     assert "FRESH BATTLE NOTES" in app
     assert "Defender note" in app
     assert ".aiflag" in css

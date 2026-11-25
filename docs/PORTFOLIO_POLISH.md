@@ -103,11 +103,11 @@ nothing is mutated.
   Strict scans for Groq `gsk_[A-Za-z0-9]{20,}` and Gemini
   `AIza[0-9A-Za-z_-]{20,}` found **0 real key values**, so no extra rotation is
   needed from repository history.
-- Latest AI battle update: **179 tests** pass, GitHub Actions run **#60** is
-  green for the AI battle code, and a repeat secret scan found **0** strict
-  Groq or Gemini key locations. The new tests cover fresh-note preference,
-  `ai_enabled` transport, offline/no-key generation and missing `torch`;
-  release scores were not changed.
+- Latest AI battle update: **179 tests** pass, the latest GitHub Actions run on
+  `main` is green, and a repeat secret scan found **0** strict Groq or Gemini
+  key locations. The new tests cover fresh-note preference, `ai_enabled`
+  transport, offline/no-key generation, missing `torch`, redaction and
+  stale-note rejection; release scores were not changed.
 - Headline real battle (`ml/last_battle.json`): `network-latency` on
   `payment-service`, **detected in 13.3 s**, diagnosed
   `latency_spike` on `order-service`, restart requested, **recovered in 76.2 s**, **100/A/PROMOTE** at
