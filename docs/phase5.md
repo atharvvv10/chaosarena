@@ -22,7 +22,7 @@ setting `GROQ_API_KEY`. No paid API is used anywhere in this project.
 | `reporter/report.py` | Generates and validates the report |
 | `reporter/cli.py` | `python -m reporter.cli ...` |
 | `controller/evidence.py` | New Phase 4 hook: saves `ml/last_battle.json` |
-| `tests/test_phase5.py` | 15 tests |
+| `tests/test_phase5.py` | 16 tests in the current suite |
 | `docs/phase5.md` | This file |
 | `Makefile` | `report`, `report-groq` |
 

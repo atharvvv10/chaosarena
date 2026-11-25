@@ -27,7 +27,7 @@ cluster battle.
 
 - `python -m pytest -q`: **179 passed**.
 - `python -m scripts.verify_all`: all steps passed, including the React production build.
-- GitHub Actions for the AI battle code: run **#60**, success; later docs-only updates re-run the same checks.
+- GitHub Actions: the latest run on `main` is green, with both the release gate and deep AIML checks passing.
 - Local browser smoke check: the **AI battle** checkbox starts unchecked, sends `ai_enabled: true` when ticked, triggers a second `GET /ai/reasoning`, shows fresh Groq/Gemini notes and the `FRESH BATTLE NOTES` badge, and logs **0 page errors**.
 - Secret scan: strict Groq/Gemini key locations **0** across repository history; all loose matches are placeholders.
 - v1.1 media SHA-256 guards remain unchanged.
