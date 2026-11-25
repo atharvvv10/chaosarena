@@ -7,7 +7,6 @@ safe, advisory text after a real battle has finished. Keys stay in the local
 from __future__ import annotations
 
 import json
-import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -22,17 +21,14 @@ from attacker.strategist import (
 from defender.analyst import LLMAnalyst, TemplateAnalyst
 from reporter.incident import Incident
 from reporter.llm import TemplateLLM
+from reporter.redaction import redact_text
 from reporter.report import IncidentReporter
 from reporter.role_clients import client_for, preferred_backend
 
-_KEY_PATTERN = re.compile(r"gsk_[A-Za-z0-9_-]+|AIza[0-9A-Za-z_-]{20,}")
 _NOTE = "Advisory only; the CLI allowlist and classical detector own the real loop."
 
-
-def _safe_error(exc: Exception) -> str:
-    """Truncate provider errors and redact anything resembling a key."""
-    text = " ".join(str(exc).split())[:300]
-    return _KEY_PATTERN.sub("[redacted]", text)
+# Backwards-compatible alias used by the API and advisory tests.
+_safe_error = redact_text
 
 
 def _timed(role: str, call: Callable[[], Any]) -> dict[str, Any]:
@@ -55,14 +51,19 @@ def _timed(role: str, call: Callable[[], Any]) -> dict[str, Any]:
         }
 
 
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
-    temporary.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(path)
+def _write_bundle(bundle: dict[Path, dict[str, Any]]) -> None:
+    """Write all temporary files first, then publish the complete note set."""
+    staged = []
+    for path, payload in bundle.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(path.suffix + ".tmp")
+        temporary.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        staged.append((temporary, path))
+    for temporary, path in staged:
+        temporary.replace(path)
 
 
 def _duration(value: Any) -> int:
@@ -131,13 +132,14 @@ def _attack_call(battle: dict[str, Any], ranked: list[dict[str, Any]]) -> dict[s
         "stage": "post-battle-advisory",
     }
     try:
+        client = client_for("attacker", backend=preferred_backend("attacker"))
         strategist = GroqStrategist(
-            client=client_for("attacker", backend=preferred_backend("attacker")),
+            client=client,
             fallback=_SelectedTemplateStrategist(ranked=ranked),
         )
         call = _timed("attacker_strategist", lambda: strategist.propose(observation).to_dict())
         if strategist.last_error:
-            call["last_error"] = strategist.last_error
+            call["last_error"] = redact_text(strategist.last_error)
     except Exception as exc:  # noqa: BLE001 - no key means offline template
         call = _timed(
             "attacker_strategist",
@@ -163,42 +165,65 @@ def _defence_facts(battle: dict[str, Any], score: dict[str, Any], decision: dict
     }
 
 
-def _defence_call(payload: dict[str, Any]) -> dict[str, Any]:
-    facts = _defence_facts(
-        payload.get("battle", {}),
-        payload.get("score", {}),
-        payload.get("decision", {}),
-    )
+def _preflight_facts(battle: dict[str, Any]) -> dict[str, Any]:
+    """Planned-fault facts only; no outcome leaks into the preflight advisory."""
+    return {
+        "attack": battle.get("attack"),
+        "target": battle.get("target"),
+        "duration": battle.get("duration"),
+        "version": battle.get("version"),
+        "stage": "preflight-advisory",
+    }
+
+
+def _defence_call(payload: dict[str, Any], stage: str = "post") -> dict[str, Any]:
+    """Make one real role call; preflight and post-battle facts stay separate."""
+    battle = payload.get("battle", {})
+    if stage == "preflight":
+        role = "defender_analyst"
+        facts = _preflight_facts(battle)
+    else:
+        role = "defender_post_analysis"
+        facts = _defence_facts(
+            battle,
+            payload.get("score", {}),
+            payload.get("decision", {}),
+        )
     try:
         analyst = LLMAnalyst(
             client=client_for("defender", backend=preferred_backend("defender")),
             fallback=TemplateAnalyst(),
         )
-        call = _timed("defender_analyst", lambda: analyst.analyse(facts).to_dict())
+        call = _timed(role, lambda: analyst.analyse(facts).to_dict())
         if analyst.last_error:
-            call["last_error"] = analyst.last_error
+            call["last_error"] = redact_text(analyst.last_error)
     except Exception as exc:  # noqa: BLE001 - no key means offline template
-        call = _timed("defender_analyst", lambda: TemplateAnalyst().analyse(facts).to_dict())
-        call["last_error"] = _safe_error(exc)
+        call = _timed(role, lambda: TemplateAnalyst().analyse(facts).to_dict())
+        call["last_error"] = redact_text(exc)
     return call
 
 
 def _report_call(payload: dict[str, Any], out: Path) -> dict[str, Any]:
     incident = Incident.from_bundle(payload)
     target = out / "incident_report.md"
+    fallback_reason = None
     try:
         report = IncidentReporter(
             client_for("report", backend=preferred_backend("report"))
         ).report(incident)
-    except Exception:  # noqa: BLE001 - deterministic section-valid fallback
+    except Exception as exc:  # noqa: BLE001 - deterministic section-valid fallback
+        fallback_reason = redact_text(exc)
         report = IncidentReporter(TemplateLLM()).report(incident)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(report.text, encoding="utf-8")
-    return {
+    info = {
         "backend": report.backend,
         "chars": len(report.text),
         "saved_to": str(target),
     }
+    if fallback_reason:
+        info["fallback_reason"] = fallback_reason
+    return info
 
 
 def generate_battle_ai_notes(payload: dict[str, Any], out: Path) -> dict[str, Any]:
@@ -212,18 +237,16 @@ def generate_battle_ai_notes(payload: dict[str, Any], out: Path) -> dict[str, An
     decision = payload.get("decision", {})
     ranked, dqn_call = _dqn_call()
     attack_call = _attack_call(battle, ranked)
-    defence_call = _defence_call(payload)
-    post_call = dict(defence_call)
-    post_call["role"] = "defender_post_analysis"
-    if isinstance(post_call.get("result"), dict):
-        post_call["result"] = dict(post_call["result"])
+    preflight_call = _defence_call(payload, stage="preflight")
+    post_call = _defence_call(payload, stage="post")
+    post_call["generated_at"] = generated_at
 
     report_info = _report_call(payload, out)
     advisories = {
         "note": _NOTE,
         "mode": "dashboard-ai-battle",
         "generated_at": generated_at,
-        "calls": [attack_call, defence_call, dqn_call],
+        "calls": [attack_call, preflight_call, dqn_call],
     }
     summary = {
         "version": decision.get("version") or battle.get("version") or "candidate",
@@ -241,9 +264,11 @@ def generate_battle_ai_notes(payload: dict[str, Any], out: Path) -> dict[str, An
         "report": report_info,
         "advisories": advisories,
     }
-    _write_json(out / "advisories.json", advisories)
-    _write_json(out / "defender_analysis.json", post_call)
-    _write_json(out / "summary.json", summary)
+    _write_bundle({
+        out / "advisories.json": advisories,
+        out / "defender_analysis.json": post_call,
+        out / "summary.json": summary,
+    })
     return {
         "available": True,
         "source": "fresh-battle",

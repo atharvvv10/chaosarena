@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from reporter.llm import GroqLLM, LLMError
+from reporter.redaction import redact_text
 from reporter.role_clients import client_for
 
 from .allowlist import ALLOWED_SERVICES
@@ -158,6 +159,9 @@ class GroqStrategist:
         max_retries: int = 2,
     ) -> None:
         self.client = client or client_for("attacker", backend="groq")
+        client_name = getattr(self.client, "name", None)
+        if client_name in {"groq", "gemini", "openai", "template"}:
+            self.source = client_name
         self.fallback = fallback or TemplateStrategist()
         self.cache: dict[str, StrategyProposal] = {}
         self.cache_size = cache_size
@@ -191,7 +195,7 @@ class GroqStrategist:
                 self.last_error = None
                 return proposal
             except (LLMError, StrategistError, ValueError, TypeError) as exc:
-                self.last_error = " ".join(str(exc).split())[:300]
+                self.last_error = redact_text(exc)
         return self.fallback.propose(observation)
 
 

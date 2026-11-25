@@ -34,7 +34,7 @@ non-zero lines for all five services in the request-rate, error-rate and latency
 - `pytest` → **77 passed** at the end of Phase 6 (services and metrics; allowlist,
   all 7 manifests, cleanup; model, diagnosis, bounded actions; score, gate, audit
   log, API; facts, prompt, report, offline + free Groq; workflow, gate self-test,
-  recomputed verdict). The suite grew to **122 passed** after the final evidence, baseline and bad-release checks, then **130 passed** after the final report-refresh, recovery-consistency, readiness and report-path regressions.
+  recomputed verdict). The suite grew to **122 passed** after the final evidence, baseline and bad-release checks, then **130 passed** after the final report-refresh, recovery-consistency, readiness and report-path regressions. Those are phase snapshots; v1.2's current total is in [RESULTS.md](RESULTS.md).
 - All five services + loadgen launched via `scripts/run_local.py` on a machine with
   **no Docker, no WSL2, no kubectl and no make**.
 - Live end-to-end flow succeeded: register → JWT login → catalogue → cart add →

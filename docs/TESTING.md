@@ -7,9 +7,10 @@ cd D:\Projects\1\chaosarena
 make verify
 ```
 
-This runs `python scripts/verify_all.py`: every pytest suite, all four safety
-guards, the CI gate fixture checks, and the React production build. It needs no
-cluster, no internet and no secret. The current suite is **170 tests**.
+This runs `python scripts/verify_all.py`: every pytest suite, all five safety
+guards (`ci.gate`, `controller.cli`, `attacker.cli`, `defender.cli`, `rl.cli`),
+the CI gate fixture checks, and the React production build. It needs no cluster,
+no internet and no secret. The current suite is **179 tests**.
 
 To run it without `make`:
 
@@ -129,8 +130,8 @@ their availability.
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
 make demo-media          # live battle + Grafana; needs the Kind lab and port-forward
 make demo-media-offline  # committed-evidence dashboard walkthrough; no lab needed
-make demo-media-v12      # NEW v1.2 AI Reasoning assets; never overwrites v1.1 media
-make demo-media-ai-battle # NEW v1.2 checkbox/fresh-notes assets; mocked API, no keys
+make demo-media-v12      # earlier v1.2 AI Reasoning assets; never overwrites v1.1 media
+make demo-media-ai-battle # latest checkbox/fresh-notes assets; mocked API, no keys
 ```
 
 `make demo-media` regenerates all four original assets with the already-running
@@ -140,8 +141,11 @@ Grafana, so check cleanup with `attacker.cli status` afterwards.
 from the evidence already in the running UI; it never runs a battle and leaves
 `grafana.png` untouched. `make demo-media-v12` writes only `v12_dashboard.png`,
 `v12_ai_reasoning.png`, `v12_demo.gif` and `v12_demo.mp4`, so the four v1.1
-assets stay byte-identical. All three need the gate API and dashboard running,
-and none is part of `make verify`.
+assets stay byte-identical. `make demo-media-ai-battle` writes only the six
+`v12_ai_battle_*` files (`checkbox.png`, `form.png`, `reasoning.png`,
+`dashboard.png`, `demo.gif`, `demo.mp4`) and mocks the gate API in the browser, so it needs the
+dashboard but no live API, lab, battle or keys. All four targets need Microsoft
+Edge, and none is part of `make verify`.
 
 ## Common failures
 

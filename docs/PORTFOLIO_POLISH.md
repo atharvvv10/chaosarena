@@ -38,16 +38,23 @@ features. Everything here is local and free.
 | `docs/screenshots/grafana.png` | Real Grafana `ChaosArena - ShopApp Live` capture from the audited live Kind run. |
 | `docs/screenshots/demo.gif` | Frozen v1.1 dashboard walkthrough (6 frames, ≈10 s). |
 | `docs/screenshots/demo.mp4` | Frozen v1.1 dashboard walkthrough video (≈15 s). |
-| `docs/screenshots/v12_dashboard.png` | New v1.2 full-page UI capture (1440×5545), includes the AI Reasoning section. |
-| `docs/screenshots/v12_ai_reasoning.png` | New v1.2 focused AI panel capture (1156×525). |
-| `docs/screenshots/v12_demo.gif` | New v1.2 walkthrough (6 frames, 9 s), offline evidence only. |
-| `docs/screenshots/v12_demo.mp4` | New v1.2 walkthrough video (13.56 s), offline evidence only. |
+| `docs/screenshots/v12_dashboard.png` | Earlier v1.2 full-page UI capture, includes the AI Reasoning section. |
+| `docs/screenshots/v12_ai_reasoning.png` | Earlier v1.2 focused AI panel capture. |
+| `docs/screenshots/v12_demo.gif` | Earlier v1.2 walkthrough, offline evidence only. |
+| `docs/screenshots/v12_demo.mp4` | Earlier v1.2 walkthrough video, offline evidence only. |
+| `docs/screenshots/v12_ai_battle_checkbox.png` | **Latest:** focused AI battle checkbox, ticked. |
+| `docs/screenshots/v12_ai_battle_form.png` | **Latest:** battle form with AI battle enabled. |
+| `docs/screenshots/v12_ai_battle_reasoning.png` | **Latest:** AI Reasoning panel with fresh Groq/Gemini notes. |
+| `docs/screenshots/v12_ai_battle_dashboard.png` | **Latest:** full-page dashboard for the same mocked flow. |
+| `docs/screenshots/v12_ai_battle_demo.gif` | **Latest:** checkbox → fresh-notes walkthrough GIF. |
+| `docs/screenshots/v12_ai_battle_demo.mp4` | **Latest:** checkbox → fresh-notes walkthrough MP4. |
 | `scripts/capture_demo.py` | Optional v1.1 regenerate script with live and `--offline` modes; not part of CI. |
-| `scripts/capture_v12_media.py` | Optional v1.2 regenerate script; writes only `v12_*` files; not part of CI. |
+| `scripts/capture_v12_media.py` | Optional earlier v1.2 media script; writes only `v12_*` files; not part of CI. |
+| `scripts/capture_ai_battle_media.py` | Optional latest media script; mocks the gate API, writes only `v12_ai_battle_*` files; not part of CI. |
 | `tests/test_phase9.py` | Guards for v1.1 media assets and claim accuracy. |
-| `tests/test_ai_panel.py` | Guards for fresh v1.2 media and byte-identical v1.1 assets. |
-| `Makefile` | `demo-media`, `demo-media-offline` and `demo-media-v12` targets. |
-| `.gitignore` | Ignore temporary v1.1 and v1.2 capture frames/video. |
+| `tests/test_ai_panel.py` | Guards for latest v1.2 media and byte-identical v1.1 assets. |
+| `Makefile` | `demo-media`, `demo-media-offline`, `demo-media-v12` and `demo-media-ai-battle` targets. |
+| `.gitignore` | Ignore temporary v1.1, v1.2 and AI battle capture frames/video. |
 
 ## Exact commands used
 
@@ -61,7 +68,8 @@ features. Everything here is local and free.
 .\.venv\Scripts\python.exe -m playwright install ffmpeg
 .\.venv\Scripts\python.exe scripts\capture_demo.py --offline  # v1.1 UI, committed evidence
 .\.venv\Scripts\python.exe scripts\capture_demo.py            # v1.1 live battle + Grafana; needs lab
-.\.venv\Scripts\python.exe scripts\capture_v12_media.py       # NEW v12_* assets; v1.1 untouched
+.\.venv\Scripts\python.exe scripts\capture_v12_media.py       # earlier v12_* assets; v1.1 untouched
+.\.venv\Scripts\python.exe scripts\capture_ai_battle_media.py # latest checkbox/fresh-notes assets; mocked API
 
 # Secret audit over every commit
 $commits = git rev-list --all
@@ -95,7 +103,7 @@ nothing is mutated.
   Strict scans for Groq `gsk_[A-Za-z0-9]{20,}` and Gemini
   `AIza[0-9A-Za-z_-]{20,}` found **0 real key values**, so no extra rotation is
   needed from repository history.
-- Latest AI battle update: **170 tests** pass, GitHub Actions run **#60** is
+- Latest AI battle update: **179 tests** pass, GitHub Actions run **#60** is
   green for the AI battle code, and a repeat secret scan found **0** strict
   Groq or Gemini key locations. The new tests cover fresh-note preference,
   `ai_enabled` transport, offline/no-key generation and missing `torch`;
@@ -119,10 +127,14 @@ nothing is mutated.
 - Frozen v1.1 media: `demo.mp4` ≈ 15 s, `demo.gif` ≈ 10 s (6 frames), dashboard
   PNG 1440×4981. `grafana.png` remains the 1600×1000 capture from the audited
   live Kind run on 2026-11-20.
-- Fresh v1.2 media: `v12_demo.mp4` 13.56 s, `v12_demo.gif` 9 s (6 frames),
-  `v12_dashboard.png` 1440×5545 and `v12_ai_reasoning.png` 1156×525. These are
-  offline UI captures from committed evidence; they do not run a new battle or
-  call an LLM. SHA-256 guards keep the four v1.1 assets byte-identical.
+- Earlier v1.2 media: `v12_demo.mp4`, `v12_demo.gif`, `v12_dashboard.png` and
+  `v12_ai_reasoning.png` came from committed evidence; no live battle or LLM call.
+- Latest UI-flow media: `v12_ai_battle_checkbox.png`, `v12_ai_battle_form.png`,
+  `v12_ai_battle_reasoning.png`, `v12_ai_battle_dashboard.png`,
+  `v12_ai_battle_demo.gif` and `v12_ai_battle_demo.mp4` show the opt-in checkbox
+  and fresh notes. The browser mocks the gate API, so no lab, battle, keys or
+  provider calls were involved. SHA-256 guards keep the four v1.1 assets
+  byte-identical.
 - The last live capture ended with `chaos_objects: []` and all pods Running; the
   current offline assets did not run a battle or alter that evidence.
 - Test suite and cluster-free verification pass; details in the final summary.
@@ -178,11 +190,12 @@ keeping the free/local constraint and every existing claim exact:
   searchable/filterable history, report copy/download buttons and a result toast.
 - Benchmark panels are explicitly labelled **offline** and **not a live battle**;
   only the timeline is described as the real recorded battle.
-- v1.2 adds `GET /ai/reasoning` and an **AI Reasoning** panel for the isolated live
-  Groq/Gemini/DQN advisory record. Only role names, latencies and rationales are
-  returned; no key values are exposed. The fresh `v12_*` media shows this panel while
-  the four v1.1 assets stay byte-identical. See `docs/V12_LIVE_VALIDATION.md`.
-- Details and verification commands: `docs/DASHBOARD.md`.
+- v1.2 adds `GET /ai/reasoning` and an **AI Reasoning** panel. It prefers fresh
+  notes from `ml/deep/live/runtime/` after an **AI battle** and otherwise shows the
+  isolated committed Groq/Gemini/DQN record. Only allowlisted fields are returned;
+  no key values are exposed. The latest `v12_ai_battle_*` media shows this flow while
+  the four v1.1 assets stay byte-identical. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
+- Details and verification commands: [DASHBOARD.md](DASHBOARD.md).
 
 ## Cost check
 

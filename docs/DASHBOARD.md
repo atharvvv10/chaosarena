@@ -39,7 +39,8 @@ charts, no API keys and no external UI kits.
   committed v1.2 validation evidence stays on screen. The panel also refreshes every
   15 s while the page is open, so starting the gate API later updates it without reload.
 - **Result toast** — confirms each battle's verdict and score without needing to scroll.
-- **Latest media** — `v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png`,
+- **Latest media** — `v12_ai_battle_checkbox.png`, `v12_ai_battle_form.png`,
+  `v12_ai_battle_reasoning.png`,
   `v12_ai_battle_dashboard.png`, `v12_ai_battle_demo.gif` and
   `v12_ai_battle_demo.mp4` show the checkbox → fresh-notes flow. They were
   captured with a mocked gate API, so no lab, live battle or keys were involved.
@@ -62,8 +63,9 @@ battle**; the timeline, recovery control and bad-release panels are real local r
 
 ## AI reasoning API
 
-`GET /ai/reasoning` reads the isolated v1.2 evidence in `ml/deep/live/` and returns
-allowlisted fields only:
+`GET /ai/reasoning` prefers notes from the newest **AI battle** in the gitignored
+`ml/deep/live/runtime/` folder; when none exist, it falls back to the isolated
+committed v1.2 evidence in `ml/deep/live/`. It returns allowlisted fields only:
 
 | Field | Source | Label in the UI |
 | --- | --- | --- |
@@ -74,9 +76,11 @@ allowlisted fields only:
 | `report` / `battle` | `summary.json` | Report backend and recorded verdict |
 
 It returns `available: false` when those files are missing. No keys, endpoints,
-headers or client configuration are exposed. The panel appears in the fresh
-`v12_demo.gif`, `v12_demo.mp4`, `v12_dashboard.png` and `v12_ai_reasoning.png`
-captures. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
+headers or client configuration are exposed. The latest
+`v12_ai_battle_demo.gif`, `v12_ai_battle_demo.mp4`, `v12_ai_battle_checkbox.png`,
+`v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png` and
+`v12_ai_battle_dashboard.png` captures show the
+opt-in checkbox and fresh notes. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md).
 
 ## Status semantics
 
@@ -94,7 +98,8 @@ response directly, so a new evaluation cannot leave an older report on screen.
 `controller.cli evaluate` uses the same reporter helper, so CLI and dashboard runs
 cannot disagree about which battle the report describes. `GET /report/latest` reads
 the same `REPORT_FILE` constant used for generation. The report is offline and
-deterministic by default; no LLM network call is made.
+deterministic by default. No LLM call is made unless **AI battle** is ticked; then
+advisory notes are generated after the real battle and never change the gate.
 
 ## Why this is honest
 

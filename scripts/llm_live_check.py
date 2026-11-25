@@ -16,6 +16,7 @@ from attacker.strategist import GroqStrategist, TemplateStrategist
 from defender.analyst import LLMAnalyst, TemplateAnalyst
 from reporter.env_loader import load_env
 from reporter.incident import load_latest
+from reporter.redaction import redact_text
 from reporter.report import IncidentReporter
 from reporter.role_clients import ROLES, client_for, key_env, preferred_backend, role_config
 
@@ -47,7 +48,7 @@ def _timed(name: str, call: Callable[[], Any]) -> dict[str, Any]:
             "role": name,
             "ok": False,
             "latency_ms": elapsed,
-            "error": " ".join(str(exc).split())[:300],
+            "error": redact_text(exc),
         }
 
 
