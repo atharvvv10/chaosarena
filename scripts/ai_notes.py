@@ -24,8 +24,6 @@ from reporter.incident import Incident
 from reporter.llm import TemplateLLM
 from reporter.report import IncidentReporter
 from reporter.role_clients import client_for, preferred_backend
-from rl.dqn_agent import DEFAULT_MODEL, DQNAgent
-from rl.features import encode
 
 _KEY_PATTERN = re.compile(r"gsk_[A-Za-z0-9_-]+|AIza[0-9A-Za-z_-]{20,}")
 _NOTE = "Advisory only; the CLI allowlist and classical detector own the real loop."
@@ -92,12 +90,20 @@ class _SelectedTemplateStrategist(TemplateStrategist):
         return super().propose(observation)
 
 
+def _dqn_rank() -> list[dict[str, Any]]:
+    """Load the local DQN only when available; torch is not a CI dependency."""
+    from rl.dqn_agent import DEFAULT_MODEL, DQNAgent
+    from rl.features import encode
+
+    agent = DQNAgent.load(DEFAULT_MODEL)
+    agent.epsilon = 0.0
+    return agent.ranked(encode(None, None, 0, 0.0))
+
+
 def _dqn_call() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     started = time.perf_counter()
     try:
-        agent = DQNAgent.load(DEFAULT_MODEL)
-        agent.epsilon = 0.0
-        ranked = agent.ranked(encode(None, None, 0, 0.0))
+        ranked = _dqn_rank()
         call = {
             "role": "dqn_attacker",
             "ok": True,

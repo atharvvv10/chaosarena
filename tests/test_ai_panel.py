@@ -200,17 +200,11 @@ def test_generate_battle_ai_notes_works_offline_without_keys(tmp_path, monkeypat
     def no_client(*args, **kwargs):  # noqa: ARG001 - simulates missing keys
         raise LLMError("no key configured")
 
-    class FakeAgent:
-        epsilon = 1.0
-
-        def ranked(self, state, limit=3):  # noqa: ARG002 - deterministic fake
-            return [{"action": "network-latency@payment-service", "q": 1.0}]
-
     monkeypatch.setattr(ai_notes, "client_for", no_client)
     monkeypatch.setattr(
-        ai_notes.DQNAgent,
-        "load",
-        classmethod(lambda cls, path=None: FakeAgent()),  # noqa: ARG005
+        ai_notes,
+        "_dqn_rank",
+        lambda: [{"action": "network-latency@payment-service", "q": 1.0}],
     )
 
     info = ai_notes.generate_battle_ai_notes(payload, tmp_path / "runtime")
@@ -227,6 +221,35 @@ def test_generate_battle_ai_notes_works_offline_without_keys(tmp_path, monkeypat
     assert '"backend": "template"' in summary_text
     assert "gsk_" not in summary_text
     assert "AIza" not in summary_text
+
+
+def test_generate_battle_ai_notes_survives_missing_torch(tmp_path, monkeypatch):
+    import scripts.ai_notes as ai_notes
+
+    result = _battle_result()
+    payload = {
+        "battle": result.as_dict(),
+        "score": {"score": 100, "grade": "A", "deductions": []},
+        "decision": {"verdict": "PROMOTE", "score": 100, "reasons": []},
+    }
+
+    def no_client(*args, **kwargs):  # noqa: ARG001 - simulates missing keys
+        raise LLMError("no key configured")
+
+    def missing_dqn():
+        raise ImportError("No module named 'torch'")
+
+    monkeypatch.setattr(ai_notes, "client_for", no_client)
+    monkeypatch.setattr(ai_notes, "_dqn_rank", missing_dqn)
+
+    info = ai_notes.generate_battle_ai_notes(payload, tmp_path / "runtime")
+
+    assert info["source"] == "fresh-battle"
+    advisories = json.loads((tmp_path / "runtime" / "advisories.json").read_text(encoding="utf-8"))
+    assert advisories["calls"][0]["ok"] is True
+    assert advisories["calls"][1]["ok"] is True
+    assert advisories["calls"][2]["ok"] is False
+    assert "torch" in advisories["calls"][2]["last_error"]
 
 
 def test_frontend_has_ai_reasoning_panel():
