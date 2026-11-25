@@ -95,7 +95,7 @@ nothing is mutated.
   Strict scans for Groq `gsk_[A-Za-z0-9]{20,}` and Gemini
   `AIza[0-9A-Za-z_-]{20,}` found **0 real key values**, so no extra rotation is
   needed from repository history.
-- Latest AI battle update: **169 tests** pass, GitHub Actions run **#60** is
+- Latest AI battle update: **170 tests** pass, GitHub Actions run **#60** is
   green for the AI battle code, and a repeat secret scan found **0** strict
   Groq or Gemini key locations. The new tests cover fresh-note preference,
   `ai_enabled` transport, offline/no-key generation and missing `torch`;

@@ -81,6 +81,9 @@ flagged it as such. The recorded final battle uses the DQN's top-ranked idea,
 - API: `GET /ai/reasoning`
 - Files: `ml/deep/live/advisories.json`, `defender_analysis.json`, `incident_report.md`
 - Fresh media: `v12_demo.gif`, `v12_demo.mp4`, `v12_dashboard.png`, `v12_ai_reasoning.png`
+- New UI-flow media: `v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png`,
+  `v12_ai_battle_dashboard.png`, `v12_ai_battle_demo.gif`, `v12_ai_battle_demo.mp4`
+  (mocked API walkthrough of the opt-in checkbox and fresh notes; not a new lab battle)
 - Docs: [ARCHITECTURE_AIML.md](ARCHITECTURE_AIML.md)
 
 The API returns allowlisted fields only. No API key values are stored in the

@@ -39,6 +39,10 @@ charts, no API keys and no external UI kits.
   committed v1.2 validation evidence stays on screen. The panel also refreshes every
   15 s while the page is open, so starting the gate API later updates it without reload.
 - **Result toast** — confirms each battle's verdict and score without needing to scroll.
+- **Latest media** — `v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png`,
+  `v12_ai_battle_dashboard.png`, `v12_ai_battle_demo.gif` and
+  `v12_ai_battle_demo.mp4` show the checkbox → fresh-notes flow. They were
+  captured with a mocked gate API, so no lab, live battle or keys were involved.
 
 ## New evidence API
 

@@ -6,7 +6,7 @@
 
 ![ChaosArena v1.2 dashboard walkthrough — AI Reasoning panel, recorded battle and release gate](docs/screenshots/v12_demo.gif)
 
-[Watch the v1.2 walkthrough (MP4)](docs/screenshots/v12_demo.mp4) · [v1.2 full dashboard](docs/screenshots/v12_dashboard.png) · [AI Reasoning panel](docs/screenshots/v12_ai_reasoning.png) · [Original v1.1 walkthrough](docs/screenshots/demo.gif) · [Original v1.1 MP4](docs/screenshots/demo.mp4) · [Grafana screenshot (v1.1 live run)](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
+[Watch the v1.2 walkthrough (MP4)](docs/screenshots/v12_demo.mp4) · [v1.2 full dashboard](docs/screenshots/v12_dashboard.png) · [AI Reasoning panel](docs/screenshots/v12_ai_reasoning.png) · **[AI battle demo (GIF)](docs/screenshots/v12_ai_battle_demo.gif)** · **[AI battle demo (MP4)](docs/screenshots/v12_ai_battle_demo.mp4)** · **[AI battle form](docs/screenshots/v12_ai_battle_form.png)** · **[Fresh notes panel](docs/screenshots/v12_ai_battle_reasoning.png)** · [Original v1.1 walkthrough](docs/screenshots/demo.gif) · [Original v1.1 MP4](docs/screenshots/demo.mp4) · [Grafana screenshot (v1.1 live run)](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
 ## Evaluate ChaosArena
 
@@ -47,7 +47,7 @@ Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VA
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **169 passing**: phase suites, AIML suites, live-evidence, AI battle/fresh-notes, media and regression checks (`make verify`) |
+| Automated tests | **170 passing**: phase suites, AIML suites, live-evidence, AI battle/fresh-notes, media and regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, cleanup verified in recorded runs; 0 residual chaos objects |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |

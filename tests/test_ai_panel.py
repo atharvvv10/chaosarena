@@ -342,3 +342,35 @@ def test_v12_media_is_fresh_and_v11_media_is_preserved():
     for old in ('SHOTS / "dashboard.png"', 'SHOTS / "demo.gif"', 'SHOTS / "demo.mp4"', 'SHOTS / "grafana.png"'):
         assert old not in capture
     assert "demo-media-v12" in (ROOT / "Makefile").read_text(encoding="utf-8")
+
+
+def test_v12_ai_battle_media_shows_the_new_flow_without_overwriting_assets():
+    shots = ROOT / "docs" / "screenshots"
+    for name in (
+        "v12_ai_battle_form.png",
+        "v12_ai_battle_reasoning.png",
+        "v12_ai_battle_dashboard.png",
+        "v12_ai_battle_demo.gif",
+        "v12_ai_battle_demo.mp4",
+    ):
+        path = shots / name
+        assert path.exists(), f"missing {path}"
+        assert path.stat().st_size > 10_000, f"asset looks empty: {path}"
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    for token in ("v12_ai_battle_demo.gif", "v12_ai_battle_demo.mp4", "v12_ai_battle_form.png", "v12_ai_battle_reasoning.png"):
+        assert token in readme
+
+    capture = (ROOT / "scripts" / "capture_ai_battle_media.py").read_text(encoding="utf-8")
+    assert 'SHOTS / "v12_ai_battle_form.png"' in capture
+    assert 'SHOTS / "v12_ai_battle_reasoning.png"' in capture
+    assert 'SHOTS / "v12_ai_battle_demo.gif"' in capture
+    assert 'SHOTS / "v12_ai_battle_demo.mp4"' in capture
+    for old in ('SHOTS / "dashboard.png"', 'SHOTS / "demo.gif"', 'SHOTS / "demo.mp4"', 'SHOTS / "grafana.png"'):
+        assert old not in capture
+
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    assert "demo-media-ai-battle" in makefile
+    ignored = (ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "docs/screenshots/_v12_ai_battle_frames/" in ignored
+    assert "docs/screenshots/_v12_ai_battle_video/" in ignored

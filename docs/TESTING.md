@@ -9,7 +9,7 @@ make verify
 
 This runs `python scripts/verify_all.py`: every pytest suite, all four safety
 guards, the CI gate fixture checks, and the React production build. It needs no
-cluster, no internet and no secret. The current suite is **169 tests**.
+cluster, no internet and no secret. The current suite is **170 tests**.
 
 To run it without `make`:
 
@@ -130,6 +130,7 @@ their availability.
 make demo-media          # live battle + Grafana; needs the Kind lab and port-forward
 make demo-media-offline  # committed-evidence dashboard walkthrough; no lab needed
 make demo-media-v12      # NEW v1.2 AI Reasoning assets; never overwrites v1.1 media
+make demo-media-ai-battle # NEW v1.2 checkbox/fresh-notes assets; mocked API, no keys
 ```
 
 `make demo-media` regenerates all four original assets with the already-running
