@@ -25,7 +25,7 @@ phases.
 3. Implement `SimArena` and `RealArena`, both returning score, reward, next state
    and facts.
 4. Add `python -m rl.cli guard|train|policy|real`, including `--dry-run`.
-5. Add 14 acceptance tests covering safety, learning, persistence and the real
+5. Add 18 acceptance tests covering safety, learning, persistence and the real
    CLI path with mocked subprocesses.
 6. Train 200 simulated episodes, run one real battle, verify cleanup, then push.
 
@@ -37,7 +37,7 @@ phases.
 | `rl/arena.py` | `Action`, `ACTION_SPACE`, `REAL_ACTION_ALLOWLIST`, `SimArena`, `RealArena`. |
 | `rl/agent.py` | Tabular Q-learning agent with epsilon-greedy policy and JSON persistence. |
 | `rl/cli.py` | `guard`, `train`, `policy`, `real` commands. |
-| `tests/test_phase8.py` | 14 acceptance tests (no cluster needed). |
+| `tests/test_phase8.py` | 18 acceptance tests in the current suite (no cluster needed). |
 | `ml/rl_q_table.json` | Trained Q table, committed as reproducible evidence. |
 | `Makefile` | `rl-guard`, `rl-train`, `rl-policy`, `rl-real`, `rl-real-dry`. |
 | `README.md` | Status, checklist and docs links updated. |
