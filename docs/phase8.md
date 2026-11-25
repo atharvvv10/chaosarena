@@ -68,7 +68,7 @@ $env:PATH = "D:\Projects\1\chaosarena\tools\bin;C:\Program Files\Docker\Docker\r
 
 ## Verified results
 
-- **130 tests pass** overall; this phase contributes 18 tests.
+- **130 tests passed at the Phase 8 snapshot**; this phase contributed 18 tests, and v1.2 raised the suite to the current total in [RESULTS.md](RESULTS.md).
 - Simulator trained for 200 episodes; epsilon decayed `1.0 → 0.05`.
 - Learned calm-state ranking:
   1. `network-partition@payment-service` — Q = 1.4999

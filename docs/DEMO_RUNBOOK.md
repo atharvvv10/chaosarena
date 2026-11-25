@@ -38,7 +38,7 @@ This path needs **no live attack** and reproduces the published dashboard and
 results exactly.
 
 ```powershell
-# 1. Cluster-free verification: 130 tests, six guards, gate fixtures, React build
+# 1. Cluster-free verification: 179 tests, five guards, gate fixtures, React build
 .\.venv\Scripts\python.exe scripts\verify_all.py
 
 # 2. Start the gate API
@@ -255,7 +255,8 @@ against `0.7397`, followed by a recalibrated threshold `0.7539` and normal score
   interaction tests.
 - Do not present `ml/incident_report_groq.md` as the report for the current
   headline battle; it was generated from an earlier v1.0.3 run.
-- Do not describe the tabular Q-learning attacker as PPO or deep RL.
+- Do not describe the shipped tabular Q-learning baseline as PPO. v1.2 adds an
+  advisory/off-loop DQN ranker, not a live deep-RL controller.
 - Do not claim the Defender caused recovery. The no-Defender control recovered
   without remediation.
 - Do not claim the gate stopped a bad release because of a CI fixture. The

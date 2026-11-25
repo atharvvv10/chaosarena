@@ -3,16 +3,17 @@
 ## What this phase adds
 
 A **free** GitHub Actions workflow that runs on every push, pull request and
-manual trigger. It does three things:
+manual trigger. At this phase's snapshot it did three things:
 
-1. installs the Python dependencies from `requirements-dev.txt`,
-2. runs the full test suite,
-3. re-scores the recorded battle and **fails the build if the gate says BLOCK**.
+1. installed the Python dependencies from `requirements-dev.txt`,
+2. ran the then-current test suite,
+3. re-scored the recorded battle and **failed the build if the gate said BLOCK**.
 
-It uses only GitHub's free `ubuntu-latest` runner and the official free
-`actions/checkout` / `actions/setup-python` actions. It needs **no Kubernetes
-cluster, no cloud account, no secrets and no paid marketplace app**. The free
-Groq reporter is deliberately not used in CI.
+The current workflow keeps those checks and adds a free-tier advisory role
+smoke test, a CPU deep-AIML job and a React build. It still uses only
+`ubuntu-latest` and official free actions; it needs **no Kubernetes cluster,
+no cloud account, no real provider keys and no paid marketplace app**. Live
+Groq/Gemini calls are never made in CI.
 
 ## Files
 
@@ -68,7 +69,7 @@ workflow**. No extra setup is needed.
 
 ## Results actually measured
 
-- **77 tests pass** (68 earlier + 9 new).
+- **77 tests passed at the Phase 6 snapshot** (68 earlier + 9 new); the current total is in [RESULTS.md](RESULTS.md).
 - `ci.gate check` on the passing fixture → `PROMOTE`, score **100**, grade **A**.
 - `ci.gate check` on the failing fixture → `BLOCK`, score **0**, grade **F**,
   all six deductions present.
@@ -90,8 +91,9 @@ workflow**. No extra setup is needed.
 
 ## Why this is safe and free
 
-CI only reads a JSON file and runs Python. It never starts Chaos Mesh, never
-touches `shop-prod`, and never sends data to Groq or any cloud. The gate is the
-same code Phase 4 used live, so a local `ci-check` and the GitHub step make the
-**same decision**. If the demo repo is public, GitHub Actions costs nothing;
-if it is private, the free monthly minutes easily cover this short job.
+CI reads local fixtures and runs Python. It never starts Chaos Mesh or touches
+`shop-prod`, and it has no real Groq/Gemini keys, so the advisory role check is
+fully offline. The gate is the same code Phase 4 used live, so a local
+`ci-check` and the GitHub step make the **same decision**. If the demo repo is
+public, GitHub Actions costs nothing; if it is private, the free monthly minutes
+easily cover this short job.

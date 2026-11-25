@@ -4,9 +4,9 @@
 
 **A resilience-gated CI/CD lab that treats a release like a fight.** A local attacker injects one of seven allowlisted Chaos Mesh faults into a `shop-test` namespace; an Isolation Forest defender detects, diagnoses and requests a repair; and a controller scores the whole exchange into a `PROMOTE`/`BLOCK` decision. It all runs on one laptop with Kind, Prometheus, Grafana and a React dashboard — no cloud account, paid CI minute or hosted database. The default path needs **no API key**; v1.2 can optionally use free Groq/Gemini keys for advisory reasoning and report prose. The repo ships the tests, saved battle evidence, free GitHub Actions workflow and a recorded demo, so you can see and verify the full loop rather than trust a diagram.
 
-![ChaosArena v1.2 dashboard walkthrough — AI Reasoning panel, recorded battle and release gate](docs/screenshots/v12_demo.gif)
+![ChaosArena v1.2 AI battle walkthrough — checkbox, fresh Groq/Gemini notes, recorded battle and release gate](docs/screenshots/v12_ai_battle_demo.gif)
 
-[Watch the v1.2 walkthrough (MP4)](docs/screenshots/v12_demo.mp4) · [v1.2 full dashboard](docs/screenshots/v12_dashboard.png) · [AI Reasoning panel](docs/screenshots/v12_ai_reasoning.png) · **[AI battle demo (GIF)](docs/screenshots/v12_ai_battle_demo.gif)** · **[AI battle demo (MP4)](docs/screenshots/v12_ai_battle_demo.mp4)** · **[AI battle form](docs/screenshots/v12_ai_battle_form.png)** · **[Fresh notes panel](docs/screenshots/v12_ai_battle_reasoning.png)** · [Original v1.1 walkthrough](docs/screenshots/demo.gif) · [Original v1.1 MP4](docs/screenshots/demo.mp4) · [Grafana screenshot (v1.1 live run)](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
+**[Watch the latest AI battle walkthrough (MP4)](docs/screenshots/v12_ai_battle_demo.mp4)** · **[AI battle checkbox](docs/screenshots/v12_ai_battle_checkbox.png)** · **[AI battle form](docs/screenshots/v12_ai_battle_form.png)** · **[Fresh notes panel](docs/screenshots/v12_ai_battle_reasoning.png)** · **[AI battle full dashboard](docs/screenshots/v12_ai_battle_dashboard.png)** · [Earlier v1.2 walkthrough (GIF)](docs/screenshots/v12_demo.gif) · [Earlier v1.2 walkthrough (MP4)](docs/screenshots/v12_demo.mp4) · [Earlier v1.2 dashboard](docs/screenshots/v12_dashboard.png) · [Earlier AI Reasoning panel](docs/screenshots/v12_ai_reasoning.png) · [Original v1.1 walkthrough](docs/screenshots/demo.gif) · [Original v1.1 MP4](docs/screenshots/demo.mp4) · [Grafana screenshot (v1.1 live run)](docs/screenshots/grafana.png) · [All results](docs/RESULTS.md)
 
 ## Evaluate ChaosArena
 
@@ -28,7 +28,7 @@ Start the existing FastAPI backend and React frontend using the documented setup
 
 Follow [DEMO_RUNBOOK.md](docs/DEMO_RUNBOOK.md) to run a controlled battle in the isolated Kind environment. [DEMO_AUDIT.md](docs/DEMO_AUDIT.md) records the last real run and its environmental limitations.
 
-The v1.2 GIF and MP4 walk through the current UI, including the **AI Reasoning** panel with Groq, Gemini and local DQN evidence. The v1.2 full-page PNG is 1440×5545 and the focused AI panel PNG is 1156×525. The original `demo.gif`, `demo.mp4`, `dashboard.png` and `grafana.png` are preserved unchanged from v1.1. The v1.2 live battle and its advisory evidence are documented in [V12_LIVE_VALIDATION.md](docs/V12_LIVE_VALIDATION.md).
+The **latest** `v12_ai_battle_demo.gif` / `v12_ai_battle_demo.mp4` walk through the current UI: the **AI battle** checkbox is ticked, then fresh Groq/Gemini notes appear in the **AI Reasoning** panel with local DQN evidence. `v12_ai_battle_checkbox.png`, `v12_ai_battle_form.png` and `v12_ai_battle_reasoning.png` focus on those two moments; `v12_ai_battle_dashboard.png` is the full page. These use a mocked gate API, so no lab, live battle or keys are involved. The original `demo.gif`, `demo.mp4`, `dashboard.png` and `grafana.png` are preserved unchanged from v1.1. The earlier isolated v1.2 live battle evidence is documented in [V12_LIVE_VALIDATION.md](docs/V12_LIVE_VALIDATION.md).
 
 ## What v1.2 adds
 
@@ -38,8 +38,8 @@ v1.2 is an **additive AIML upgrade** on top of the frozen v1.1 evidence:
 - **LSTM-autoencoder defender** alongside the shipped Isolation Forest.
 - **Role-scoped LLM reasoning**: Groq proposes an allowlisted attack idea and writes the incident report; Gemini explains defender findings. Local RL/detector code and the classical release gate still own the real control loop.
 - **Dashboard AI Reasoning panel** showing recorded source, latency, rationale and recommendation — never API keys.
-- **Fresh v1.2 media**: a new walkthrough GIF/MP4 and full-page/focused PNGs show that panel; the v1.1 assets remain untouched.
-- **Offline by default**: no key is needed for tests, CI or the normal template reporter. Only `python -m scripts.llm_live_check` and the optional live-lab runner use free-tier keys from a gitignored `.env`.
+- **Latest v1.2 media**: `v12_ai_battle_*` GIF/MP4 and screenshots show the opt-in checkbox and fresh notes; the v1.1 assets remain untouched.
+- **Offline by default**: no key is needed for tests, CI or a normal battle. Free-tier keys from a gitignored `.env` are used only by `python -m scripts.llm_live_check`, the optional live-lab runner, and an opt-in dashboard **AI battle** (server-side only; keys never reach the browser).
 
 Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VALIDATION.md](docs/V12_LIVE_VALIDATION.md).
 
@@ -47,7 +47,7 @@ Full details: [ARCHITECTURE_AIML.md](docs/ARCHITECTURE_AIML.md) and [V12_LIVE_VA
 
 | What | Measured result |
 | --- | --- |
-| Automated tests | **170 passing**: phase suites, AIML suites, live-evidence, AI battle/fresh-notes, media and regression checks (`make verify`) |
+| Automated tests | **179 passing**: phase suites, AIML suites, live-evidence, AI battle/fresh-notes, media and regression checks (`make verify`) |
 | Chaos attacks | **7** allowlisted faults, `shop-test` only, cleanup verified in recorded runs; 0 residual chaos objects |
 | Headline gated battle | **100/100, grade A, PROMOTE** at threshold 70; `network-latency` detected in **13.3 s**, recovered in **76.2 s**, cleanup ok, 0 objects left |
 | Defender | Detected in **13.3 s**, recovered in **76.2 s**; diagnosed `latency_spike` on `order-service` (symptomatic, not necessarily the origin); 40-sample baseline (threshold 0.7397) |
@@ -119,7 +119,7 @@ gate, where a false alarm blocks a good build.
 
 ### Not proven / do not overclaim
 
-- The attacker is **tabular Q-learning, not PPO**. The baseline is 40 samples and the detector benchmark is in-sample and synthetic. [Build notes](docs/BUILD_NOTES.md).
+- The shipped baseline attacker is **tabular Q-learning, not PPO**. v1.2 adds an experimental **DQN** ranker that is advisory/off-loop, not the live controller. The baseline is 40 samples and the detector benchmark is in-sample and synthetic. [Build notes](docs/BUILD_NOTES.md).
 - Diagnosis is symptomatic: the headline fault hit `payment-service`, but `order-service` was restarted.
 - The Defender did **not** improve recovery in the headline network-latency control: **76.2 s** with a requested restart versus **50.8 s** without one. [Control run](docs/RESULTS.md#no-defender-control-run).
 - The v1.2 `pod-kill` fault self-heals, so the recorded **53.1 s** recovery does not prove the Defender caused it. The first v1.2 `network-latency` attempt was also a false negative. [Live record](docs/V12_LIVE_VALIDATION.md).

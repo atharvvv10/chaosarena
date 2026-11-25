@@ -14,6 +14,7 @@ from dataclasses import dataclass, replace
 from typing import Any, Protocol
 
 from reporter.llm import GeminiLLM, GroqLLM, LLMError
+from reporter.redaction import redact_text
 from reporter.role_clients import client_for
 
 
@@ -128,7 +129,7 @@ class LLMAnalyst:
                 self.last_error = None
                 return result
             except (LLMError, AnalystError, ValueError, TypeError) as exc:
-                self.last_error = " ".join(str(exc).split())[:300]
+                self.last_error = redact_text(exc)
         return self.fallback.analyse(facts)
 
 

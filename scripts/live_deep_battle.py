@@ -26,6 +26,7 @@ from controller.score import score_battle
 from defender.analyst import LLMAnalyst, TemplateAnalyst
 from reporter.incident import Incident
 from reporter.llm import TemplateLLM
+from reporter.redaction import redact_text
 from reporter.report import IncidentReporter
 from reporter.role_clients import client_for, preferred_backend
 from rl.dqn_agent import DQNAgent
@@ -42,7 +43,7 @@ def _timed(name: str, call):
             "role": name,
             "ok": False,
             "latency_ms": round((time.perf_counter() - started) * 1000, 1),
-            "error": " ".join(str(exc).split())[:300],
+            "error": redact_text(exc),
         }
 
 
@@ -56,8 +57,8 @@ def _run_module(*args: str) -> None:
         timeout=900,
     )
     if result.returncode != 0:
-        detail = " ".join((result.stderr or result.stdout).split())[:300]
-        raise RuntimeError(f"{' '.join(args)} failed: {detail}")
+        detail = redact_text(result.stderr or result.stdout)
+        raise RuntimeError(redact_text(f"{' '.join(args)} failed: {detail}"))
 
 
 def _prepare_defender(data: Path, model: Path, samples: int, interval: float) -> dict[str, Any]:
@@ -153,7 +154,7 @@ def _advisories(attack: str, target: str, duration: int) -> dict[str, Any]:
         agent.epsilon = 0.0
         dqn_call = _timed("dqn_attacker", lambda: agent.ranked(encode(None, None, 0, 0.0)))
     except Exception as exc:  # noqa: BLE001 - checkpoint must exist, but fail soft
-        dqn_call = {"role": "dqn_attacker", "ok": False, "error": str(exc)[:300]}
+        dqn_call = {"role": "dqn_attacker", "ok": False, "error": redact_text(exc)}
 
     return {
         "note": "Advisory only; the CLI allowlist and classical detector own the real loop.",

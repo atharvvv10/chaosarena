@@ -2,7 +2,7 @@ name: ChaosArena Resilience Gate
 
 'on':
   push:
-    branches: [main, master, v1.2-deep-aiml]
+    branches: [main, master]
   pull_request:
   workflow_dispatch:
 

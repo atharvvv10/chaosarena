@@ -1,7 +1,8 @@
-"""Two interchangeable report backends: offline template or a real chat LLM.
+"""Role-scoped LLM backends: offline template, Groq, Gemini or OpenAI-compatible.
 
-The default is the offline template. Nothing is sent over the network unless
-CHAOSARENA_LLM_BACKEND=openai is set explicitly, so the demo works anywhere.
+The default is the offline template. A real call happens only when a role's
+``CHAOSARENA_<ROLE>_LLM_BACKEND`` is set explicitly, so the demo works anywhere.
+Provider error text is redacted before it can reach evidence or the dashboard.
 """
 from __future__ import annotations
 
@@ -10,6 +11,8 @@ import os
 import urllib.error
 import urllib.request
 from typing import Any, Protocol
+
+from .redaction import redact_text
 
 
 class LLMError(RuntimeError):
@@ -178,10 +181,10 @@ class OpenAICompatibleLLM:
             except Exception:  # pragma: no cover - defensive
                 pass
             raise LLMError(
-                f"LLM request failed: {exc}; response: {detail[:500]}"
+                redact_text(f"LLM request failed: {exc}; response: {detail}", 500)
             ) from exc
         except Exception as exc:  # noqa: BLE001 - surface one clear error
-            raise LLMError(f"LLM request failed: {exc}") from exc
+            raise LLMError(redact_text(f"LLM request failed: {exc}", 500)) from exc
 
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -235,8 +238,8 @@ class GroqLLM(OpenAICompatibleLLM):
 class GeminiLLM:
     """Google Gemini via the free generateContent REST endpoint.
 
-    Used only for the report role in v1.2: batch prose is not latency-critical.
-    No extra dependency is needed; this uses urllib like the other backends.
+    The defender analyst uses Gemini in v1.2; the report role can also override
+    to it. No extra dependency is needed; this uses urllib like the backends.
     """
 
     name = "gemini"
@@ -295,10 +298,10 @@ class GeminiLLM:
             except Exception:  # pragma: no cover - defensive
                 pass
             raise LLMError(
-                f"Gemini request failed: {exc}; response: {detail[:500]}"
+                redact_text(f"Gemini request failed: {exc}; response: {detail}", 500)
             ) from exc
         except Exception as exc:  # noqa: BLE001 - surface one clear error
-            raise LLMError(f"Gemini request failed: {exc}") from exc
+            raise LLMError(redact_text(f"Gemini request failed: {exc}", 500)) from exc
 
 
 def default_client() -> LLMClient:

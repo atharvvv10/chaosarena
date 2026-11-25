@@ -114,13 +114,15 @@ under `ml/deep/live/`:
 - Fault: `pod-kill@order-service` for 30 s.
 - Detected in `15.8 s`, recovered in `53.1 s`, score `100/A/PROMOTE`.
 - Cleanup ok, 0 chaos objects remaining.
-- Groq proposed the attack idea, Gemini explained the defence both before and
-  after the battle, and Groq wrote the report from the recorded facts.
+- Groq proposed the attack idea, Gemini made separate pre-battle and post-battle
+  calls, and Groq wrote the report from the recorded facts.
 - The dashboard exposes these through `GET /ai/reasoning` in an **AI Reasoning**
   panel. Only role names, latencies, rationales and results are returned. A
   dashboard battle with **AI battle** enabled writes fresh advisory notes to
-  `ml/deep/live/runtime/`, which that endpoint prefers over the committed run.
-- Fresh `v12_*` screenshots/GIF/MP4 show that panel; the v1.1 media files are
+  `ml/deep/live/runtime/`, including the same two distinct Gemini roles, and
+  that endpoint prefers the complete fresh set over the committed run.
+- Latest `v12_ai_battle_*` screenshots/GIF/MP4 show that panel and the checkbox;
+  the v1.1 media files are
   preserved byte-identical.
 
 Full record, including the first `network-latency` false negative and why the

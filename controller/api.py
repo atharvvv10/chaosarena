@@ -18,6 +18,7 @@ from .gate import (
     record_decision,
 )
 from .score import score_battle
+from reporter.redaction import redact_text
 from reporter.report import write_report
 
 app = FastAPI(title="ChaosArena Gate", version="1.0.0")
@@ -78,6 +79,18 @@ def _refresh_report(payload: dict) -> dict:
     return {"file": str(REPORT_FILE), "backend": report.backend, "text": report.text}
 
 
+def _clear_runtime_notes() -> None:
+    """Drop fresh notes when a later AI battle fails before writing them."""
+    for name in (
+        "advisories.json", "defender_analysis.json", "summary.json",
+        "incident_report.md", "generation_error.json",
+    ):
+        try:
+            (AI_RUNTIME_DIR / name).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
 def _lab_probe(module: str) -> dict:
     """Probe lab readiness only through the published CLI boundary."""
     try:
@@ -117,27 +130,23 @@ def _view_llm_call(call: dict | None) -> dict:
     if not isinstance(call, dict) or not call:
         return {}
     result = call.get("result")
-    if not isinstance(result, dict):
-        return {
-            "role": call.get("role"),
-            "ok": bool(call.get("ok")),
-            "latency_ms": call.get("latency_ms"),
-            "result": result,
-        }
     view = {
         "role": call.get("role"),
         "ok": bool(call.get("ok")),
         "latency_ms": call.get("latency_ms"),
-        "source": result.get("source"),
     }
+    if call.get("last_error"):
+        view["last_error"] = redact_text(call["last_error"])
+    if not isinstance(result, dict):
+        view["result"] = result
+        return view
+    view["source"] = result.get("source")
     for key in (
         "attack", "target", "duration", "rationale", "category",
         "confidence", "recommended_action", "cached", "allowed",
     ):
         if key in result:
             view[key] = result[key]
-    if call.get("last_error"):
-        view["last_error"] = call["last_error"]
     return view
 
 
@@ -149,15 +158,18 @@ def _ai_files() -> tuple[dict, dict, dict, str]:
         AI_RUNTIME_DIR / "summary.json",
     )
     committed = (AI_ADVISORIES_FILE, AI_ANALYSIS_FILE, DEEP_SUMMARY_FILE)
-    for files, source in ((runtime, "fresh-battle"), (committed, "saved-validation")):
-        payloads = tuple(_read_evidence(path) for path in files)
-        if any(payloads):
-            return (
-                payloads[0] or {},
-                payloads[1] or {},
-                payloads[2] or {},
-                source,
-            )
+    runtime_payloads = tuple(_read_evidence(path) for path in runtime)
+    if all(isinstance(item, dict) and item for item in runtime_payloads):
+        stamps = {
+            item.get("generated_at")
+            for item in runtime_payloads
+            if item.get("generated_at")
+        }
+        if len(stamps) <= 1:
+            return (*runtime_payloads, "fresh-battle")
+    committed_payloads = tuple(_read_evidence(path) for path in committed)
+    if all(isinstance(item, dict) and item for item in committed_payloads):
+        return (*committed_payloads, "saved-validation")
     return {}, {}, {}, "saved-validation"
 
 
@@ -200,6 +212,7 @@ def ai_reasoning() -> dict:
             "backend": report.get("backend"),
             "chars": report.get("chars"),
             "saved_to": report.get("saved_to"),
+            "fallback_reason": report.get("fallback_reason"),
         },
     }
 
@@ -226,14 +239,15 @@ def evaluate(request: EvaluateRequest) -> dict:
     response["report"] = _refresh_report(payload)
     if request.ai_enabled:
         try:
-            from scripts.ai_notes import _safe_error, generate_battle_ai_notes
+            from scripts.ai_notes import generate_battle_ai_notes
 
             response["ai"] = generate_battle_ai_notes(payload, AI_RUNTIME_DIR)
         except Exception as exc:  # noqa: BLE001 - AI is advisory, the gate stands
+            _clear_runtime_notes()
             response["ai"] = {
                 "available": False,
                 "source": "fresh-battle-error",
-                "error": _safe_error(exc),
+                "error": redact_text(exc),
             }
     return response
 

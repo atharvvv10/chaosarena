@@ -28,6 +28,7 @@ VIDEO_TMP = SHOTS / "_v12_ai_battle_video"
 BASE = "http://127.0.0.1:5173"
 
 FORM_PNG = SHOTS / "v12_ai_battle_form.png"
+CHECKBOX_PNG = SHOTS / "v12_ai_battle_checkbox.png"
 AI_PNG = SHOTS / "v12_ai_battle_reasoning.png"
 DASH_PNG = SHOTS / "v12_ai_battle_dashboard.png"
 GIF = SHOTS / "v12_ai_battle_demo.gif"
@@ -298,7 +299,10 @@ def capture_ai_battle_ui(browser) -> None:
     page.wait_for_timeout(700)
     frame(page, "02_ai_battle_checkbox_on")
     page.locator("#battle").screenshot(path=str(FORM_PNG))
+    checkbox.locator("xpath=..").screenshot(path=str(CHECKBOX_PNG))
+    frame(page, "02b_ai_battle_checkbox_focus")
     print(f"FORM: {FORM_PNG} ({FORM_PNG.stat().st_size // 1024} KiB)", flush=True)
+    print(f"CHECKBOX: {CHECKBOX_PNG} ({CHECKBOX_PNG.stat().st_size // 1024} KiB)", flush=True)
 
     page.get_by_role("button", name="Run battle").click()
     page.wait_for_function(

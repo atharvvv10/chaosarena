@@ -95,7 +95,8 @@ Open <http://127.0.0.1:5173>.
 
 React, Vite and the GitHub Actions runner are all free/open source. The workflow
 uses only `ubuntu-latest` and public actions; no marketplace apps, no secrets,
-no hosted UI services. The dashboard makes no external network calls.
+no hosted UI services. The browser calls only the local gate API; optional
+server-side Groq/Gemini advisory calls happen only when **AI battle** is ticked.
 
 ## Phase 7 status
 

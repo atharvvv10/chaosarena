@@ -19,20 +19,20 @@ cluster battle.
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 17 tests; one `make verify`, real dashboard screenshots/GIF/video plus live Grafana capture, evidence/baseline/experiment checks, recruiter README and claim/benchmark guards |
 | v1.2 | Deep AIML + role-scoped LLM reasoning + AI Reasoning dashboard panel | DQN/neural validation, three-role live LLM check, isolated live lab battle (15.8 s detection, 100/A/PROMOTE), AI panel endpoint/UI tests, fresh v1.2 media; 34 additional tests |
-| v1.2 update | Opt-in **AI battle** with fresh advisory notes | Dashboard checkbox, post-battle role-scoped advisory writes, runtime evidence preference, offline/template fallback and no-torch regression coverage; 4 additional tests |
+| v1.2 update | Opt-in **AI battle** with fresh advisory notes | Dashboard checkbox, post-battle role-scoped advisory writes, runtime evidence preference, offline/template fallback, no-torch regression coverage, redaction/stale-note hardening, two independent defender calls and latest media guards; 14 additional tests |
 
-**Total: 170 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Eight later regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour and the matching frontend assertions. The v1.2 additions cover DQN, neural detection, env loading, mixed-provider clients, deep validation, live evidence, the AI reasoning endpoint, the dashboard panel and preservation of the v1.1 media. Five later tests cover the opt-in AI battle path: fresh runtime notes are preferred, `ai_enabled` reaches the gate API, notes generate with no keys, generation survives a missing `torch`, and the new checkbox/fresh-notes media guard is present. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md) for the isolated live battle; no v1.1 result above was changed.
+**Total: 179 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Fourteen regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour, experimental-validation restore and the matching frontend assertions. The v1.2 additions cover DQN, neural detection, env loading, mixed-provider clients, deep validation, live evidence, the AI reasoning endpoint, the dashboard panel and preservation of the v1.1 media. The 20 AI-panel tests cover fresh runtime-note preference, `ai_enabled` transport, offline/no-torch fallbacks, redaction on provider-error paths, stale/partial-note rejection, two independent defender calls, the opt-in boundary and the latest media guards. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md) for the isolated live battle; no v1.1 result above was changed.
 
 ### Latest release verification (AI battle toggle)
 
-- `python -m pytest -q`: **170 passed**.
+- `python -m pytest -q`: **179 passed**.
 - `python -m scripts.verify_all`: all steps passed, including the React production build.
 - GitHub Actions for the AI battle code: run **#60**, success; later docs-only updates re-run the same checks.
 - Local browser smoke check: the **AI battle** checkbox starts unchecked, sends `ai_enabled: true` when ticked, triggers a second `GET /ai/reasoning`, shows fresh Groq/Gemini notes and the `FRESH BATTLE NOTES` badge, and logs **0 page errors**.
 - Secret scan: strict Groq/Gemini key locations **0** across repository history; all loose matches are placeholders.
 - v1.1 media SHA-256 guards remain unchanged.
 - Scores are unchanged by this feature: the headline battle is still **100 / A / PROMOTE** with **13.3 s** detection. No new live lab battle score was produced by this UI/API change.
-- Latest media: `v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png`, `v12_ai_battle_dashboard.png`, `v12_ai_battle_demo.gif` and `v12_ai_battle_demo.mp4` show the opt-in checkbox and fresh notes. They use a mocked gate API in the browser; no live battle, lab or keys were involved, and no earlier asset was overwritten.
+- Latest media: `v12_ai_battle_checkbox.png`, `v12_ai_battle_form.png`, `v12_ai_battle_reasoning.png`, `v12_ai_battle_dashboard.png`, `v12_ai_battle_demo.gif` and `v12_ai_battle_demo.mp4` show the opt-in checkbox and fresh notes. They use a mocked gate API in the browser; no live battle, lab or keys were involved, and no earlier asset was overwritten.
 
 ## Headline gated battle
 
@@ -196,7 +196,8 @@ comparison is like-for-like. These are offline benchmarks, not live battles.
   being caught.
 - GitHub Actions re-scores **saved JSON fixtures**; it never runs a live cluster
   battle.
-- The RL attacker is **tabular Q-learning**, not PPO or deep RL.
+- The shipped baseline attacker is **tabular Q-learning**, not PPO. v1.2 adds an
+  advisory/off-loop DQN ranker, not a live deep-RL controller.
 - The 40-sample baseline fits a steady synthetic demo, not production traffic.
 - A bad release **was** measured: the live gate BLOCKed `PAYMENT_FAILURE_RATE=1.0`
   at **65/D** and PROMOTEd the `0.01` rollback at **100/A**. That verdict came
@@ -222,7 +223,10 @@ Badge: see the top of `README.md`.
 
 - Free `ubuntu-latest` runner, public repo, no secrets, no cluster.
 - Actions used: `checkout@v7.0.1`, `setup-python@v7.1.0`, `setup-node@v7.1.0`.
-- Steps: safety guard → pytest → React build → bad-battle BLOCK → good-battle PROMOTE → audit trail.
+- Jobs/steps: **Test + release gate (free tier)** runs safety guards → pytest →
+  React build → bad-battle BLOCK → good-battle PROMOTE → audit trail; **Deep
+  AIML smoke test (CPU)** installs `requirements-aiml.txt` and runs the offline
+  DQN/neural/deep-validation checks with no real provider keys.
 - Latest push green. The latest run is checked after push.
 
 ## Cost statement
