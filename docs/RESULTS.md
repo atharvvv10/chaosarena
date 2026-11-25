@@ -19,8 +19,19 @@ cluster battle.
 | 8 | Free tabular RL attacker | 18 tests; 200 sim episodes; offline learned-vs-random benchmark shows 1.77× more damage than chance |
 | 9 | Final docs, results, tests and UI polish | 17 tests; one `make verify`, real dashboard screenshots/GIF/video plus live Grafana capture, evidence/baseline/experiment checks, recruiter README and claim/benchmark guards |
 | v1.2 | Deep AIML + role-scoped LLM reasoning + AI Reasoning dashboard panel | DQN/neural validation, three-role live LLM check, isolated live lab battle (15.8 s detection, 100/A/PROMOTE), AI panel endpoint/UI tests, fresh v1.2 media; 34 additional tests |
+| v1.2 update | Opt-in **AI battle** with fresh advisory notes | Dashboard checkbox, post-battle role-scoped advisory writes, runtime evidence preference, offline/template fallback and no-torch regression coverage; 4 additional tests |
 
-**Total: 165 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Eight later regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour and the matching frontend assertions. The v1.2 additions cover DQN, neural detection, env loading, mixed-provider clients, deep validation, live evidence, the AI reasoning endpoint, the dashboard panel and preservation of the v1.1 media. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md) for the isolated live battle; no v1.1 result above was changed.
+**Total: 169 automated tests pass.** Phase 9 contributes 17 tests: 12 phase polish checks plus 5 evidence/experiment checks (evidence API, observe-only baseline, live bad-release gate, timing docs and media). Eight later regression tests cover report refresh in both the API and CLI, abnormal final recovery, missing or invalid final measurements, readiness separation, shared report-path behaviour and the matching frontend assertions. The v1.2 additions cover DQN, neural detection, env loading, mixed-provider clients, deep validation, live evidence, the AI reasoning endpoint, the dashboard panel and preservation of the v1.1 media. Four later tests cover the opt-in AI battle path: fresh runtime notes are preferred, `ai_enabled` reaches the gate API, notes generate with no keys, and generation survives a missing `torch`. See [V12_LIVE_VALIDATION.md](V12_LIVE_VALIDATION.md) for the isolated live battle; no v1.1 result above was changed.
+
+### Latest release verification (AI battle toggle)
+
+- `python -m pytest -q`: **169 passed**.
+- `python -m scripts.verify_all`: all steps passed, including the React production build.
+- GitHub Actions for the AI battle code: run **#60**, success; later docs-only updates re-run the same checks.
+- Local browser smoke check: the **AI battle** checkbox starts unchecked, sends `ai_enabled: true` when ticked, triggers a second `GET /ai/reasoning`, shows fresh Groq/Gemini notes and the `FRESH BATTLE NOTES` badge, and logs **0 page errors**.
+- Secret scan: strict Groq/Gemini key locations **0** across repository history; all loose matches are placeholders.
+- v1.1 media SHA-256 guards remain unchanged.
+- Scores are unchanged by this feature: the headline battle is still **100 / A / PROMOTE** with **13.3 s** detection. No new live lab battle score was produced by this UI/API change.
 
 ## Headline gated battle
 
